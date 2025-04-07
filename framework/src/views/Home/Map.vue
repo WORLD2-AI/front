@@ -205,60 +205,30 @@ function preload() {
   //       png file that contains the tileset.
   //       Also IMPORTANT: when you create a tileset in Tiled, always be
   //       sure to check the "embedded" option.
-  this.load.image("blocks_1", "/assets/map_assets/blocks/blocks_1.png");
-  this.load.image("walls", "/assets/map_assets/v1/Room_Builder_32x32.png");
-  this.load.image("interiors_pt1", "/assets/map_assets/v1/interiors_pt1.png");
-  this.load.image("interiors_pt2", "/assets/map_assets/v1/interiors_pt2.png");
-  this.load.image("interiors_pt3", "/assets/map_assets/v1/interiors_pt3.png");
-  this.load.image("interiors_pt4", "/assets/map_assets/v1/interiors_pt4.png");
-  this.load.image("interiors_pt5", "/assets/map_assets/v1/interiors_pt5.png");
-  this.load.image(
-    "CuteRPG_Field_B",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png"
-  );
-  this.load.image(
-    "CuteRPG_Field_C",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png"
-  );
-  this.load.image(
-    "CuteRPG_Harbor_C",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png"
-  );
-  this.load.image(
-    "CuteRPG_Village_B",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png"
-  );
-  this.load.image(
-    "CuteRPG_Forest_B",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png"
-  );
-  this.load.image(
-    "CuteRPG_Desert_C",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png"
-  );
-  this.load.image(
-    "CuteRPG_Mountains_B",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png"
-  );
-  this.load.image(
-    "CuteRPG_Desert_B",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png"
-  );
-  this.load.image(
-    "CuteRPG_Forest_C",
-    "/assets/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png"
-  );
-  this.load.image("CityRoad", "/assets/map_assets/Road_test1024.png");
-  this.load.image("BasketballPlace", "/assets/map_assets/basketball_place.png");
-  this.load.image("CityObject", "/assets/map_assets/city_extension_prev.png");
-  this.load.image("Waters", "/assets/map_assets/CuteRPG_Mountains_A1.png");
-  this.load.image(
-    "Trees",
-    "/assets/map_assets/height96_trees_mega_pack_cc_by_3_0.png"
-  );
+  this.load.image("blocks_1", 'assets/the_ville/visuals/map_assets/blocks/blocks_1.png');
+  this.load.image("walls", 'assets/the_ville/visuals/map_assets/v1/Room_Builder_32x32.png');
+  this.load.image("interiors_pt1", 'assets/the_ville/visuals/map_assets/v1/interiors_pt1.png');
+  this.load.image("interiors_pt2", 'assets/the_ville/visuals/map_assets/v1/interiors_pt2.png');
+  this.load.image("interiors_pt3", 'assets/the_ville/visuals/map_assets/v1/interiors_pt3.png');
+  this.load.image("interiors_pt4", 'assets/the_ville/visuals/map_assets/v1/interiors_pt4.png');
+  this.load.image("interiors_pt5", 'assets/the_ville/visuals/map_assets/v1/interiors_pt5.png');
+  this.load.image("CuteRPG_Field_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png');
+  this.load.image("CuteRPG_Field_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png');
+  this.load.image("CuteRPG_Harbor_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png');
+  this.load.image("CuteRPG_Village_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png');
+  this.load.image("CuteRPG_Forest_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png');
+  this.load.image("CuteRPG_Desert_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png');
+  this.load.image("CuteRPG_Mountains_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png');
+  this.load.image("CuteRPG_Desert_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png');
+  this.load.image("CuteRPG_Forest_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png');
+  this.load.image("CityRoad", 'assets/the_ville/visuals/map_assets/Road_test1024.png');
+  this.load.image("BasketballPlace", 'assets/the_ville/visuals/map_assets/basketball_place.png');
+  this.load.image("CityObject", 'assets/the_ville/visuals/map_assets/city_extension_prev.png');
+  this.load.image("Waters", 'assets/the_ville/visuals/map_assets/CuteRPG_Mountains_A1.png');
+  this.load.image("Trees", 'assets/the_ville/visuals/map_assets/height96_trees_mega_pack_cc_by_3_0.png');
 
-  // Joon: This is the export json file you get from Tiled.
-  this.load.tilemapTiledJSON("map", "/assets/this_ville/the_ville_jan7-2.json");
+  // Joon: This is the export json file you get from Tiled. 
+  this.load.tilemapTiledJSON("map", 'assets/the_ville/visuals/the_ville_jan7-2.json');
 
   // An atlas is a way to pack multiple images together into one texture. I'm
   // using it to load all the player animations (walking left, walking right,
@@ -275,11 +245,11 @@ function preload() {
   );
 
   for (let key in persona_names) {
-    // key = persona_names[key];
+    key = persona_names[key];
     // ===============================
     key = key.replace(" ", "_");
     key = key.toLowerCase();
-    this.load.atlas(key, `/assets/town/${key}.png`, `/assets/town/atlas.json`);
+    this.load.atlas(key, `assets/characters/town/profile/${key}.png`, `assets/characters/town/atlas.json`);
   }
 }
 
@@ -905,7 +875,7 @@ function getFrameData() {
     postTimeoutHandle = true;
     var update_xobj = new XMLHttpRequest();
     update_xobj.overrideMimeType("application/json");
-    update_xobj.open("POST", "{% url 'update_environment' %}", !first_stop);
+    update_xobj.open("POST", "/api/update_environment", !first_stop);
     update_xobj?.addEventListener("load", function () {
       first_stop = false;
       if (this.readyState === 4) {
@@ -1132,7 +1102,7 @@ let story_template =
 function get_all_user_data() {
   var update_xobj = new XMLHttpRequest();
   update_xobj.overrideMimeType("application/json");
-  var url = "{% url 'status' %}";
+  var url = "/api/status/";
   if (last_time) {
     url += "?last_time=" + last_time;
   }
