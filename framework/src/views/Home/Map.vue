@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div id="game-container" style="text-align: center"></div>
     <div id="step" style="display: none">{{ step }}</div>
     <div id="sim_code" style="display: none">{{ sim_code }}</div>
     <div id="persona_name_list" style="display: none">
@@ -12,10 +11,24 @@
         {{ pos[0] }},{{ pos[1] }},{{ pos[2] }}
       </span> -->
     </div>
+    <div class="row">
+      <div class="col-md-1">1</div>
+      <div class="col-md-7">
+        <div id="game-container" style="text-align: center">
+          <!-- <Map /> -->
+        </div>
+      </div>
+      <div class="col-md-4">
+        <DialogContainer :personaNames="persona_names" />
+      </div>
+    </div>
   </div>
 </template>
 <script setup>
+import { onMounted, ref } from "vue";
 import Phaser from "phaser";
+import DialogContainer from "./dialogContainer.vue";
+
 /*
 	  Main resources:
 	  https://www.youtube.com/watch?v=cKIG1lKwLeo&t=401s&ab_channel=HongLy
@@ -34,6 +47,44 @@ import Phaser from "phaser";
 
 // <step> -- one full loop around all three phases determined by <phase> is
 // a step. We use this to link the steps in the backend.
+let gameContainerDom = ref();
+const config = ref();
+const game = ref();
+const progressBar = ref();
+onMounted(() => {
+  gameContainerDom.value = document.getElementById("game-container");
+
+  progressBar.value = document.getElementById("progress-bar");
+
+  console.log(
+    gameContainerDom.value,
+    "game-containergame-containergame-containergame-container"
+  );
+  config.value = {
+    type: Phaser.AUTO,
+    fps: {
+      target: 45, // 设置目标帧率为 8 FPS
+      forceSetTimeOut: true, // 确保帧率稳定（适用于低帧率场景）
+    },
+    width: 1200,
+    height: 800,
+    parent: gameContainerDom.value,
+    pixelArt: true,
+    physics: {
+      default: "arcade",
+      arcade: {
+        gravity: { y: 0 },
+      },
+    },
+    scene: {
+      preload: preload,
+      create: create,
+      update: update,
+    },
+    scale: { zoom: 0.9 },
+  };
+  game.value = new Phaser.Game(config.value);
+});
 let params = getUrlParams();
 let step = parseInt(document.getElementById("step")?.innerHTML);
 if (params["step"] && parseInt(params["step"]) > 0) {
@@ -58,15 +109,10 @@ let persona_names = [
   "christopher gardner",
   "linda",
   "chris gardner",
-  "tom moreno",
   "jane moreno",
-  "tamara taylor",
-  "rajiv patel",
-  "carmen ortiz",
   "arthur burton",
   "latoya williams",
   "carlos gomez",
-  "francisco lopez",
   "kiki",
   "cichengege",
   "frank",
@@ -96,34 +142,14 @@ let t = null;
 //     preload: preload,
 //     create: create,
 //     update: update } };
-
-const config = {
-  type: Phaser.AUTO,
-  fps: {
-    target: 45, // 设置目标帧率为 8 FPS
-    forceSetTimeOut: true, // 确保帧率稳定（适用于低帧率场景）
-  },
-  width: 1200,
-  height: 800,
-  parent: "game-container",
-  pixelArt: true,
-  physics: {
-    default: "arcade",
-    arcade: {
-      gravity: { y: 0 },
-    },
-  },
-  scene: {
-    preload: preload,
-    create: create,
-    update: update,
-  },
-  scale: { zoom: 0.9 },
-};
+console.log(
+  document.querySelector("#parent"),
+  "parentparentparentparentparent"
+);
 
 // Creating the game instance and setting up the main Phaser variables that
 // will be used in it.
-const game = new Phaser.Game(config);
+
 let cursors;
 let player;
 let showDebug = false;
@@ -205,30 +231,96 @@ function preload() {
   //       png file that contains the tileset.
   //       Also IMPORTANT: when you create a tileset in Tiled, always be
   //       sure to check the "embedded" option.
-  this.load.image("blocks_1", 'assets/the_ville/visuals/map_assets/blocks/blocks_1.png');
-  this.load.image("walls", 'assets/the_ville/visuals/map_assets/v1/Room_Builder_32x32.png');
-  this.load.image("interiors_pt1", 'assets/the_ville/visuals/map_assets/v1/interiors_pt1.png');
-  this.load.image("interiors_pt2", 'assets/the_ville/visuals/map_assets/v1/interiors_pt2.png');
-  this.load.image("interiors_pt3", 'assets/the_ville/visuals/map_assets/v1/interiors_pt3.png');
-  this.load.image("interiors_pt4", 'assets/the_ville/visuals/map_assets/v1/interiors_pt4.png');
-  this.load.image("interiors_pt5", 'assets/the_ville/visuals/map_assets/v1/interiors_pt5.png');
-  this.load.image("CuteRPG_Field_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png');
-  this.load.image("CuteRPG_Field_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png');
-  this.load.image("CuteRPG_Harbor_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png');
-  this.load.image("CuteRPG_Village_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png');
-  this.load.image("CuteRPG_Forest_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png');
-  this.load.image("CuteRPG_Desert_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png');
-  this.load.image("CuteRPG_Mountains_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png');
-  this.load.image("CuteRPG_Desert_B", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png');
-  this.load.image("CuteRPG_Forest_C", 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png');
-  this.load.image("CityRoad", 'assets/the_ville/visuals/map_assets/Road_test1024.png');
-  this.load.image("BasketballPlace", 'assets/the_ville/visuals/map_assets/basketball_place.png');
-  this.load.image("CityObject", 'assets/the_ville/visuals/map_assets/city_extension_prev.png');
-  this.load.image("Waters", 'assets/the_ville/visuals/map_assets/CuteRPG_Mountains_A1.png');
-  this.load.image("Trees", 'assets/the_ville/visuals/map_assets/height96_trees_mega_pack_cc_by_3_0.png');
+  this.load.image(
+    "blocks_1",
+    "assets/the_ville/visuals/map_assets/blocks/blocks_1.png"
+  );
+  this.load.image(
+    "walls",
+    "assets/the_ville/visuals/map_assets/v1/Room_Builder_32x32.png"
+  );
+  this.load.image(
+    "interiors_pt1",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt1.png"
+  );
+  this.load.image(
+    "interiors_pt2",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt2.png"
+  );
+  this.load.image(
+    "interiors_pt3",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt3.png"
+  );
+  this.load.image(
+    "interiors_pt4",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt4.png"
+  );
+  this.load.image(
+    "interiors_pt5",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt5.png"
+  );
+  this.load.image(
+    "CuteRPG_Field_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Field_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png"
+  );
+  this.load.image(
+    "CuteRPG_Harbor_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png"
+  );
+  this.load.image(
+    "CuteRPG_Village_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Forest_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Desert_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png"
+  );
+  this.load.image(
+    "CuteRPG_Mountains_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Desert_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Forest_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png"
+  );
+  this.load.image(
+    "CityRoad",
+    "assets/the_ville/visuals/map_assets/Road_test1024.png"
+  );
+  this.load.image(
+    "BasketballPlace",
+    "assets/the_ville/visuals/map_assets/basketball_place.png"
+  );
+  this.load.image(
+    "CityObject",
+    "assets/the_ville/visuals/map_assets/city_extension_prev.png"
+  );
+  this.load.image(
+    "Waters",
+    "assets/the_ville/visuals/map_assets/CuteRPG_Mountains_A1.png"
+  );
+  this.load.image(
+    "Trees",
+    "assets/the_ville/visuals/map_assets/height96_trees_mega_pack_cc_by_3_0.png"
+  );
 
-  // Joon: This is the export json file you get from Tiled. 
-  this.load.tilemapTiledJSON("map", 'assets/the_ville/visuals/the_ville_jan7-2.json');
+  // Joon: This is the export json file you get from Tiled.
+  this.load.tilemapTiledJSON(
+    "map",
+    "assets/the_ville/visuals/the_ville_jan7-2.json"
+  );
 
   // An atlas is a way to pack multiple images together into one texture. I'm
   // using it to load all the player animations (walking left, walking right,
@@ -249,7 +341,12 @@ function preload() {
     // ===============================
     key = key.replace(" ", "_");
     key = key.toLowerCase();
-    this.load.atlas(key, `assets/characters/town/profile/${key}.png`, `assets/characters/town/atlas.json`);
+    console.log(`assets/town/profile/${key}.png`, "");
+    this.load.atlas(
+      key,
+      `assets/town/profile/${key}.png`,
+      `assets/town/atlas.json`
+    );
   }
 }
 
@@ -533,7 +630,8 @@ function create() {
   const anims = this.anims;
   for (let i = 0; i < Object.keys(persona_names).length; i++) {
     // ===========================================================
-    let persona_name = Object.keys(persona_names)[i];
+    // let persona_name = Object.keys(persona_names)[i];
+    let persona_name = persona_names[i];
 
     let left_walk_name = persona_name + "-left-walk";
     let right_walk_name = persona_name + "-right-walk";
@@ -541,6 +639,7 @@ function create() {
     let up_walk_name = persona_name + "-up-walk";
 
     //   console.log(persona_name, left_walk_name, "DEUBG")
+
     anims.create({
       key: left_walk_name,
       frames: anims.generateFrameNames(persona_name, {
@@ -593,7 +692,12 @@ function create() {
   // set the view zoom
   const minZoom = 0.3; // minimal scaling
   const maxZoom = 3; // maximum scale
-
+  // 正常播放音频
+  this.input.on("pointerdown", () => {
+    this.game.sound.unlock();
+    // 现在可以安全播放音频
+    this.sound.play("your-audio");
+  });
   this.input.keyboard.on("keydown-Z", () => {
     const newZoom = this.cameras.main.zoom * 1.1;
     this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
@@ -981,10 +1085,11 @@ var pause_button = document.getElementById("pause_button");
 let isDragging = false;
 
 // 初始化进度条
-const progressBar = document.getElementById("progress-bar");
+// const progressBar = document.getElementById("progress-bar");
+// =======================
 const progress = document.getElementById("progress");
 const slider = document.getElementById("slider");
-const containerRect = progressBar?.getBoundingClientRect();
+// const containerRect = progressBar?.getBoundingClientRect();
 
 // 事件监听
 slider?.addEventListener("mousedown", startDragging);
@@ -1021,7 +1126,7 @@ function stopDragging() {
 }
 
 function updateProgress(clientX) {
-  const rect = progressBar.getBoundingClientRect();
+  const rect = progressBar.value.getBoundingClientRect();
   let percent = ((clientX - rect.left) / rect.width) * 100;
   percent = Math.min(100, Math.max(0, percent));
 
@@ -1067,8 +1172,9 @@ function changeProgressBarToEnd(endFranme) {
 }
 changeProgressBarToEnd(currentEndFrame);
 
-let element = document.getElementById("game-container");
-element?.addEventListener("contextmenu", (e) => {
+// let element = document.getElementById("game-container");
+// console.log(element, "elementelementelementelementelement");
+gameContainerDom.value?.addEventListener("contextmenu", (e) => {
   e.preventDefault();
   display_main_box();
 });
@@ -1165,9 +1271,11 @@ function update_story() {
   updateFramesDisplay();
 }
 function update_user_info() {
+  let scheduleDom = document.getElementById("character_schedule");
+  let infoDom = document.getElementById("character_info");
   if (!focus_name || focus_name == "") {
-    document.getElementById("character_schedule").innerHTML = "<p>None</p>";
-    document.getElementById("character_info").innerHTML = "<p>None</p>";
+    scheduleDom && (scheduleDom.innerHTML = "<p>None</p>");
+    infoDom && (infoDom.innerHTML = "<p>None</p>");
     return;
   }
   let user_data = all_user_data[focus_name];
@@ -1211,4 +1319,33 @@ function switchTab(tabName) {
 switchTab("dialogue");
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.row {
+  height: 100%;
+  min-width: 1860px;
+  display: flex;
+  .col-md-1 {
+    flex-grow: 1;
+  }
+  .col-md-7 {
+    flex-grow: 7;
+    #game-container {
+      min-width: 50vw;
+      width: 100%;
+      min-height: 50vh;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #game-container > canvas {
+      border-radius: 5px;
+    }
+  }
+  .col-md-4 {
+    width: calc(100% / 3);
+    flex-grow: 6;
+  }
+}
+</style>

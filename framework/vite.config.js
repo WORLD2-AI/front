@@ -1,10 +1,10 @@
-'use strict'
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+"use strict";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
-import path from 'path';
+import path from "path";
 function resolve(dir) {
-  return path.join(__dirname, dir)
+  return path.join(__dirname, dir);
 }
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,48 +12,48 @@ export default defineConfig({
   configureWebpack: {
     resolve: {
       alias: {
-        '@': resolve('src'),
-      }
+        "@": resolve("src"),
+      },
     },
   },
   // 开启代理日志
   server: {
     proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8000',
+      "/api": {
+        target: "http://192.168.1.6:8000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')+"/",
+        rewrite: (path) => path.replace(/^\/api/, "") + "/",
         configure: (proxy, options) => {
-          proxy.on('error', err => {
-            console.error('Assets代理错误:', err);
+          proxy.on("error", (err) => {
+            console.error("Assets代理错误:", err);
           });
-          proxy.on('proxyReq', proxyReq => {
-            console.log('Assets代理请求:', proxyReq.path);
+          proxy.on("proxyReq", (proxyReq) => {
+            console.log("Assets代理请求:", proxyReq.path);
           });
-          proxy.on('proxyRes', proxyRes => {
-            console.log('Assets代理响应状态:', proxyRes.statusCode);
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log("Assets代理响应状态:", proxyRes.statusCode);
           });
-        }
+        },
       },
-      '/assets': {
-        target: 'http://127.0.0.1:8000',
+      "/assets": {
+        target: "http://192.168.1.6:8000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/assets/, '/static/assets'),
+        rewrite: (path) => path.replace(/^\/assets/, "/static/assets"),
         configure: (proxy, options) => {
-          proxy.on('error', err => {
-            console.error('Assets代理错误:', err);
+          proxy.on("error", (err) => {
+            console.error("Assets代理错误:", err);
           });
-          proxy.on('proxyReq', proxyReq => {
-            console.log('Assets代理请求:', proxyReq.path);
+          proxy.on("proxyReq", (proxyReq) => {
+            console.log("Assets代理请求:", proxyReq.path);
           });
-          proxy.on('proxyRes', proxyRes => {
-            console.log('Assets代理响应状态:', proxyRes.statusCode);
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log("Assets代理响应状态:", proxyRes.statusCode);
           });
-        }
-      }
-    }
-  }
-})
+        },
+      },
+    },
+  },
+});
 // import { defineConfig } from 'vite'
 // import vue from '@vitejs/plugin-vue'
 
@@ -61,6 +61,3 @@ export default defineConfig({
 // export default defineConfig({
 //   plugins: [vue()],
 // })
-
-
-
