@@ -20,7 +20,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: "http://192.168.1.6:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "") + "/",
         configure: (proxy, options) => {
@@ -36,7 +36,7 @@ export default defineConfig({
         },
       },
       "/assets": {
-        target: "http://127.0.0.1:8000",
+        target: "http://192.168.1.6:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/assets/, "/static/assets"),
         configure: (proxy, options) => {
@@ -48,6 +48,22 @@ export default defineConfig({
           });
           proxy.on("proxyRes", (proxyRes) => {
             console.log("Assets代理响应状态:", proxyRes.statusCode);
+          });
+        },
+      },
+      "/login": {
+        target: "http://192.168.1.6:5000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/login/, "/"),
+        configure: (proxy, options) => {
+          proxy.on("error", (err) => {
+            console.error("login代理错误:", err);
+          });
+          proxy.on("proxyReq", (proxyReq) => {
+            console.log("login代理请求:", proxyReq.path);
+          });
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log("login代理响应状态:", proxyRes.statusCode);
           });
         },
       },

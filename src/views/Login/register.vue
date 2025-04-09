@@ -96,7 +96,7 @@
         <el-button
           round
           type="primary"
-          @click="submitForm"
+          @click="profile"
           :loading="loading"
           :disabled="loading"
           >注册</el-button
@@ -168,6 +168,11 @@ export default {
     };
   },
   methods: {
+    profile() {
+      userapi.profile(this.formData).then((res) => {
+        console.log(res);
+      });
+    },
     submitForm() {
       console.log(
         this.agree,
