@@ -86,85 +86,79 @@ onMounted(() => {
   game.value = new Phaser.Game(config.value);
 });
 let params = getUrlParams();
-let step = parseInt(document.getElementById("step")?.innerHTML);
-if (params["step"] && parseInt(params["step"]) > 0) {
-  step = parseInt(params["step"]);
-}
-let last_step = step;
+let step = 1
+let last_step = 1;
 let setTimeoutHandle = null;
 let postTimeoutHandle = false;
 let drag_step = step;
 let currentEndFrame = step;
 let currentStartFrame = calculateStartFrame(currentEndFrame);
-let currentFrame = currentEndFrame;
-let simCodeNode = document.getElementById("sim_code");
-console.log(simCodeNode, "");
-let sim_code = simCodeNode && simCodeNode.innerHTML;
+let currentFrame = currentEndFrame; 
+let sim_code = "ai_and_v_coin6";
 // let persona_names = document.getElementById('persona_name_list').innerHTML.split(",");
-
+let persona_names = []
 let spans = document
   .getElementById("persona_init_pos")
   ?.getElementsByTagName("span");
-let persona_names = [
-  "christopher gardner",
-  "linda",
-  "chris gardner",
-  "jane moreno",
-  "arthur burton",
-  "latoya williams",
-  "carlos gomez",
-  "kiki",
-  "cichengege",
-  "frank",
-  "mk",
-];
-for (var i = 0, l = spans?.length; i < l; i++) {
-  let x = spans[i].innerText.split(",");
-  persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
-}
+// let persona_names = [
+//   "christopher gardner",
+//   "linda",
+//   "chris gardner",
+//   "jane moreno",
+//   "arthur burton",
+//   "latoya williams",
+//   "carlos gomez",
+//   "kiki",
+//   "cichengege",
+//   "frank",
+//   "mk",
+// ];
+// for (var i = 0, l = spans?.length; i < l; i++) {
+//   let x = spans[i].innerText.split(",");
+//   persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
+// }
 var last_time = null;
 // console.log('persona_names:',persona_names)
 let t = null;
 
 // Phaser 3.0 global settings.
 // Configuration meant to be passed to the main Phaser game instance.
-// const config = {
-//   type: Phaser.AUTO,
-//   width: 1500,
-//   height: 800,
-//   parent: "game-container",
-//   pixelArt: true,
-//   physics: {
-//     default: "arcade",
-//     arcade: {
-//       gravity: { y: 0 } } },
-//   scene: {
-//     preload: preload,
-//     create: create,
-//     update: update } };
-console.log(
-  document.querySelector("#parent"),
-  "parentparentparentparentparent"
-);
-
 // Creating the game instance and setting up the main Phaser variables that
 // will be used in it.
 
 let cursors;
 let player;
 let showDebug = false;
-
+let position = [
+"arthur burton,61,24",
+"carlos gomez,40,35",
+"carmen ortiz,63,67",
+"francisco lopez,31,86",
+"latoya williams,18,14",
+"kiki,18,67",
+"cichengege,27,65",
+"frank,71,25",
+"mk,25,89",
+"tamara taylor,73,53",
+"jane moreno,70,57",
+"tom moreno,96,74",
+"rajiv patel,27,14",
+"chris gardner,33,86",
+"linda,83,47",
+"christopher gardner,132,71"
+]
 console.log("get url params", params);
 // Persona related variables. This should have the name of the persona as its
 // keys, and the instances of the Persona class as the values.
 var spawn_tile_loc = {};
-// for (var i = 0; i < persona_names.length; i++) {
-// 	spawn_tile_loc[persona_names[i]] = [0, 0]
-// }
-
-for (var key in persona_names) {
-  spawn_tile_loc[key] = persona_names[key];
+for (var i = 0; i < position.length; i++) {
+	  let x = position[i].split(",");
+		persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])]
 }
+
+// for (var key in persona_names) {
+//   spawn_tile_loc[persona_names[key]] = persona_names[key];
+// }
 console.log(spawn_tile_loc);
 let lastTime = 0;
 var personas = {};
@@ -337,15 +331,15 @@ function preload() {
   );
 
   for (let key in persona_names) {
-    key = persona_names[key];
+    // key = persona_names[key];
     // ===============================
     key = key.replace(" ", "_");
     key = key.toLowerCase();
-    console.log(`assets/town/profile/${key}.png`, "");
+    console.log(`assets/characters/town/profile/${key}.png`, "");
     this.load.atlas(
       key,
-      `assets/town/profile/${key}.png`,
-      `assets/town/atlas.json`
+      `assets/characters/town/profile/${key}.png`,
+      `assets/characters/town/atlas.json`
     );
   }
 }
@@ -693,11 +687,7 @@ function create() {
   const minZoom = 0.3; // minimal scaling
   const maxZoom = 3; // maximum scale
   // 正常播放音频
-  this.input.on("pointerdown", () => {
-    this.game.sound.unlock();
-    // 现在可以安全播放音频
-    this.sound.play("your-audio");
-  });
+ 
   this.input.keyboard.on("keydown-Z", () => {
     const newZoom = this.cameras.main.zoom * 1.1;
     this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
@@ -816,8 +806,8 @@ function update(time, delta) {
   if (!execute_movement || !execute_movement["meta"]) {
     return;
   }
-  document.getElementById("game-time-content").innerHTML =
-    execute_movement["meta"]["curr_time"];
+  // document.getElementById("game-time-content").innerHTML =
+  //   execute_movement["meta"]["curr_time"];
   last_time = execute_movement["meta"]["curr_time"];
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
@@ -1245,7 +1235,7 @@ function update_story() {
       if (!element || !element.time) {
         return;
       }
-      event_time = new Date(element.time);
+      let event_time = new Date(element.time);
       if (event_time.getTime() <= date.getTime()) {
         data.push(element);
       }

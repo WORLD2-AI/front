@@ -20,7 +20,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://192.168.1.6:8000",
+        target: "http://127.0.0.1:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "") + "/",
         configure: (proxy, options) => {
@@ -36,7 +36,7 @@ export default defineConfig({
         },
       },
       "/assets": {
-        target: "http://192.168.1.6:8000",
+        target: "http://127.0.0.1:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/assets/, "/static/assets"),
         configure: (proxy, options) => {
