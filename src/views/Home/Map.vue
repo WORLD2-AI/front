@@ -156,9 +156,9 @@ for (var i = 0; i < position.length; i++) {
 		persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])]
 }
 
-// for (var key in persona_names) {
-//   spawn_tile_loc[persona_names[key]] = persona_names[key];
-// }
+for (let key in persona_names){
+  spawn_tile_loc[key] = persona_names[key] ;
+}
 console.log(spawn_tile_loc);
 let lastTime = 0;
 var personas = {};
