@@ -19,7 +19,12 @@
         </div>
       </div>
       <div class="col-md-4">
-        <DialogContainer :personaNames="persona_names" />
+        <DialogContainer
+          :personNames="persona_names"
+          :displayMainBox="display_main_box"
+          :displayGameDialog="display_game_dialog"
+          :switchTab="switchTab"
+        />
       </div>
     </div>
   </div>
@@ -51,15 +56,11 @@ let gameContainerDom = ref();
 const config = ref();
 const game = ref();
 const progressBar = ref();
+const progress = ref();
+const slider = ref();
 onMounted(() => {
   gameContainerDom.value = document.getElementById("game-container");
 
-  progressBar.value = document.getElementById("progress-bar");
-
-  console.log(
-    gameContainerDom.value,
-    "game-containergame-containergame-containergame-container"
-  );
   config.value = {
     type: Phaser.AUTO,
     fps: {
@@ -84,19 +85,33 @@ onMounted(() => {
     scale: { zoom: 0.9 },
   };
   game.value = new Phaser.Game(config.value);
+
+  // 初始化进度条
+  progressBar.value = document.getElementById("progress-bar");
+  // =======================
+  progress.value = document.getElementById("progress");
+  slider.value = document.getElementById("slider");
+  const containerRect = progressBar.value?.getBoundingClientRect();
+  console.log(progressBar.value, "progressBarprogressBar");
+  console.log(progress.value, "progressprogress");
+  console.log(slider.value, "sliderslider");
+  // 事件监听
+  slider.value?.addEventListener("mousedown", startDragging);
+  document?.addEventListener("mousemove", handleDragging);
+  document?.addEventListener("mouseup", stopDragging);
 });
 let params = getUrlParams();
-let step = 1
+let step = 1;
 let last_step = 1;
 let setTimeoutHandle = null;
 let postTimeoutHandle = false;
 let drag_step = step;
 let currentEndFrame = step;
 let currentStartFrame = calculateStartFrame(currentEndFrame);
-let currentFrame = currentEndFrame; 
-let sim_code = "ai_and_v_coin6";
+let currentFrame = currentEndFrame;
+let sim_code = "ai_and_v_coin2";
 // let persona_names = document.getElementById('persona_name_list').innerHTML.split(",");
-let persona_names = []
+let persona_names = [];
 let spans = document
   .getElementById("persona_init_pos")
   ?.getElementsByTagName("span");
@@ -130,36 +145,36 @@ let cursors;
 let player;
 let showDebug = false;
 let position = [
-"arthur burton,61,24",
-"carlos gomez,40,35",
-"carmen ortiz,63,67",
-"francisco lopez,31,86",
-"latoya williams,18,14",
-"kiki,18,67",
-"cichengege,27,65",
-"frank,71,25",
-"mk,25,89",
-"tamara taylor,73,53",
-"jane moreno,70,57",
-"tom moreno,96,74",
-"rajiv patel,27,14",
-"chris gardner,33,86",
-"linda,83,47",
-"christopher gardner,132,71"
-]
-console.log("get url params", params);
+  "arthur burton,61,24",
+  "carlos gomez,40,35",
+  "carmen ortiz,63,67",
+  "francisco lopez,31,86",
+  "latoya williams,18,14",
+  "kiki,18,67",
+  "cichengege,27,65",
+  "frank,71,25",
+  "mk,25,89",
+  "tamara taylor,73,53",
+  "jane moreno,70,57",
+  "tom moreno,96,74",
+  "rajiv patel,27,14",
+  "chris gardner,33,86",
+  "linda,83,47",
+  "christopher gardner,132,71",
+];
+// console.log("get url params", params);
 // Persona related variables. This should have the name of the persona as its
 // keys, and the instances of the Persona class as the values.
 var spawn_tile_loc = {};
 for (var i = 0; i < position.length; i++) {
-	  let x = position[i].split(",");
-		persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])]
+  let x = position[i].split(",");
+  persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
 }
 
-for (let key in persona_names){
-  spawn_tile_loc[key] = persona_names[key] ;
+for (let key in persona_names) {
+  spawn_tile_loc[key] = persona_names[key];
 }
-console.log(spawn_tile_loc);
+// console.log(spawn_tile_loc);
 let lastTime = 0;
 var personas = {};
 var pronunciatios = {};
@@ -335,7 +350,7 @@ function preload() {
     // ===============================
     key = key.replace(" ", "_");
     key = key.toLowerCase();
-    console.log(`assets/characters/town/profile/${key}.png`, "");
+    // console.log(`assets/characters/town/profile/${key}.png`, "");
     this.load.atlas(
       key,
       `assets/characters/town/profile/${key}.png`,
@@ -346,7 +361,7 @@ function preload() {
 
 function create() {
   const map = this.make.tilemap({ key: "map" });
-  console.log(map, "addTilesetImage");
+  // console.log(map, "addTilesetImage");
   // Joon: Logging map is really helpful for debugging here:
   //       console.log(map);
 
@@ -624,9 +639,9 @@ function create() {
   const anims = this.anims;
   for (let i = 0; i < Object.keys(persona_names).length; i++) {
     // ===========================================================
-    // let persona_name = Object.keys(persona_names)[i];
-    let persona_name = persona_names[i];
-
+    let persona_name = Object.keys(persona_names)[i];
+    // let persona_name = persona_names[i];
+    // console.log(persona_name,"persona_namepersona_namepersona_namepersona_namepersona_namepersona_name");
     let left_walk_name = persona_name + "-left-walk";
     let right_walk_name = persona_name + "-right-walk";
     let down_walk_name = persona_name + "-down-walk";
@@ -687,7 +702,7 @@ function create() {
   const minZoom = 0.3; // minimal scaling
   const maxZoom = 3; // maximum scale
   // 正常播放音频
- 
+
   this.input.keyboard.on("keydown-Z", () => {
     const newZoom = this.cameras.main.zoom * 1.1;
     this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
@@ -1074,18 +1089,6 @@ var pause_button = document.getElementById("pause_button");
 
 let isDragging = false;
 
-// 初始化进度条
-// const progressBar = document.getElementById("progress-bar");
-// =======================
-const progress = document.getElementById("progress");
-const slider = document.getElementById("slider");
-// const containerRect = progressBar?.getBoundingClientRect();
-
-// 事件监听
-slider?.addEventListener("mousedown", startDragging);
-document?.addEventListener("mousemove", handleDragging);
-document?.addEventListener("mouseup", stopDragging);
-
 function calculateStartFrame(endFrame) {
   let startFrame = endFrame - 4000;
   return startFrame < 1 ? 1 : startFrame;
@@ -1123,8 +1126,8 @@ function updateProgress(clientX) {
   currentFrame =
     currentStartFrame + (percent / 100) * (currentEndFrame - currentStartFrame);
   // console.log("currentFrame",currentFrame)
-  progress && (progress.style.width = `${percent}%`);
-  slider.style.left = `calc(${percent}% - 8px)`;
+  progress.value && (progress.value.style.width = `${percent}%`);
+  slider.value && (slider.value.style.left = `calc(${percent}% - 8px)`);
   document.getElementById("current-frame") &&
     (document.getElementById("current-frame").textContent =
       Math.floor(currentFrame));
@@ -1156,8 +1159,8 @@ function changeProgressBarToEnd(endFranme) {
         (currentEndFrame - currentStartFrame)) *
       100;
   }
-  progress && (progress.style.width = `${percent}%`);
-  slider && (slider.style.left = `calc(${percent}% - 8px)`);
+  progress.value && (progress.value.style.width = `${percent}%`);
+  slider.value && (slider.value.style.left = `calc(${percent}% - 8px)`);
   updateFramesDisplay();
 }
 changeProgressBarToEnd(currentEndFrame);
@@ -1257,8 +1260,8 @@ function update_story() {
     }
   });
   document.getElementById("world_event").innerHTML = update_content;
-  currentEndFrame = all_user_data.step;
-  updateFramesDisplay();
+  // currentEndFrame = all_user_data.step;
+  // updateFramesDisplay();
 }
 function update_user_info() {
   let scheduleDom = document.getElementById("character_schedule");
@@ -1298,9 +1301,8 @@ function switchTab(tabName) {
     button.classList.remove("active");
   });
 
-  const tabElement = document.querySelector(
-    `[onclick="switchTab('${tabName}')"]`
-  );
+  const tabElement = document.querySelector(`[data-tab="${tabName}"]`);
+  console.log(tabName, tabElement, "tabElementtabElementtabElement");
   if (tabElement) {
     tabElement.classList.add("active");
   }

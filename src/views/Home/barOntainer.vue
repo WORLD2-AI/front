@@ -105,6 +105,7 @@ import { ref, reactive } from "vue";
 }
 
 .frame-info {
+  color: #fff;
   display: flex;
   justify-content: space-between;
   margin-top: 35px;

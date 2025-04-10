@@ -1,15 +1,15 @@
 import axios from "axios";
 
 // 配置axios的基地址，根据你的服务器地址进行设置
-const API_BASE_URL = "http://192.168.1.6:5000/login";
+// const API_BASE_URL = "http://localhost:5173/login";
 
 // 创建axios实例
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: "/",
   timeout: 5000, // 请求超时时间
 });
 const axiosInstanceTicket = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: "/",
   timeout: 1000, // 请求超时时间
 });
 // 添加请求拦截器

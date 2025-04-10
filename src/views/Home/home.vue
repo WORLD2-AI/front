@@ -5,10 +5,10 @@
         >Header
         <ul class="container">
           <li>
-            <img class="media-object" src="/logo.jpg" alt="" />
+            <img class="media-object" src="/static/logo.jpg" alt="" />
           </li>
           <li class="navbar-nav">
-            <img src="/github.jpg" alt="" />
+            <img src="/static/github.jpg" alt="" />
             <a href="/login">Login In</a>
           </li>
         </ul>

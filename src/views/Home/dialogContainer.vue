@@ -4,7 +4,7 @@
       <div class="dialog-header">
         <a
           style="margin-left: 5px; margin-top: 2px; color: #c9a769"
-          @click="display_main_box()"
+          @click="props.displayMainBox()"
         >
           ◀
         </a>
@@ -28,13 +28,25 @@
 
       <div class="tab-container">
         <div class="tabs">
-          <button class="tab-button active" @click="switchTab('schedule')">
+          <button
+            data-tab="schedule"
+            class="tab-button active"
+            @click="props.switchTab('schedule')"
+          >
             Daily
           </button>
-          <button class="tab-button" @click="switchTab('dialogue')">
+          <button
+            data-tab="dialogue"
+            class="tab-button"
+            @click="props.switchTab('dialogue')"
+          >
             Chat
           </button>
-          <button class="tab-button" @click="switchTab('attributes')">
+          <button
+            data-tab="attributes"
+            class="tab-button"
+            @click="props.switchTab('attributes')"
+          >
             Character
           </button>
         </div>
@@ -90,21 +102,16 @@
     <div class="dialog-container" id="main_box">
       <div class="header-section">
         <div class="character-info" style="display: flex">
-          <!-- {% for p_name, p_name_os in persona_names %} -->
-          <template v-for="p_name in props.persona_names" :key="p_name">
+          <div v-for="keyPairs in personNames" :key="keyPairs">
             <div
-              :id="
-                () => {
-                  return 'avatar_' + persona_names;
-                }
-              "
+              :id="'avatar_' + keyPairs['value']"
               style="
                 display: inline-block;
-                width: 100px;
+                min-width: 100px;
                 text-align: center;
                 margin-left: 10px;
               "
-              @click="display_game_dialog(p_name)"
+              @click="props.displayGameDialog(keyPairs['key'])"
             >
               <div
                 style="
@@ -114,20 +121,21 @@
                   overflow: hidden;
                 "
               >
-                {{ p_name }}
+                {{ keyPairs["key"] }}
               </div>
               <div style="margin: 0 auto">
                 <img
                   class="media-object"
                   :src="
-                    () => 'assets/characters/town/profile/' + p_name + '.png'
+                    'assets/characters/town/profile/' +
+                    keyPairs['value'] +
+                    '.png'
                   "
                   style="width: 2em"
                 />
               </div>
             </div>
-          </template>
-          <!-- {% endfor %} -->
+          </div>
         </div>
       </div>
 
@@ -141,11 +149,34 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive, defineProps } from "vue";
+import { ref, reactive, computed } from "vue";
 const props = defineProps({
-  personaNames: Array,
+  personNames: {
+    type: Array,
+    required: true,
+  },
+  displayMainBox: {
+    type: Function,
+  },
+  displayGameDialog: {
+    type: Function,
+  },
+  switchTab: {
+    type: Function,
+  },
 });
-console.log(props.personaNames);
+
+const personNames = computed(() => {
+  let res = [];
+  for (let key in props.personNames) {
+    let value = key.toLowerCase();
+    value = key.replace(" ", "_");
+
+    res.push({ key, value });
+  }
+
+  return res;
+});
 </script>
 
 <style lang="scss" scoped>

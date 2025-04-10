@@ -21,8 +21,7 @@ import { ref, reactive } from "vue";
 .bg {
   width: 100%;
   height: 100vh;
-  background: red;
-  background-image: url("loginBg.jpg");
+  background-image: url("/static/loginBg.jpg");
   background-size: cover;
   .content {
     width: 100%;
@@ -45,7 +44,7 @@ import { ref, reactive } from "vue";
         .leftCard {
           width: 50%;
           height: 100%;
-          background-image: url("loginBg.jpg");
+          background-image: url("/static/loginBg.jpg");
           background-size: cover;
         }
         .rightCard {
