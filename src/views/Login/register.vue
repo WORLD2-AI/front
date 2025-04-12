@@ -1,23 +1,17 @@
 <template>
   <div class="loginView">
     <div class="title">Register</div>
-    <el-form
-      ref="elForm"
-      :model="formData"
-      :rules="rules"
-      size="medium"
-      label-width="0px"
-    >
+    <el-form ref="elFormRef" :model="formData" :rules="rules" label-width="0px">
       <div class="phone">
         <el-form-item label="" prop="username">
           <el-input
-            v-model="formData.username"
+            v-model.number="formData.username"
             placeholder="Please enter your account number"
             clearable
             prefix-icon="el-icon-user-solid"
             :style="{ width: '100%' }"
           >
-            <template #prefix>+86</template>
+            <!-- <template #prefix>+86</template> -->
           </el-input>
         </el-form-item>
       </div>
@@ -39,14 +33,13 @@
       </el-form-item>
       <el-form-item>
         <el-button class="loginBtn" type="primary" round @click="submitForm"
-          >Login</el-button
+          >register</el-button
         >
-        <!-- <el-button @click="resetForm">注册</el-button> -->
       </el-form-item>
     </el-form>
     <div class="bottom">
       Existing accounts immediately&nbsp;
-      <a @click="router.push('/login')">login</a>
+      <a @click="goLogin">login</a>
     </div>
   </div>
 </template>
@@ -55,10 +48,12 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../../store/user.ts";
 import user from "../../api/user.js";
+import { ElNotification } from "element-plus";
 const router = useRouter();
 const remember = ref(false);
+const elFormRef = ref();
 const formData = ref({
-  username: "",
+  username: null,
   password: "",
 });
 const rules = ref({
@@ -68,7 +63,6 @@ const rules = ref({
       message: "username is required",
       trigger: "blur",
     },
-    { type: "number", message: "username must be a number" },
   ],
   password: [
     {
@@ -78,59 +72,39 @@ const rules = ref({
     },
   ],
 });
-const goRegister = () => {
-  router.push("/register");
-  console.log(router, "goRegister");
+const goLogin = () => {
+  router.push("/login");
 };
 const submitForm = () => {
-  if (this.formData.username === "" || this.formData.password === "") {
-    this.$message.error("账号或密码不能为空");
-    return;
-  }
-  user.register(this.formData).then((res) => {
-    console.log(res);
-    if (res.status == 200 && res.data) {
-      this.$message.success("注册");
-      // useUserStore().login(this.formData.username, this.formData.password);
-      setTimeout(() => {
-        this.$router.push("/register");
-      }, 500);
+  elFormRef.value?.validate((valid) => {
+    console.log(valid, "valid");
+    if (valid) {
+      user
+        .register(formData.value)
+        .then((res) => {
+          if (res.status == 200 && res.data) {
+            ElNotification({
+              title: "success",
+              message: "register Successful",
+              type: "success",
+            });
+
+            setTimeout(() => {
+              router.push("/login");
+            }, 500);
+          }
+        })
+        .catch((req) => {
+          ElNotification({
+            title: "prompt",
+            message: req?.data,
+            type: "warning",
+          });
+        });
+    } else {
     }
   });
 };
-const resetForm = () => {
-  // this.$refs['elForm'].resetFields()
-  this.$router.push("/register");
-};
-// export default {
-//   components: {},
-//   data() {
-//     return {
-//       remember: false,
-//       formData: {
-//         username: "",
-//         password: "",
-//       },
-//       rules: {
-//         username: [
-//           {
-//             required: true,
-//             message: "请输入账号",
-//             trigger: "blur",
-//           },
-//         ],
-//         password: [
-//           {
-//             required: true,
-//             message: "请输入密码",
-//             trigger: "blur",
-//           },
-//         ],
-//       },
-//     };
-//   },
-//   methods: {},
-// };
 </script>
 <style lang="scss" scoped>
 .loginView {

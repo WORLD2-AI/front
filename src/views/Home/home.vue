@@ -1,15 +1,14 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header style="background: #000"
-        >Header
+      <el-header style="background: #000">
         <ul class="container">
           <li>
             <img class="media-object" src="/static/logo.jpg" alt="" />
           </li>
           <li class="navbar-nav">
             <img src="/static/github.jpg" alt="" />
-            <a href="/login">Login In</a>
+            <a href="/">Login In</a>
           </li>
         </ul>
       </el-header>

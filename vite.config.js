@@ -16,7 +16,7 @@ export default defineConfig({
       },
     },
   },
-  // 开启代理日志
+  // Enabling Agent Logging
   server: {
     proxy: {
       "/api": {
@@ -25,13 +25,13 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, "") + "/",
         configure: (proxy, options) => {
           proxy.on("error", (err) => {
-            console.error("Assets代理错误:", err);
+            console.error("Assets agent error:", err);
           });
           proxy.on("proxyReq", (proxyReq) => {
-            console.log("Assets代理请求:", proxyReq.path);
+            console.log("Assets proxy request:", proxyReq.path);
           });
           proxy.on("proxyRes", (proxyRes) => {
-            console.log("Assets代理响应状态:", proxyRes.statusCode);
+            console.log("Assets Agent Response Status:", proxyRes.statusCode);
           });
         },
       },
@@ -41,39 +41,32 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/assets/, "/static/assets"),
         configure: (proxy, options) => {
           proxy.on("error", (err) => {
-            console.error("Assets代理错误:", err);
+            console.error("Assets agent error:", err);
           });
           proxy.on("proxyReq", (proxyReq) => {
-            console.log("Assets代理请求:", proxyReq.path);
+            console.log("Assets proxy request:", proxyReq.path);
           });
           proxy.on("proxyRes", (proxyRes) => {
-            console.log("Assets代理响应状态:", proxyRes.statusCode);
+            console.log("Assets Agent Response Status:", proxyRes.statusCode);
           });
         },
       },
       "/login": {
-        target: "http://192.168.1.6:5000",
+        target: "http://192.168.1.23:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/login/, "/"),
         configure: (proxy, options) => {
           proxy.on("error", (err) => {
-            console.error("login代理错误:", err);
+            console.error("login agent error:", err);
           });
           proxy.on("proxyReq", (proxyReq) => {
-            console.log("login代理请求:", proxyReq.path);
+            console.log("login proxy request:", proxyReq.path);
           });
           proxy.on("proxyRes", (proxyRes) => {
-            console.log("login代理响应状态:", proxyRes.statusCode);
+            console.log("login Agent Response Status:", proxyRes.statusCode);
           });
         },
       },
     },
   },
 });
-// import { defineConfig } from 'vite'
-// import vue from '@vitejs/plugin-vue'
-
-// // https://vite.dev/config/
-// export default defineConfig({
-//   plugins: [vue()],
-// })

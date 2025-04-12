@@ -18,21 +18,33 @@ function register(userData) {
         "Content-Type": "multipart/form-data", // 明确设置Content-Type
       },
     })
-    .then((res) => {
-      console.log(res, "resres");
-    })
-    .catch((req) => {
-      console.log(req, "reqreq");
-      ElNotification({
-        title: "提示",
-        message: req.data,
-        type: "warning",
-      });
-    });
+    // .then((res) => {
+    //   console.log(res, "resres");
+    // })
+    // .catch((req) => {
+    //   console.log(req, "reqreq");
+    //   ElNotification({
+    //     title: "提示",
+    //     message: req.data,
+    //     type: "warning",
+    //   });
+    // });
 }
 function login(userData) {
-  const url = "/check/user/login"; // 假设这是登录用户的服务器端点
-  return axiosInstance.post(url, userData);
+  const url = "/login/login"; // 假设这是登录用户的服务器端点
+  const formData = new FormData();
+  for (const key in userData) {
+    if (Object.hasOwnProperty.call(userData, key)) {
+      const element = userData[key];
+      formData.append(key, element);
+    }
+  }
+  return axiosInstance
+    .post(url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data", // 明确设置Content-Type
+      },
+    })
 }
 
 function logout(userData) {
@@ -43,9 +55,15 @@ function profile(userData) {
   const url = `/login/profile`;
   return axiosInstance.get(url, userData);
 }
+function twitter() {
+  const url = `/login/twitter`;
+  console.log('/login/twitter');
+  return axiosInstance.get(url);
+}
 export default {
   register,
   login,
   logout,
   profile,
+  twitter
 };

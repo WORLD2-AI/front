@@ -1,12 +1,12 @@
 import staticRoutes from "./router_static";
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory,createWebHashHistory } from "vue-router";
 const modules = import.meta.glob("../views/**/*.vue");
 // console.log(modules,"modules");
 
 // console.log(staticRoutes);
 export default function () {
   return createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes: staticRoutes,
     // files,
   });

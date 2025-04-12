@@ -30,7 +30,7 @@
   </div>
 </template>
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import Phaser from "phaser";
 import DialogContainer from "./dialogContainer.vue";
 
@@ -60,12 +60,11 @@ const progress = ref();
 const slider = ref();
 onMounted(() => {
   gameContainerDom.value = document.getElementById("game-container");
-
   config.value = {
     type: Phaser.AUTO,
     fps: {
-      target: 45, // 设置目标帧率为 8 FPS
-      forceSetTimeOut: true, // 确保帧率稳定（适用于低帧率场景）
+      target: 45,
+      forceSetTimeOut: true,
     },
     width: 1200,
     height: 800,
@@ -86,19 +85,28 @@ onMounted(() => {
   };
   game.value = new Phaser.Game(config.value);
 
-  // 初始化进度条
+  // Initializing the progress bar
   progressBar.value = document.getElementById("progress-bar");
   // =======================
   progress.value = document.getElementById("progress");
   slider.value = document.getElementById("slider");
   const containerRect = progressBar.value?.getBoundingClientRect();
-  console.log(progressBar.value, "progressBarprogressBar");
-  console.log(progress.value, "progressprogress");
-  console.log(slider.value, "sliderslider");
-  // 事件监听
+  // event listener
   slider.value?.addEventListener("mousedown", startDragging);
   document?.addEventListener("mousemove", handleDragging);
   document?.addEventListener("mouseup", stopDragging);
+});
+onUnmounted(() => {
+  if (game.value) {
+    game.value.destroy(true);
+  }
+  // Also removed when the game is destroyed
+  game.value.events.on("destroy", () => {
+    slider.value?.removeEventListener("mousedown", startDragging);
+    document?.removeEventListener("mousemove", handleDragging);
+    document?.removeEventListener("mouseup", stopDragging);
+  });
+  game.value = null;
 });
 let params = getUrlParams();
 let step = 1;
@@ -717,7 +725,6 @@ function create() {
   this.input.on("pointerdown", (pointer) => {
     if (pointer.leftButtonDown()) {
       isDraggingmMap = true;
-      console.log("pointer", pointer.x, pointer.y);
       startPointerPos.set(pointer.x, pointer.y);
     }
   });
@@ -1057,10 +1064,10 @@ function splitAndWrap(text, n = 7) {
   return result.join("\n");
 }
 /**
- * 格式化人物名字
+ * Formatting character names
  */
 function formatPersonName(origin_name) {
-  // 人物名称处理正则
+  // Character name handling rules
   let person_name_inital_reg = new RegExp(/(\p{L}{1})\p{L}+/, "gu");
   let initials = [...origin_name.matchAll(person_name_inital_reg)] || [];
   return (
@@ -1259,7 +1266,8 @@ function update_story() {
         .replace("#time#", element.time);
     }
   });
-  document.getElementById("world_event").innerHTML = update_content;
+  let worldEvent = document.getElementById("world_event");
+  worldEvent ? (worldEvent.innerHTML = update_content) : "";
   // currentEndFrame = all_user_data.step;
   // updateFramesDisplay();
 }

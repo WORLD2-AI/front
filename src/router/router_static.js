@@ -2,33 +2,39 @@ import LoginLayout from "../views/Login/LoginLayout.vue";
 import Login from "../views/Login/login.vue";
 import Register from "../views/Login/register.vue";
 import Home from "../views/Home/home.vue";
+import waitlistSignup from "../views/waitlistSignup/index.vue";
 export default [
   {
     path: "/",
-    name: "登录",
+    name: "Login",
     component: LoginLayout,
-    redirect: "/login",
+    redirect: "/waitlistSignup",
     meta: {
-      title: "登录",
-      icon: "chart",
+      title: "Login",
+      icon: "Login",
       affix: false,
     },
     children: [
       {
         path: "/login",
-        name: "登录页",
+        name: "LoginPage",
         component: Login,
       },
       {
         path: "/register",
-        name: "注册页",
+        name: "RegisterPage",
         component: Register,
       },
     ],
   },
   {
+    path: "/waitlistSignup",
+    name: "WaitingPage",
+    component: waitlistSignup,
+  },
+  {
     path: "/home",
-    name: "首页",
+    name: "HomePage",
     component: Home,
   },
 ];
