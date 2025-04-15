@@ -97,7 +97,7 @@ const strengthLevels = [
   { text: "Exceptional", minScore: 90, class: "level-5" },
 ];
 const activeLevel = ref(0);
-const commonPasswords = ["123456", "password", "qwerty", "111111"]; // 常见弱密码列表
+const commonPasswords = ["123456", "password", "qwerty", "111111"]; // List of common weak passwords
 const strengthFeedback = computed(() => {
   return strengthLevels[activeLevel.value].text;
 });
