@@ -7,8 +7,38 @@
             <img class="media-object" src="/static/logo.jpg" alt="" />
           </li>
           <li class="navbar-nav">
-            <img src="/static/github.jpg" alt="" />
-            <a href="/">Login In</a>
+            <template v-if="loginStatus">
+              <!-- <img src="/static/github.jpg" alt="" /> -->
+              <el-dropdown @command="handleCommand" trigger="click">
+                <div class="user-avatar">
+                  <el-avatar :size="40" :src="user.avatar" />
+                  <span class="user-name">{{ user.name }}</span>
+                  <el-icon class="el-icon--right">
+                    <arrow-down />
+                  </el-icon>
+                </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="profile">
+                      <el-icon><User /></el-icon>
+                      <span>Profile</span>
+                    </el-dropdown-item>
+                    <el-dropdown-item command="settings">
+                      <el-icon><Setting /></el-icon>
+                      <span>Settings</span>
+                    </el-dropdown-item>
+                    <el-dropdown-item divided command="logout">
+                      <el-icon><SwitchButton /></el-icon>
+                      <span>Logout</span>
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+            <template>
+              <img src="/static/github.jpg" alt="" />
+              <a href="/">Login In</a>
+            </template>
           </li>
         </ul>
       </el-header>
@@ -21,8 +51,37 @@
 </template>
 <script setup>
 import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
 import Map from "./Map.vue";
 import BarOntainer from "./barOntainer.vue";
+const router = useRouter();
+const loginStatus = true;
+import {
+  ArrowDown,
+  User,
+  Setting,
+  SwitchButton,
+} from "@element-plus/icons-vue";
+const user = reactive({
+  name: "Danny",
+  avatar: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+});
+const handleCommand = (command) => {
+  switch (command) {
+    case "profile":
+      router.push("/profile");
+      break;
+    case "settings":
+      router.push("/settings");
+      break;
+    case "logout":
+      logout();
+      break;
+  }
+};
+const logout = () => {
+  alert("logout");
+};
 </script>
 
 <style lang="scss" scoped>
@@ -31,6 +90,36 @@ import BarOntainer from "./barOntainer.vue";
   height: 100vh;
   .el-header {
     position: relative;
+
+    .user-info {
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+    }
+
+    .user-name {
+      margin: 0 10px;
+      color: white;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      background-color: #f5f7fa;
+    }
+
+    .el-dropdown-menu__item {
+      display: flex;
+      align-items: center;
+    }
+
+    .el-dropdown-menu__item .el-icon {
+      margin-right: 8px;
+    }
     &:hover {
       &::after {
         opacity: 1;

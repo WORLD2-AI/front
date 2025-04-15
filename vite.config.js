@@ -52,7 +52,7 @@ export default defineConfig({
         },
       },
       "/login": {
-        target: "http://192.168.1.23:5000",
+        target: "http://192.168.1.6:5000",//http://192.168.1.23:5000/
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/login/, "/"),
         configure: (proxy, options) => {

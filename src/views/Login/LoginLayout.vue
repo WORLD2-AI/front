@@ -3,11 +3,7 @@
     <div class="content">
       <div class="contmark">
         <div class="card">
-          <div class="rightCard">
-            <router-view></router-view>
-          </div>
-          <div class="leftCard"></div>
-          <div class="viewCont"></div>
+          <router-view></router-view>
         </div>
       </div>
     </div>
@@ -21,7 +17,7 @@ import { ref, reactive } from "vue";
 .bg {
   width: 100%;
   height: 100vh;
-  background: #000;
+  background-image: url("static/loginBg.jpg");
   background-size: cover;
   .content {
     width: 100%;
@@ -34,20 +30,20 @@ import { ref, reactive } from "vue";
       justify-content: center;
       align-items: center;
       .card {
-        width: 60%;
+        background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+        backdrop-filter: blur(1px); /* 关键属性 - 背景模糊 */
+        padding: 20px;
+        box-shadow: 0 0px 25px rgba(255, 255, 255, 0.8);
+        width: 800px;
         height: 65%;
-        border: 1px solid #6c6968;
         /* background: red; */
-        border-radius: 20px;
+        border-radius: 25px;
         /* padding: 20px; */
         overflow: hidden;
         display: flex;
         .leftCard {
           width: 50%;
           height: 100%;
-          background-image: url("/static/BG.png");
-          background-size: 100% 100%;
-          background-repeat: no-repeat;
         }
         .rightCard {
           padding: 20px;
