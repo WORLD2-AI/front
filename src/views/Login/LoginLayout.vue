@@ -3,10 +3,10 @@
     <div class="content">
       <div class="contmark">
         <div class="card">
-          <div class="leftCard"></div>
           <div class="rightCard">
             <router-view></router-view>
           </div>
+          <div class="leftCard"></div>
           <div class="viewCont"></div>
         </div>
       </div>
@@ -21,7 +21,7 @@ import { ref, reactive } from "vue";
 .bg {
   width: 100%;
   height: 100vh;
-  background-image: url("/static/loginBg.jpg");
+  background: #000;
   background-size: cover;
   .content {
     width: 100%;
@@ -35,7 +35,8 @@ import { ref, reactive } from "vue";
       align-items: center;
       .card {
         width: 60%;
-        height: 75%;
+        height: 65%;
+        border: 1px solid #6c6968;
         /* background: red; */
         border-radius: 20px;
         /* padding: 20px; */
@@ -44,14 +45,16 @@ import { ref, reactive } from "vue";
         .leftCard {
           width: 50%;
           height: 100%;
-          background-image: url("/static/loginBg.jpg");
-          background-size: cover;
+          background-image: url("/static/BG.png");
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
         }
         .rightCard {
+          padding: 20px;
           flex-shrink: 0;
           width: 50%;
           height: 100%;
-          background: #fff;
+          background: #000;
         }
       }
     }

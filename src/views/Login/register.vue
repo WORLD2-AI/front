@@ -1,9 +1,15 @@
 <template>
   <div class="loginView">
     <div class="title">Register</div>
-    <el-form ref="elFormRef" :model="formData" :rules="rules" label-width="0px">
+    <el-form
+      ref="elFormRef"
+      label-position="top"
+      :model="formData"
+      :rules="rules"
+      label-width="0px"
+    >
       <div class="phone">
-        <el-form-item label="" prop="username">
+        <el-form-item label="Username" prop="username">
           <el-input
             v-model.number="formData.username"
             placeholder="Please enter your account number"
@@ -15,7 +21,7 @@
           </el-input>
         </el-form-item>
       </div>
-      <el-form-item label="" prop="password">
+      <el-form-item label="Password" prop="password">
         <div class="password">
           <el-input
             v-model="formData.password"
@@ -29,7 +35,14 @@
         </div>
       </el-form-item>
       <el-form-item>
-        <el-checkbox v-model="remember" label="memorize passwords" />
+        <div class="checkout">
+          <el-checkbox v-model="remember" label="memorize passwords" />
+
+          <span>
+            immediately&nbsp;
+            <a @click="goLogin">login</a>
+          </span>
+        </div>
       </el-form-item>
       <el-form-item>
         <el-button class="loginBtn" type="primary" round @click="submitForm"
@@ -37,10 +50,7 @@
         >
       </el-form-item>
     </el-form>
-    <div class="bottom">
-      Existing accounts immediately&nbsp;
-      <a @click="goLogin">login</a>
-    </div>
+    <!-- <div class="bottom">Existing accounts</div> -->
   </div>
 </template>
 <script setup>
@@ -108,23 +118,36 @@ const submitForm = () => {
 </script>
 <style lang="scss" scoped>
 .loginView {
+  background: #000;
+  color: #fff;
   width: 100%;
   height: 100%;
   padding: 50px 20px;
   display: flex;
   flex-direction: column;
   .title {
-    color: rgb(0, 196, 175);
-    font-size: 20px;
+    font-size: 50px;
     font-weight: 600;
-    text-align: center;
     margin-bottom: 30px;
   }
-  .el-input__wrapper {
-    border-radius: 20px;
+  &:deep(.el-input__wrapper) {
+    border-radius: 40px;
+  }
+  .el-form-item {
+    &:deep(.el-checkbox__label) {
+      color: #fff;
+    }
+    &:deep(.el-form-item__label) {
+      color: #fff;
+      font-size: 20px;
+      &::before {
+        content: "" !important;
+      }
+    }
   }
   .phone {
     width: 100%;
+
     .el-input__wrapper {
       border-radius: 20px;
     }
@@ -136,18 +159,30 @@ const submitForm = () => {
     }
   }
   .el-button {
-    width: 100%;
-    height: 32px;
-    background-color: rgb(0, 196, 175);
-    color: #fff;
-    font-size: 17px;
-    &:hover {
+    width: 75%;
+    height: 50px;
+    letter-spacing: 5px;
+    font-weight: 600;
+    background-color: #fff;
+    color: #000;
+    font-size: 30px;
+    border-radius: 60px;
+    /* &:hover {
       background-color: rgba(0, 196, 175, 0.5);
-    }
+    } */
+  }
+  .checkout {
+    width: 100%;
+    display: flex;
+    font-size: 12px;
+    justify-content: space-between;
+  }
+  .loginBtn {
+    margin-top: 20px;
   }
   .bottom {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     font-size: 14px;
     padding: 0 15px;
     a {
