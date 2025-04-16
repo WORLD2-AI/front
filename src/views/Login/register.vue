@@ -119,25 +119,25 @@ const hasSpecialChar = computed(() => {
 const checkPasswordStrength = () => {
   let score = 0;
   let password = formData.value.password;
-  // 长度评分
+  // Length rating
   score += Math.min(password.length * 3, 30); // 最多30分
 
-  // 字符多样性评分
+  // Character diversity rating
   if (/[A-Z]/.test(password)) score += 10;
   if (/[a-z]/.test(password)) score += 10;
   if (/[0-9]/.test(password)) score += 10;
   if (/[^A-Za-z0-9]/.test(password)) score += 15;
 
-  // 重复字符和连续字符惩罚
+  // Punishment for repeated and consecutive characters
   if (/(.)\1{2,}/.test(password)) score -= 15;
   if (/(123|abc|qwe|asd|zxc)/i.test(password)) score -= 10;
 
-  // 常见密码检查
+  // Common password checks
   if (commonPasswords.includes(password.toLowerCase())) {
     score = 0;
   }
 
-  // 确定强度等级
+  // Determine strength level
   activeLevel.value = strengthLevels.reduce((acc, level, index) => {
     return score >= level.minScore ? index : acc;
   }, 0);
@@ -285,20 +285,19 @@ const submitForm = () => {
 
     .active-1 {
       background: #ff4d4d;
-    } /* 非常弱 */
+    }
     .active-2 {
       background: #ff9966;
-    } /* 弱 */
+    }
     .active-3 {
       background: #ffcc00;
-    } /* 中等 */
+    }
     .active-4 {
       background: #99cc33;
-    } /* 强 */
+    }
     .active-5 {
       background: #22bb33;
-    } /* 非常强 */
-
+    }
     .strength-feedback {
       font-size: 14px;
       font-weight: bold;
@@ -354,8 +353,8 @@ const submitForm = () => {
     font-size: 20px;
     border-radius: 60px;
     border: none;
-    background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-    backdrop-filter: blur(1px); /* 关键属性 - 背景模糊 */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(1px);
     margin: 10px auto;
     &:hover {
       background-color: rgb(52, 48, 48);
