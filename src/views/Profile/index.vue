@@ -107,9 +107,18 @@
           <!-- Role setting section -->
           <div v-show="activeMenu === 'roles'" class="roles-section">
             <el-table :data="roles" style="width: 100%">
-              <el-table-column prop="name" label="name" width="180" />
-              <el-table-column prop="level" label="level" width="100" />
-              <el-table-column prop="createTime" label="createTime" />
+              <el-table-column
+                prop="first_name"
+                label="firstName"
+                width="180"
+              />
+              <el-table-column prop="last_name" label="lastName" width="180" />
+              <el-table-column prop="age" label="age" width="100" />
+              <el-table-column prop="sex" label="sex" />
+              <el-table-column prop="innate" label="innate" />
+              <el-table-column prop="learned" label="learned" />
+              <el-table-column prop="currently" label="currently" />
+              <el-table-column prop="lifestyle" label="lifestyle" />
               <el-table-column label="actions">
                 <template #default="scope">
                   <el-button size="small" @click="editRole(scope.row)"
@@ -211,26 +220,26 @@
 
     <!-- Character Editing Dialogue Box -->
     <el-dialog v-model="roleDialogVisible" :title="roleDialogTitle" width="40%">
-      <el-form :model="roleForm" label-width="100px">
-        <el-form-item label="first_name">
+      <el-form ref="roleFormRef" :model="roleForm" label-width="100px">
+        <el-form-item label="first_name" prop="first_name">
           <el-input
             v-model="roleForm.first_name"
             placeholder="Please enter the role first_name"
           />
         </el-form-item>
-        <el-form-item label="last_name">
+        <el-form-item label="last_name" prop="last_name">
           <el-input
             v-model="roleForm.last_name"
             placeholder="Please enter the role last_name"
           />
         </el-form-item>
-        <el-form-item label="age" :min="1" :max="120">
+        <el-form-item label="age" prop="age" :min="1" :max="120">
           <el-input
             v-model.number="roleForm.age"
             placeholder="Please enter the role age"
           />
         </el-form-item>
-        <el-form-item label="sex">
+        <el-form-item label="sex" prop="sex">
           <el-select
             v-model="roleForm.sex"
             placeholder="Please select the role sex"
@@ -241,69 +250,33 @@
               v-for="item in sexOptions"
               :key="item.value"
               :label="item.label"
-              :value="item.value"
+              :value="item.label"
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="learned">
-          <el-select
+        <el-form-item label="innate" prop="innate">
+          <el-input
+            type="text"
+            v-model="roleForm.innate"
+            placeholder="Please enter the role innate"
+          />
+        </el-form-item>
+        <el-form-item label="learned" prop="learned">
+          <el-input
+            type="text"
             v-model="roleForm.learned"
-            multiple
-            filterable
-            allow-create
-            default-first-option
-            :reserve-keyword="false"
-            placeholder="Choose tags for your article"
-            style="width: 240px"
-          >
-            <el-option
-              v-for="item in learnedOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-            <template #footer>
-              <el-button
-                v-if="!isAdding"
-                text
-                bg
-                size="small"
-                @click="onAddOption"
-              >
-                Add an option
-              </el-button>
-              <template v-else>
-                <el-input
-                  v-model="optionName"
-                  class="option-input"
-                  placeholder="input option name"
-                  size="small"
-                />
-                <el-button type="primary" size="small" @click="onConfirm">
-                  confirm
-                </el-button>
-                <el-button size="small" @click="clear">cancel</el-button>
-              </template>
-            </template>
-          </el-select>
+            placeholder="Please enter the role learned"
+          />
         </el-form-item>
-        <el-form-item label="currently">
+        <el-form-item label="currently" prop="currently">
           <el-input v-model="roleForm.currently" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="lifestyle">
-          <el-select
+        <el-form-item label="lifestyle" prop="lifestyle">
+          <el-input
+            type="text"
             v-model="roleForm.lifestyle"
-            placeholder="Please select the role lifestyle"
-            size="large"
-            style="width: 240px"
-          >
-            <el-option
-              v-for="item in lifestyleOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+            placeholder="Please enter the role lifestyle"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -330,7 +303,8 @@ import {
   Plus,
   ArrowRight,
 } from "@element-plus/icons-vue";
-
+import characters from "../../api/characters.js";
+import { onMounted } from "vue";
 // Role registration information
 let sexOptions = [
   {
@@ -346,34 +320,6 @@ let sexOptions = [
     value: 2,
   },
 ];
-let learnedOptions = ref([
-  {
-    label: "fishing",
-    value: 0,
-  },
-  {
-    label: "cooking",
-    value: 1,
-  },
-  {
-    label: "programming",
-    value: 2,
-  },
-]);
-let lifestyleOptions = ref([
-  {
-    label: "earlyRiser",
-    value: 0,
-  },
-  {
-    label: "Neutral",
-    value: 1,
-  },
-  {
-    label: "nightOwl",
-    value: 2,
-  },
-]);
 const isAdding = ref(false);
 const optionName = ref("");
 const onAddOption = () => {
@@ -411,30 +357,20 @@ const user = ref({
 });
 
 // rolesDate
-const roles = ref([
-  {
-    id: 1,
-    name: "administrators",
-    level: 99,
-    createTime: "2023-01-15",
-    description: "System administrator role",
-  },
-  {
-    id: 2,
-    name: "Ordinary users",
-    level: 1,
-    createTime: "2023-02-20",
-    description: "Ordinary user role",
-  },
-  {
-    id: 3,
-    name: "VIP Member",
-    level: 50,
-    createTime: "2023-03-10",
-    description: "VIP member role",
-  },
-]);
-
+const roles = ref([]);
+const roleFormRef = ref();
+const resetForm = () => {
+  if (!roleFormRef) return;
+  console.log(roleFormRef.value);
+  roleFormRef.value?.resetFields();
+  console.log("内容清除");
+};
+onMounted(() => {
+  characters.getRoles().then((res) => {
+    console.log(res.data);
+    roles.value = res.data.data;
+  });
+});
 // Current activation menu
 const activeMenu = ref("personal");
 
@@ -511,13 +447,9 @@ const saveAvatar = () => {
 
 const addRole = () => {
   isEditRole.value = false;
-  roleForm.value = {
-    id: null,
-    name: "",
-    level: 1,
-    description: "",
-  };
+
   roleDialogVisible.value = true;
+  resetForm();
 };
 
 const editRole = (role) => {
@@ -545,24 +477,37 @@ const deleteRole = (role) => {
 
 const saveRole = () => {
   console.log(roleForm.value);
+  console.log(isEditRole);
   if (isEditRole.value) {
     // Update Role
-    const index = roles.value.findIndex((r) => r.id === roleForm.value.id);
-    if (index !== -1) {
-      roles.value[index] = { ...roleForm.value };
-    }
+    // const index = roles.value.findIndex((r) => r.id === roleForm.value.id);
+    // if (index !== -1) {
+    //   roles.value[index] = { ...roleForm.value };
+    // }
     ElMessage.success("Role update successful");
   } else {
+    console.log(roleForm.value, "form");
     // New Role
-    const newRole = {
-      ...roleForm.value,
-      id: roles.value.length
-        ? Math.max(...roles.value.map((r) => r.id)) + 1
-        : 1,
-      createTime: new Date().toISOString().split("T")[0],
-    };
-    roles.value.push(newRole);
-    ElMessage.success("Role added successfully");
+    // const newRole = {
+    //   ...roleForm.value,
+    //   id: roles.value.length
+    //     ? Math.max(...roles.value.map((r) => r.id)) + 1
+    //     : 1,
+    //   createTime: new Date().toISOString().split("T")[0],
+    // };
+    // roles.value.push(newRole);
+    let newroleForm = roleForm.value;
+    let name = newroleForm.last_name + " " + newroleForm.first_name;
+    characters
+      .register({ ...newroleForm, name })
+      .then((res) => {
+        ElMessage.success("Role added successfully");
+        console.log(res);
+      })
+      .catch((req) => {
+        console.log(req);
+        ElMessage.error(req.message);
+      });
   }
   // roleDialogVisible.value = false;
 };

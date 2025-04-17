@@ -19,12 +19,13 @@
         </div>
       </div>
       <div class="col-md-4">
-        <DialogContainer
+        <!-- <DialogContainer
           :personNames="persona_names"
           :displayMainBox="display_main_box"
           :displayGameDialog="display_game_dialog"
           :switchTab="switchTab"
-        />
+        /> -->
+        <CharacterAttributes />
       </div>
     </div>
   </div>
@@ -32,7 +33,8 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import Phaser from "phaser";
-import DialogContainer from "./dialogContainer.vue";
+// import DialogContainer from "./dialogContainer.vue";
+import CharacterAttributes from "./characterAttributes.vue";
 
 /*
 	  Main resources:
@@ -79,7 +81,7 @@ onMounted(() => {
     scene: {
       preload: preload,
       create: create,
-      update: update,
+      // update: update,
     },
     scale: { zoom: 0.9 },
   };
@@ -961,18 +963,20 @@ function update(time, delta) {
         } else {
           fill_dialog_content = "<span>None</span>";
         }
-        document.getElementById("dialog_content").innerHTML =
-          fill_dialog_content;
-        document.getElementById("character_name").innerHTML = focus_name;
-        document.getElementById("character_pos").innerHTML =
-          description_content.split("@")[1];
-        document.getElementById("character_atcion").innerHTML =
-          description_content.split("@")[0];
+        // Focus on role assignment
+
+        // document.getElementById("dialog_content").innerHTML =
+        //   fill_dialog_content;
+        // document.getElementById("character_name").innerHTML = focus_name;
+        // document.getElementById("character_pos").innerHTML =
+        //   description_content.split("@")[1];
+        // document.getElementById("character_atcion").innerHTML =
+        //   description_content.split("@")[0];
         // document.getElementById("character_detail").innerHTML = document.getElementById("status_"+curr_persona_name_os).innerHTML
       } else if (focus_name == "") {
-        document.getElementById("character_name").innerHTML = "None";
-        document.getElementById("character_pos").innerHTML = "None";
-        document.getElementById("character_atcion").innerHTML = "None";
+        // document.getElementById("character_name").innerHTML = "None";
+        // document.getElementById("character_pos").innerHTML = "None";
+        // document.getElementById("character_atcion").innerHTML = "None";
         // document.getElementById("character_detail").innerHTML = ""
       }
     }

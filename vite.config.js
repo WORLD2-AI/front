@@ -22,7 +22,7 @@ export default defineConfig({
       "/api": {
         target: "http://192.168.1.6:8000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "") + "/",
+        rewrite: (path) => path.replace(/^\/api/, "") ,
         configure: (proxy, options) => {
           proxy.on("error", (err) => {
             console.error("Assets agent error:", err);
@@ -32,6 +32,22 @@ export default defineConfig({
           });
           proxy.on("proxyRes", (proxyRes) => {
             console.log("Assets Agent Response Status:", proxyRes.statusCode);
+          });
+        },
+      },
+      "/characters": {
+        target: "http://192.168.1.35:5000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/characters/, "") ,
+        configure: (proxy, options) => {
+          proxy.on("error", (err) => {
+            console.error("characters agent error:", err);
+          });
+          proxy.on("proxyReq", (proxyReq) => {
+            console.log("characters proxy request:", proxyReq.path);
+          });
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log("characters Agent Response Status:", proxyRes.statusCode);
           });
         },
       },
