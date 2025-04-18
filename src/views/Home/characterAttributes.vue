@@ -32,35 +32,96 @@
               <span></span>
             </div>
           </div>
+          <div class="skill">
+            <div></div>
+            <div></div>
+          </div>
         </div>
       </div>
       <div class="bottom-section">
-        <el-table :data="tableData">
-          <el-table-column prop="name" label="Name"></el-table-column>
-          <el-table-column prop="value" label="Value"></el-table-column>
+        <el-table
+          :show-header="false"
+          scrollbar-always-on
+          :data="role"
+          max-height="130"
+          style="width: 100%"
+        >
+          <el-table-column
+            prop="name"
+            label="name"
+            width="80"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="value"
+            label="value"
+            width="80"
+            show-overflow-tooltip
+          />
         </el-table>
       </div>
     </el-card>
+    <div class="timeLine">
+      <div class="card">
+        <div class="name">Carmen Oritz</div>
+        <el-timeline style="max-width: 600px">
+          <el-timeline-item center>
+            <el-card>
+              <p>Morning exercise</p>
+            </el-card>
+            <template #dot>
+              <el-icon><Sunny /></el-icon>
+            </template>
+          </el-timeline-item>
+          <el-timeline-item center>
+            <el-card><p>Morning exercise</p> </el-card>
+            <template #dot>
+              <div>6:00</div>
+            </template>
+          </el-timeline-item>
+          <el-timeline-item center>
+            <el-card><p>Morning exercise</p> </el-card>
+            <template #dot>
+              <div>9:00</div>
+            </template>
+          </el-timeline-item>
+          <el-timeline-item center>
+            <el-card><p>Morning exercise</p> </el-card>
+            <template #dot>
+              <div>15:00</div>
+            </template>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+    </div>
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      clanValue: "동백꽃단",
-      ctValue: "동백의 명예",
-      titleValue: "명예의 정점",
-      tableData: [
-        { name: "w", value: "무기" },
-        { name: "a", value: "강화" },
-        { name: "s", value: "보석" },
-        { name: "h", value: "무슨" },
-        { name: "l", value: "원소" },
-      ],
-    };
-  },
-};
+<script setup>
+import { ref, onMounted } from "vue";
+import { Sunny } from "@element-plus/icons-vue";
+import characters from "../../api/characters.js";
+const roles = ref([]);
+const role = ref([]);
+const clanValue = ref("동백꽃단");
+const ctValue = ref("동백의");
+const titleValue = ref("명예의");
+onMounted(() => {
+  characters.getRoles().then((res) => {
+    roles.value = res.data.data;
+    let object = roles.value[0];
+    console.log(object, "object");
+    for (const key in object) {
+      let obj = {};
+      if (Object.hasOwnProperty.call(object, key)) {
+        const element = object[key];
+        obj.name = key;
+        obj.value = element;
+        role.value.push(obj);
+      }
+    }
+  });
+});
 </script>
 
 <style lang="scss" scoped>
@@ -69,19 +130,24 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   padding: 20px;
 }
 .card {
-  width: 350px;
-  padding: 10px;
+  width: 216px;
+  height: 400px;
+  padding: 5px;
+  :deep(.el-card__body) {
+    padding: 0;
+  }
   /* border-radius: 50% 50% 0 0; */
   background: #ccc;
   .top-section {
-    height: 155px;
+    height: 110px;
     position: relative;
-
+    overflow: hidden;
     .arch {
       position: absolute;
       background: #fff;
-      height: 150px;
-      width: 100%;
+      height: 110px;
+      left: -6%;
+      width: 113%;
       border: 1px solid #fff;
       border-radius: 50% 50% 0 0;
     }
@@ -89,21 +155,23 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
       background: #fff;
       width: 100%;
       position: absolute;
-      top: 75px;
-      padding: 0 20px;
+      top: 50px;
+      padding: 0 10px;
       .el-row {
         .el-col {
+          height: 18px;
           &:nth-child(1) {
-            height: 27px;
-            line-height: 27px;
+            height: 100%;
+            line-height: 18px;
             font-size: 14px;
             text-align: center;
             background: #ccc;
           }
           &:nth-child(2) {
+            font-size: 14px;
             box-shadow: $shadow;
-            height: 27px;
-            line-height: 27px;
+            height: 100%;
+            line-height: 18px;
             text-align: right;
           }
         }
@@ -115,49 +183,65 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   .name {
     background: #fff;
     display: flex;
-    height: 27px;
-    padding: 0 20px;
+    height: 15px;
+    padding: 0 10px;
+    font-size: 100px;
     div {
+      font-size: 0.1em;
       box-shadow: $shadow;
       padding-right: 10px;
       height: 100%;
       flex: 1;
-      line-height: 27px;
+      line-height: 12px;
       text-align: right;
     }
   }
   .characterDressUp {
+    background: #fff;
+    padding: 2px 10px;
+    display: flex;
     .role {
-      background: #fff;
+      flex: 1;
       padding: 2px 0px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       .head {
-        width: 35px;
-        height: 35px;
+        width: 25px;
+        height: 25px;
         transform: translateY(10px);
         background: #ccc;
         box-shadow: $shadow;
       }
       .body {
-        width: 68px;
-        height: 87px;
+        width: 50px;
+        height: 65px;
         background: #ccc;
         box-shadow: $shadow;
       }
       .replacement {
-        transform: translateY(-30px);
-        width: 103px;
+        transform: translateY(-20px);
+        width: 75px;
         display: flex;
         justify-content: space-between;
         span {
           background: #ccc;
           box-shadow: $shadow;
-          width: 35px;
-          height: 35px;
+          width: 25px;
+          height: 25px;
         }
+      }
+    }
+    .skill {
+      display: flex;
+      flex-direction: column;
+      width: 25px;
+      div {
+        width: 25px;
+        height: 25px;
+        background: #ccc;
+        box-shadow: $shadow;
       }
     }
   }
@@ -178,6 +262,95 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   margin-bottom: 5px;
 }
 .bottom-section {
+  background: #fff;
   font-size: 12px;
+  padding: 0 10px;
+  :deep(.el-table__inner-wrapper) {
+    .el-table__body-wrapper {
+      .el-scrollbar {
+        .el-scrollbar__bar .is-vertical {
+          width: 10px;
+          .el-scrollbar__thumb {
+          }
+        }
+      }
+    }
+  }
+}
+.timeLine {
+  width: 214px;
+  height: 255px;
+  padding: 5px 10px;
+  background: #ccc;
+  .card {
+    height: 100%;
+    width: auto;
+    padding: 2px 10px;
+    background: #fff;
+    .name {
+      background: #000;
+      color: #fff;
+      height: 25px;
+      border-radius: 5px;
+      width: 100%;
+      line-height: 25px;
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .el-timeline {
+      border-radius: 5px;
+
+      :deep(.el-timeline-item) {
+        height: 40px;
+        padding-bottom: 0;
+        margin-top: 5px;
+        .el-timeline-item__tail {
+          height: 80%;
+          margin-left: 11px;
+          border-left: 2px solid #ccc;
+          top: 27px;
+        }
+        .el-timeline-item__dot {
+          width: 35px;
+          height: 35px;
+          font-size: 12px;
+        }
+        .el-timeline-item__wrapper {
+          height: 100%;
+          line-height: 40px;
+          padding-left: 50px;
+        }
+      }
+    }
+    :deep(.el-timeline) {
+      .el-timeline-item__center {
+        &:first-child {
+          height: 40px;
+          padding: 0;
+          background: #fff;
+          box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
+          .el-timeline-item__tail {
+            top: 40px;
+            height: 95%;
+          }
+          .el-timeline-item__dot {
+            font-size: 20px;
+          }
+          .el-timeline-item {
+            background: #fff;
+          }
+          .el-timeline-item__wrapper {
+            .el-timeline-item__content {
+              .el-card {
+                box-shadow: none;
+                border: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 </style>

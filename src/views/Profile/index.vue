@@ -221,13 +221,13 @@
     <!-- Character Editing Dialogue Box -->
     <el-dialog v-model="roleDialogVisible" :title="roleDialogTitle" width="40%">
       <el-form ref="roleFormRef" :model="roleForm" label-width="100px">
-        <el-form-item label="first_name" prop="first_name">
+        <el-form-item label="firstName" prop="first_name">
           <el-input
             v-model="roleForm.first_name"
             placeholder="Please enter the role first_name"
           />
         </el-form-item>
-        <el-form-item label="last_name" prop="last_name">
+        <el-form-item label="lastName" prop="last_name">
           <el-input
             v-model="roleForm.last_name"
             placeholder="Please enter the role last_name"
@@ -235,6 +235,7 @@
         </el-form-item>
         <el-form-item label="age" prop="age" :min="1" :max="120">
           <el-input
+            type="number"
             v-model.number="roleForm.age"
             placeholder="Please enter the role age"
           />
@@ -501,11 +502,13 @@ const saveRole = () => {
     characters
       .register({ ...newroleForm, name })
       .then((res) => {
-        ElMessage.success("Role added successfully");
-        console.log(res);
+        characters.getRoles().then((res) => {
+          roles.value = res.data.data;
+          roleDialogVisible.value = false;
+          ElMessage.success("Role added successfully");
+        });
       })
       .catch((req) => {
-        console.log(req);
         ElMessage.error(req.message);
       });
   }
