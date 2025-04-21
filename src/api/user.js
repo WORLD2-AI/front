@@ -4,7 +4,8 @@ import { ElNotification } from "element-plus";
 const baseURL = "http://192.168.1.6:5000/login";
 // 导出注册用户的API
 function register(userData) {
-  const url = "/login/register"; // 假设这是注册用户的服务器端点
+  const oldurl = "/login/register"; 
+  const url= '/characters/api/register_user'
   const formData = new FormData();
   for (const key in userData) {
     if (Object.hasOwnProperty.call(userData, key)) {
@@ -31,7 +32,8 @@ function register(userData) {
     // });
 }
 function login(userData) {
-  const url = "/login/login"; // 假设这是登录用户的服务器端点
+  const oldurl = "/login/login"; //
+  const url = "/characters/api/login"; 
   const formData = new FormData();
   for (const key in userData) {
     if (Object.hasOwnProperty.call(userData, key)) {
@@ -48,7 +50,8 @@ function login(userData) {
 }
 
 function logout(userData) {
-  const url = "/auth/user/logout"; // 假设这是登录用户的服务器端点
+  const oldurl = "/auth/user/logout"; // 假设这是登录用户的服务器端点
+  const url = "/characters/api/logout"; // 假设这是登录用户的服务器端点
   return axiosInstance.get(url, userData);
 }
 function profile(userData) {

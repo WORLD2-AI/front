@@ -5,23 +5,23 @@
         <div class="arch"></div>
         <div class="clan">
           <el-row>
-            <el-col :span="6">CLAN</el-col>
-            <el-col :span="18">{{ clanValue }}</el-col>
+            <el-col :span="6">Age</el-col>
+            <el-col :span="18">{{ role.age }}</el-col>
           </el-row>
           <el-row>
-            <el-col :span="6">C.T.</el-col>
-            <el-col :span="18">{{ ctValue }}</el-col>
+            <el-col :span="6">Sex</el-col>
+            <el-col :span="18">{{ role.sex }}</el-col>
           </el-row>
           <el-row>
-            <el-col :span="6">TITLE</el-col>
-            <el-col :span="18">{{ titleValue }}</el-col>
+            <el-col :span="6">Name</el-col>
+            <el-col :span="18">{{ role.name }}</el-col>
           </el-row>
         </div>
       </div>
       <div class="middle-section">
         <div class="name">
-          <div class="first_name">danny</div>
-          <div class="last_name">Smith</div>
+          <div class="first_name">{{ role.first_name }}</div>
+          <div class="last_name">{{ role.last_name }}</div>
         </div>
         <div class="characterDressUp">
           <div class="role">
@@ -42,22 +42,18 @@
         <el-table
           :show-header="false"
           scrollbar-always-on
-          :data="role"
-          max-height="130"
+          :data="roleForm"
+          height="200"
+          max-height="200"
           style="width: 100%"
         >
           <el-table-column
             prop="name"
             label="name"
-            width="80"
+            width="100"
             show-overflow-tooltip
           />
-          <el-table-column
-            prop="value"
-            label="value"
-            width="80"
-            show-overflow-tooltip
-          />
+          <el-table-column prop="value" label="value" show-overflow-tooltip />
         </el-table>
       </div>
     </el-card>
@@ -67,28 +63,65 @@
         <el-timeline style="max-width: 600px">
           <el-timeline-item center>
             <el-card>
-              <p>Morning exercise</p>
+              <div class="content">
+                <h4>Update Github template</h4>
+                <p>Tom committed 2018/4/12 20:46</p>
+              </div>
             </el-card>
             <template #dot>
               <el-icon><Sunny /></el-icon>
             </template>
           </el-timeline-item>
           <el-timeline-item center>
-            <el-card><p>Morning exercise</p> </el-card>
+            <el-card>
+              <div class="icon">
+                <el-icon><Sunny /></el-icon>
+              </div>
+              <div class="content">
+                <h4>Update Github template</h4>
+              </div>
+            </el-card>
             <template #dot>
               <div>6:00</div>
             </template>
           </el-timeline-item>
           <el-timeline-item center>
-            <el-card><p>Morning exercise</p> </el-card>
+            <el-card>
+              <div class="icon">
+                <el-icon><Sunny /></el-icon>
+              </div>
+              <div class="content">
+                <h4>Update Github template</h4>
+              </div>
+            </el-card>
             <template #dot>
               <div>9:00</div>
             </template>
           </el-timeline-item>
-          <el-timeline-item center>
-            <el-card><p>Morning exercise</p> </el-card>
+          <el-timeline-item placement="top" center>
+            <el-card>
+              <div class="icon">
+                <el-icon><Sunny /></el-icon>
+              </div>
+              <div class="content">
+                <h4>Update Github template</h4>
+              </div>
+            </el-card>
             <template #dot>
               <div>15:00</div>
+            </template>
+          </el-timeline-item>
+          <el-timeline-item placement="top" center>
+            <el-card>
+              <div class="icon">
+                <el-icon><Sunny /></el-icon>
+              </div>
+              <div class="content">
+                <h4>Update Github template</h4>
+              </div>
+            </el-card>
+            <template #dot>
+              <div>21:00</div>
             </template>
           </el-timeline-item>
         </el-timeline>
@@ -102,24 +135,41 @@ import { ref, onMounted } from "vue";
 import { Sunny } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
 const roles = ref([]);
-const role = ref([]);
-const clanValue = ref("동백꽃단");
-const ctValue = ref("동백의");
-const titleValue = ref("명예의");
+const role = ref({
+  age: "",
+  name: "",
+  first_name: "",
+  last_name: "",
+  sex: "",
+});
+const roleForm = ref([]);
+
+const rolelist = {
+  currently: "",
+  innate: "",
+  learned: "",
+  lifestyle: "",
+  sleep_time: "",
+  wake_time: "",
+};
 onMounted(() => {
   characters.getRoles().then((res) => {
     roles.value = res.data.data;
+    role.value = roles.value[0];
     let object = roles.value[0];
-    console.log(object, "object");
-    for (const key in object) {
-      let obj = {};
-      if (Object.hasOwnProperty.call(object, key)) {
-        const element = object[key];
-        obj.name = key;
-        obj.value = element;
-        role.value.push(obj);
+    console.log(res);
+    if (roles.value.length > 0) {
+      for (const key in rolelist) {
+        let obj = {};
+        if (Object.hasOwnProperty.call(object, key)) {
+          const element = object[key];
+          obj.name = key;
+          obj.value = element;
+          roleForm.value.push(obj);
+        }
       }
     }
+    console.log(roleForm);
   });
 });
 </script>
@@ -128,10 +178,11 @@ onMounted(() => {
 $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
 .container {
   padding: 20px;
+  /* display: flex; */
 }
 .card {
-  width: 216px;
-  height: 400px;
+  width: 290px;
+  height: auto;
   padding: 5px;
   :deep(.el-card__body) {
     padding: 0;
@@ -139,13 +190,13 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   /* border-radius: 50% 50% 0 0; */
   background: #ccc;
   .top-section {
-    height: 110px;
+    height: 130px;
     position: relative;
     overflow: hidden;
     .arch {
       position: absolute;
       background: #fff;
-      height: 110px;
+      height: 130px;
       left: -6%;
       width: 113%;
       border: 1px solid #fff;
@@ -156,22 +207,20 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
       width: 100%;
       position: absolute;
       top: 50px;
-      padding: 0 10px;
+      padding: 0 20px;
       .el-row {
         .el-col {
-          height: 18px;
           &:nth-child(1) {
-            height: 100%;
-            line-height: 18px;
+            height: 27px;
+            line-height: 27px;
             font-size: 14px;
             text-align: center;
             background: #ccc;
           }
           &:nth-child(2) {
-            font-size: 14px;
             box-shadow: $shadow;
-            height: 100%;
-            line-height: 18px;
+            height: 27px;
+            line-height: 27px;
             text-align: right;
           }
         }
@@ -183,22 +232,20 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   .name {
     background: #fff;
     display: flex;
-    height: 15px;
-    padding: 0 10px;
-    font-size: 100px;
+    height: 27px;
+    padding: 0 20px;
     div {
-      font-size: 0.1em;
       box-shadow: $shadow;
       padding-right: 10px;
       height: 100%;
       flex: 1;
-      line-height: 12px;
+      line-height: 27px;
       text-align: right;
     }
   }
   .characterDressUp {
     background: #fff;
-    padding: 2px 10px;
+    padding: 5px 20px;
     display: flex;
     .role {
       flex: 1;
@@ -208,38 +255,38 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
       align-items: center;
       justify-content: center;
       .head {
-        width: 25px;
-        height: 25px;
+        width: 35px;
+        height: 35px;
         transform: translateY(10px);
         background: #ccc;
         box-shadow: $shadow;
       }
       .body {
-        width: 50px;
-        height: 65px;
+        width: 68px;
+        height: 87px;
         background: #ccc;
         box-shadow: $shadow;
       }
       .replacement {
-        transform: translateY(-20px);
-        width: 75px;
+        transform: translateY(-30px);
+        width: 103px;
         display: flex;
         justify-content: space-between;
         span {
           background: #ccc;
           box-shadow: $shadow;
-          width: 25px;
-          height: 25px;
+          width: 35px;
+          height: 35px;
         }
       }
     }
     .skill {
       display: flex;
       flex-direction: column;
-      width: 25px;
+      width: 35px;
       div {
-        width: 25px;
-        height: 25px;
+        width: 35px;
+        height: 35px;
         background: #ccc;
         box-shadow: $shadow;
       }
@@ -264,11 +311,14 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
 .bottom-section {
   background: #fff;
   font-size: 12px;
-  padding: 0 10px;
+  padding: 0 20px;
+  .el-table--fit {
+    border: 2px solid #ccc;
+  }
   :deep(.el-table__inner-wrapper) {
     .el-table__body-wrapper {
       .el-scrollbar {
-        .el-scrollbar__bar .is-vertical {
+        .el-scrollbar__bar.is-vertical {
           width: 10px;
           .el-scrollbar__thumb {
           }
@@ -278,64 +328,95 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   }
 }
 .timeLine {
-  width: 214px;
-  height: 255px;
-  padding: 5px 10px;
+  width: 290px;
   background: #ccc;
   .card {
-    height: 100%;
     width: auto;
-    padding: 2px 10px;
+    padding: 5px 15px;
     background: #fff;
     .name {
       background: #000;
       color: #fff;
-      height: 25px;
+      height: 40px;
       border-radius: 5px;
       width: 100%;
-      line-height: 25px;
+      line-height: 40px;
       text-align: center;
-      font-size: 14px;
-      margin-bottom: 5px;
+      font-size: 18px;
+      margin-bottom: 10px;
     }
     .el-timeline {
-      border-radius: 5px;
-
       :deep(.el-timeline-item) {
-        height: 40px;
-        padding-bottom: 0;
-        margin-top: 5px;
+        border-radius: 10px;
+        height: 60px;
+        width: 260px;
+        margin-top: 10px;
+        padding: 0;
         .el-timeline-item__tail {
-          height: 80%;
-          margin-left: 11px;
-          border-left: 2px solid #ccc;
-          top: 27px;
+          left: 0;
+          margin-left: 30px;
+          height: 56px;
+          border-left: 3px solid #ccc;
+          top: 37px;
         }
         .el-timeline-item__dot {
-          width: 35px;
-          height: 35px;
-          font-size: 12px;
+          width: 60px;
+          height: 100%;
+          .el-icon {
+            font-size: 45px;
+          }
+          .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
         }
         .el-timeline-item__wrapper {
           height: 100%;
-          line-height: 40px;
-          padding-left: 50px;
+          padding-left: 60px;
+          .el-card__body {
+            display: flex;
+            .icon {
+              flex-shrink: 0;
+              width: 60px;
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              .el-icon {
+                font-size: 45px;
+              }
+            }
+            padding: 5px;
+          }
+          .el-timeline-item__content {
+            .el-card {
+              border-radius: 10px;
+              border: none;
+            }
+          }
+        }
+        .el-timeline-item__timestamp {
+          margin-bottom: 0;
+          padding: 0;
         }
       }
     }
     :deep(.el-timeline) {
       .el-timeline-item__center {
+        &:last-child {
+          overflow: hidden;
+        }
         &:first-child {
-          height: 40px;
           padding: 0;
           background: #fff;
           box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
           .el-timeline-item__tail {
-            top: 40px;
-            height: 95%;
+            top: 60px;
+            height: 33px;
           }
           .el-timeline-item__dot {
-            font-size: 20px;
+            z-index: 100;
           }
           .el-timeline-item {
             background: #fff;

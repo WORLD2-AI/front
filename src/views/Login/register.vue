@@ -169,6 +169,7 @@ const submitForm = () => {
         user
           .register(formData.value)
           .then((res) => {
+            console.log(res);
             if (res.status == 200 && res.data) {
               ElNotification({
                 title: "success",

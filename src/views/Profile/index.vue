@@ -121,9 +121,9 @@
               <el-table-column prop="lifestyle" label="lifestyle" />
               <el-table-column label="actions">
                 <template #default="scope">
-                  <el-button size="small" @click="editRole(scope.row)"
+                  <!-- <el-button size="small" @click="editRole(scope.row)"
                     >edit</el-button
-                  >
+                  > -->
                   <el-button
                     size="small"
                     type="danger"
@@ -220,7 +220,12 @@
 
     <!-- Character Editing Dialogue Box -->
     <el-dialog v-model="roleDialogVisible" :title="roleDialogTitle" width="40%">
-      <el-form ref="roleFormRef" :model="roleForm" label-width="100px">
+      <el-form
+        ref="roleFormRef"
+        :rules="rules"
+        :model="roleForm"
+        label-width="100px"
+      >
         <el-form-item label="firstName" prop="first_name">
           <el-input
             v-model="roleForm.first_name"
@@ -321,6 +326,48 @@ let sexOptions = [
     value: 2,
   },
 ];
+let rules = ref({
+  first_name: {
+    required: true,
+    message: "first_name is required",
+    trigger: "blur",
+  },
+  last_name: {
+    required: true,
+    message: "last_name is required",
+    trigger: "blur",
+  },
+  age: {
+    required: true,
+    message: "age is required",
+    trigger: "blur",
+  },
+  sex: {
+    required: true,
+    message: "sex is required",
+    trigger: "blur",
+  },
+  innate: {
+    required: true,
+    message: "innate is required",
+    trigger: "blur",
+  },
+  learned: {
+    required: true,
+    message: "learned is required",
+    trigger: "blur",
+  },
+  currently: {
+    required: true,
+    message: "currently is required",
+    trigger: "blur",
+  },
+  lifestyle: {
+    required: true,
+    message: "lifestyle is required",
+    trigger: "blur",
+  },
+});
 const isAdding = ref(false);
 const optionName = ref("");
 const onAddOption = () => {
@@ -364,7 +411,6 @@ const resetForm = () => {
   if (!roleFormRef) return;
   console.log(roleFormRef.value);
   roleFormRef.value?.resetFields();
-  console.log("内容清除");
 };
 onMounted(() => {
   characters.getRoles().then((res) => {
@@ -460,6 +506,7 @@ const editRole = (role) => {
 };
 
 const deleteRole = (role) => {
+  console.log(role.id);
   ElMessageBox.confirm(
     `Are you sure you want to delete the role "${role.name}" ?`,
     "prompt",
@@ -470,7 +517,20 @@ const deleteRole = (role) => {
     }
   )
     .then(() => {
+      characters
+        .delteteRoles(role.id)
+        .then((res) => {
+          characters.getRoles().then((res) => {
+            roles.value = res.data.data;
+            roleDialogVisible.value = false;
+            ElMessage.success("Role added successfully");
+          });
+        })
+        .catch((req) => {
+          ElMessage.error(req.message);
+        });
       roles.value = roles.value.filter((r) => r.id !== role.id);
+
       ElMessage.success("Delete successfully");
     })
     .catch(() => {});
@@ -499,7 +559,7 @@ const saveRole = () => {
     // roles.value.push(newRole);
     let newroleForm = roleForm.value;
     let name = newroleForm.last_name + " " + newroleForm.first_name;
-    characters
+    roleFormRef.value.characters
       .register({ ...newroleForm, name })
       .then((res) => {
         characters.getRoles().then((res) => {
@@ -509,7 +569,7 @@ const saveRole = () => {
         });
       })
       .catch((req) => {
-        ElMessage.error(req.message);
+        ElMessage.error("Only one role can be created per user");
       });
   }
   // roleDialogVisible.value = false;

@@ -68,8 +68,8 @@ onMounted(() => {
       target: 45,
       forceSetTimeOut: true,
     },
-    width: 1200,
-    height: 800,
+    width: 1500,
+    height: 1000,
     parent: gameContainerDom.value,
     pixelArt: true,
     physics: {

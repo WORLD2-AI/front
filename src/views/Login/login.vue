@@ -104,7 +104,7 @@ const submitForm = () => {
           if (res.status == 200 && res.data) {
             ElNotification({
               title: "success",
-              message: "Login Successful",
+              message: res.data.message,
               type: "success",
             });
             setTimeout(() => {
@@ -113,10 +113,9 @@ const submitForm = () => {
           }
         })
         .catch((req) => {
-          console.log(req);
           ElNotification({
             title: "prompt",
-            message: req.data,
+            message: req.data.message,
             type: "warning",
           });
         });
