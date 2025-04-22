@@ -37,6 +37,9 @@ export default [
     path: "/profile",
     name: "profilePage",
     component: Profile,
+    meta:{
+      requiresAuth:true
+    }
   },
   {
     path: "/home",

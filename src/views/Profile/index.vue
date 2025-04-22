@@ -199,24 +199,33 @@
     </el-main>
 
     <!-- Avatar Editing Dialogue Box -->
-    <el-dialog v-model="avatarDialogVisible" title="Avatar Editing" width="30%">
-      <el-upload
-        class="avatar-uploader"
-        action="https://jsonplaceholder.typicode.com/posts/"
-        :show-file-list="false"
-        :on-success="handleAvatarSuccess"
-        :before-upload="beforeAvatarUpload"
+    <div class="uploadBox">
+      <el-dialog
+        v-model="avatarDialogVisible"
+        title="Avatar Editing"
+        width="30%"
       >
-        <img v-if="avatarTempUrl" :src="avatarTempUrl" class="avatar" />
-        <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-      </el-upload>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="avatarDialogVisible = false">cancel</el-button>
-          <el-button type="primary" @click="saveAvatar">save</el-button>
-        </span>
-      </template>
-    </el-dialog>
+        <el-upload
+          :limit="1"
+          list-type="picture-card"
+          :http-request="requestFun"
+          :file-list="files"
+          :class="{ avatarUploader: true, disabled: uploadDisabled }"
+          :on-change="imgChange"
+          :before-upload="beforeAvatarUpload"
+          :before-remove="handleRemove"
+        >
+          <img v-if="avatarTempUrl" :src="avatarTempUrl" class="avatar" />
+          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+        </el-upload>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="avatarDialogVisible = false">cancel</el-button>
+            <el-button type="primary" @click="saveAvatar">save</el-button>
+          </span>
+        </template>
+      </el-dialog>
+    </div>
 
     <!-- Character Editing Dialogue Box -->
     <el-dialog v-model="roleDialogVisible" :title="roleDialogTitle" width="40%">
@@ -296,7 +305,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   User,
@@ -310,7 +319,12 @@ import {
   ArrowRight,
 } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
-import { onMounted } from "vue";
+import userApi from "../../api/user";
+const files = ref([]);
+const filesList = ref([]);
+const uploadDisabled = computed(() => {
+  return filesList.value.length >= 1 ? true : false;
+});
 // Role registration information
 let sexOptions = [
   {
@@ -413,9 +427,17 @@ const resetForm = () => {
   roleFormRef.value?.resetFields();
 };
 onMounted(() => {
+  // get RolesList
   characters.getRoles().then((res) => {
     console.log(res.data);
-    roles.value = res.data.data;
+    roles.value = res.data;
+  });
+  // get userInfo
+  userApi.profile().then((res) => {
+    let url = res.data.data.avatar_url;
+    userApi.downLoad(url).then((res) => {
+      user.value.avatar = URL.createObjectURL([res]);
+    });
   });
 });
 // Current activation menu
@@ -466,16 +488,37 @@ const editAvatar = () => {
   avatarDialogVisible.value = true;
 };
 
-const handleAvatarSuccess = (response, file) => {
-  avatarTempUrl.value = URL.createObjectURL(file.raw);
+// uploadFunction
+const imgChange = (fileObj, fileList) => {
+  const newValue = [];
+  fileList.forEach((item, index) => {
+    if (item.url) {
+      if (item.raw) {
+        if (item.raw.type.includes("image")) {
+          console.log(item.raw);
+          newValue.push(item.raw);
+        }
+      }
+    }
+  });
+  filesList.value = newValue;
+  console.log(filesList.value, "files");
 };
 
+const requestFun = (fileObj) => {
+  console.log(fileObj);
+
+  const formData = new FormData();
+  formData.append("file", fileObj.file);
+  // userApi.upload(formData)
+};
 const beforeAvatarUpload = (file) => {
-  const isJPG = file.type === "image/jpeg";
+  const isJPEG = file.type === "image/jpeg";
+  const isJPG = file.type === "image/jpg";
   const isPNG = file.type === "image/png";
   const isLt2M = file.size / 1024 / 1024 < 2;
 
-  if (!isJPG && !isPNG) {
+  if (!isJPG && !isPNG && !isJPEG) {
     ElMessage.error("Avatar images can only be in JPG/PNG format");
     return false;
   }
@@ -485,11 +528,35 @@ const beforeAvatarUpload = (file) => {
   }
   return true;
 };
+const handleRemove = (file, fileList) => {
+  const newValue = [];
+  fileList = fileList.filter((item) => item !== file);
+  fileList.forEach((item, index) => {
+    if (item.url) {
+      if (item.raw) {
+        newValue.push(item.raw);
+      }
+    }
+  });
+  filesList.value = newValue;
+};
 
 const saveAvatar = () => {
+  avatarTempUrl.value = window.URL.createObjectURL(
+    new Blob([filesList.value[0]])
+  );
   user.value.avatar = avatarTempUrl.value;
   avatarDialogVisible.value = false;
   ElMessage.success("Avatar updated successfully");
+  console.log(filesList.value[0], "filesList.value[0]");
+  if (beforeAvatarUpload(filesList.value[0])) {
+    const formData = new FormData();
+    console.log("the file is loading");
+    formData.append("avatar", filesList.value[0]);
+    userApi.upload(formData).catch((req) => {
+      ElMessage.warning("Avatar updated unsuccessfully");
+    });
+  }
 };
 
 const addRole = () => {
@@ -971,6 +1038,44 @@ const handleRecharge = () => {
   .avatar-uploader-icon {
     font-size: 28px;
     color: #8c939d;
+  }
+}
+:deep(.uploadBox) {
+  .el-overlay {
+    .el-overlay-dialog {
+      .el-dialog {
+        .el-dialog__body {
+          height: 300px;
+          /* width: 300px; */
+          .avatarUploader {
+            height: 100%;
+            .el-upload-list {
+              width: 100%;
+              height: 100%;
+              li {
+                width: 100%;
+                height: 100%;
+                img {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
+              .el-upload {
+                width: 100%;
+                height: 100%;
+              }
+            }
+          }
+          .disabled {
+            ul {
+              div {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 

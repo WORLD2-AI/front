@@ -154,7 +154,7 @@ const rolelist = {
 };
 onMounted(() => {
   characters.getRoles().then((res) => {
-    roles.value = res.data.data;
+    roles.value = res.data;
     role.value = roles.value[0];
     let object = roles.value[0];
     console.log(res);
