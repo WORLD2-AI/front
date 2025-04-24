@@ -215,7 +215,7 @@
           :before-upload="beforeAvatarUpload"
           :before-remove="handleRemove"
         >
-          <img v-if="avatarTempUrl" :src="avatarTempUrl" class="avatar" />
+          <img v-if="user.avatar" :src="user.avatar" class="avatar" />
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
         </el-upload>
         <template #footer>
@@ -426,20 +426,7 @@ const resetForm = () => {
   console.log(roleFormRef.value);
   roleFormRef.value?.resetFields();
 };
-onMounted(() => {
-  // get RolesList
-  characters.getRoles().then((res) => {
-    console.log(res.data);
-    roles.value = res.data;
-  });
-  // get userInfo
-  userApi.profile().then((res) => {
-    let url = res.data.data.avatar_url;
-    userApi.downLoad(url).then((res) => {
-      user.value.avatar = URL.createObjectURL([res]);
-    });
-  });
-});
+
 // Current activation menu
 const activeMenu = ref("personal");
 
@@ -504,7 +491,21 @@ const imgChange = (fileObj, fileList) => {
   filesList.value = newValue;
   console.log(filesList.value, "files");
 };
-
+onMounted(() => {
+  // get RolesList
+  characters.getRoles().then((res) => {
+    console.log(res.data);
+    roles.value = res.data;
+  });
+  // get userInfo
+  userApi.profile().then((res) => {
+    let url = res.data.data.avatar_url;
+    userApi.downLoad(url).then((res) => {
+      user.value.avatar = URL.createObjectURL(new Blob([res.data]));
+      console.log(avatarTempUrl.value);
+    });
+  });
+});
 const requestFun = (fileObj) => {
   console.log(fileObj);
 
@@ -1052,6 +1053,14 @@ const handleRecharge = () => {
             .el-upload-list {
               width: 100%;
               height: 100%;
+              div {
+                width: 100%;
+                height: 100%;
+                img {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
               li {
                 width: 100%;
                 height: 100%;

@@ -157,7 +157,6 @@ onMounted(() => {
     roles.value = res.data;
     role.value = roles.value[0];
     let object = roles.value[0];
-    console.log(res);
     if (roles.value.length > 0) {
       for (const key in rolelist) {
         let obj = {};
@@ -169,7 +168,6 @@ onMounted(() => {
         }
       }
     }
-    console.log(roleForm);
   });
 });
 </script>

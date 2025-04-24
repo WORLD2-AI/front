@@ -16,11 +16,25 @@ router.beforeEach((to, from, next) => {
     isLoggedIn=res.data.status==='success'
     if (to.meta.requiresAuth && !isLoggedIn) {
       next('/login'); // Jump to login page
+      console.log("/login");
     } else {
-      next(); // Release
+      if (to.path === '/login' && isLoggedIn) {
+        console.log("When logged in and accessing/login, jump to the homepage");
+        next('/home'); // When logged in and accessing/login, jump to the homepage
+      } else {
+        next();
+      }
+    }
+    
+  }).catch((req)=>{
+    if(!to.meta.requiresAuth){
+      next()
+    }else{
+      next("/login")
     }
   })
   // Check if login is required
+  
 });
 
 export default router
