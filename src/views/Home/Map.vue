@@ -33,6 +33,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import Phaser from "phaser";
+import rolesApi from "../../api/roles";
 // import DialogContainer from "./dialogContainer.vue";
 import CharacterAttributes from "./characterAttributes.vue";
 
@@ -60,44 +61,7 @@ const game = ref();
 const progressBar = ref();
 const progress = ref();
 const slider = ref();
-onMounted(() => {
-  gameContainerDom.value = document.getElementById("game-container");
-  config.value = {
-    type: Phaser.AUTO,
-    fps: {
-      target: 45,
-      forceSetTimeOut: true,
-    },
-    width: 1500,
-    height: 1000,
-    parent: gameContainerDom.value,
-    pixelArt: true,
-    physics: {
-      default: "arcade",
-      arcade: {
-        gravity: { y: 0 },
-      },
-    },
-    scene: {
-      preload: preload,
-      create: create,
-      // update: update,
-    },
-    scale: { zoom: 0.9 },
-  };
-  game.value = new Phaser.Game(config.value);
 
-  // Initializing the progress bar
-  progressBar.value = document.getElementById("progress-bar");
-  // =======================
-  progress.value = document.getElementById("progress");
-  slider.value = document.getElementById("slider");
-  const containerRect = progressBar.value?.getBoundingClientRect();
-  // event listener
-  slider.value?.addEventListener("mousedown", startDragging);
-  document?.addEventListener("mousemove", handleDragging);
-  document?.addEventListener("mouseup", stopDragging);
-});
 onUnmounted(() => {
   if (game.value) {
     game.value.destroy(true);
@@ -176,14 +140,52 @@ let position = [
 // Persona related variables. This should have the name of the persona as its
 // keys, and the instances of the Persona class as the values.
 var spawn_tile_loc = {};
-for (var i = 0; i < position.length; i++) {
-  let x = position[i].split(",");
-  persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
-}
+onMounted(() => {
+  gameContainerDom.value = document.getElementById("game-container");
+  config.value = {
+    type: Phaser.AUTO,
+    fps: {
+      target: 45,
+      forceSetTimeOut: true,
+    },
+    width: 1500,
+    height: 1000,
+    parent: gameContainerDom.value,
+    pixelArt: true,
+    physics: {
+      default: "arcade",
+      arcade: {
+        gravity: { y: 0 },
+      },
+    },
+    scene: {
+      preload: preload,
+      create: create,
+      // update: update,
+    },
+    scale: { zoom: 0.9 },
+  };
+  game.value = new Phaser.Game(config.value);
 
-for (let key in persona_names) {
-  spawn_tile_loc[key] = persona_names[key];
-}
+  // Initializing the progress bar
+  progressBar.value = document.getElementById("progress-bar");
+  // =======================
+  progress.value = document.getElementById("progress");
+  slider.value = document.getElementById("slider");
+  const containerRect = progressBar.value?.getBoundingClientRect();
+  // event listener
+  slider.value?.addEventListener("mousedown", startDragging);
+  document?.addEventListener("mousemove", handleDragging);
+  document?.addEventListener("mouseup", stopDragging);
+});
+// for (var i = 0; i < position.length; i++) {
+//   let x = position[i].split(",");
+//   persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
+// }
+
+// for (let key in persona_names) {
+//   spawn_tile_loc[key] = persona_names[key];
+// }
 // console.log(spawn_tile_loc);
 let lastTime = 0;
 var personas = {};
@@ -354,19 +356,31 @@ function preload() {
     "https://mikewesthad.github.io/phaser-3-tilemap-blog-posts/post-1/assets/atlas/atlas.png",
     "https://mikewesthad.github.io/phaser-3-tilemap-blog-posts/post-1/assets/atlas/atlas.json"
   );
+  rolesApi.visibleChars().then((res) => {
+    let data = res.data.data;
+    persona_names[data.current_character.name] =
+      data.current_character.position;
 
-  for (let key in persona_names) {
-    // key = persona_names[key];
-    // ===============================
-    key = key.replace(" ", "_");
-    key = key.toLowerCase();
-    // console.log(`assets/characters/town/profile/${key}.png`, "");
-    this.load.atlas(
-      key,
-      `assets/characters/town/profile/${key}.png`,
-      `assets/characters/town/atlas.json`
-    );
-  }
+    // add visible_characters
+    data.visible_characters.forEach((char) => {
+      persona_names[char.name] = char.position;
+    });
+    for (let key in persona_names) {
+      spawn_tile_loc[key] = persona_names[key];
+    }
+    for (let key in persona_names) {
+      // key = persona_names[key];
+      // ===============================
+      key = key.replace(" ", "_");
+      key = key.toLowerCase();
+      // console.log(`assets/characters/town/profile/${key}.png`, "");
+      this.load.atlas(
+        key,
+        `assets/characters/town/profile/${key}.png`,
+        `assets/characters/town/atlas.json`
+      );
+    }
+  });
 }
 
 function create() {
@@ -587,8 +601,10 @@ function create() {
 
   // *** SET UP PERSONAS ***
   // We start by creating the game sprite objects.
+  console.log(spawn_tile_loc, "createPerson");
   for (let i = 0; i < Object.keys(spawn_tile_loc).length; i++) {
     let persona_name = Object.keys(spawn_tile_loc)[i];
+    console.log(persona_name, "persona_namepersona_name");
     let start_pos = [
       spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
@@ -1003,6 +1019,7 @@ function getFrameData() {
           data = JSON.parse(update_xobj.responseText);
           if (data["data"] && data["data"].length > 0) {
             last_step = data["<step>"] + 1;
+            console.log(data, "data.data");
             data["data"].forEach((element) => {
               frame_data[element["<step>"]] = element;
             });

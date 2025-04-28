@@ -22,7 +22,7 @@ export default defineConfig({
       "/api": {
         target: "http://192.168.1.6:8000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "") ,
+        rewrite: (path) => path.replace(/^\/api/, "")  + "/",
         configure: (proxy, options) => {
           proxy.on("error", (err) => {
             console.error("Assets agent error:", err);
@@ -32,6 +32,22 @@ export default defineConfig({
           });
           proxy.on("proxyRes", (proxyRes) => {
             console.log("Assets Agent Response Status:", proxyRes.statusCode);
+          });
+        },
+      },
+      "/roles": {
+        target: "http://192.168.1.37:5000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/roles/, "") ,
+        configure: (proxy, options) => {
+          proxy.on("error", (err) => {
+            console.error("roles agent error:", err);
+          });
+          proxy.on("proxyReq", (proxyReq) => {
+            console.log("roles proxy request:", proxyReq.path);
+          });
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log("roles Agent Response Status:", proxyRes.statusCode);
           });
         },
       },
@@ -68,7 +84,7 @@ export default defineConfig({
         },
       },
       "/login": {
-        target: "http://192.168.1.6:5000",//http://192.168.1.23:5000/
+        target: "http://192.168.1.6:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/login/, "/"),
         configure: (proxy, options) => {

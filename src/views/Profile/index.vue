@@ -500,10 +500,11 @@ onMounted(() => {
   // get userInfo
   userApi.profile().then((res) => {
     let url = res.data.data.avatar_url;
-    userApi.downLoad(url).then((res) => {
-      user.value.avatar = URL.createObjectURL(new Blob([res.data]));
-      console.log(avatarTempUrl.value);
-    });
+    url &&
+      userApi.downLoad(url).then((res) => {
+        user.value.avatar = URL.createObjectURL(new Blob([res.data]));
+        console.log(avatarTempUrl.value);
+      });
   });
 });
 const requestFun = (fileObj) => {
