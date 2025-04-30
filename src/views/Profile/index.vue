@@ -33,15 +33,15 @@
     <el-main class="main-content">
       <h2 class="content-title">Personal Center</h2>
       <div class="content-card">
-        <div class="content-header">
-          <div class="header-left" @click="editAvatar">
-            <el-avatar :size="60" :src="user.avatar" />
-            <span class="edit">edit</span>
-          </div>
-        </div>
         <div class="main">
           <!-- Personal Information Section -->
           <div v-show="activeMenu === 'personal'" class="info-section">
+            <div class="content-header">
+              <div class="header-left" @click="editAvatar">
+                <el-avatar :size="60" :src="user.avatar" />
+                <span class="edit">edit</span>
+              </div>
+            </div>
             <div class="info-grid">
               <div class="info-item">
                 <label class="info-label">phone</label>
