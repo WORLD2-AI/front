@@ -44,12 +44,11 @@ function logout() {
   return axiosInstance.get(url);
 }
 function profile() {
-  const url = `/characters//api/user/profile`;
+  const url = `/characters/api/user/profile`;
   return axiosInstance.get(url);
 }
 function twitter() {
-  const url = `/login/twitter`;
-  console.log('/login/twitter');
+  const url = `/login/login/twitter`;
   return axiosInstance.get(url);
 }
 function upload(fileData){

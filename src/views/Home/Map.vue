@@ -726,7 +726,7 @@ function create() {
   // set the view zoom
   const minZoom = 0.3; // minimal scaling
   const maxZoom = 3; // maximum scale
-  // 正常播放音频
+  // Play audio normally
 
   this.input.keyboard.on("keydown-Z", () => {
     const newZoom = this.cameras.main.zoom * 1.1;
@@ -738,7 +738,7 @@ function create() {
     this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
   });
 
-  // 输入事件绑定
+  // Input event binding
   this.input.on("pointerdown", (pointer) => {
     if (pointer.leftButtonDown()) {
       isDraggingmMap = true;
@@ -748,7 +748,7 @@ function create() {
 
   this.input.on("pointermove", (pointer) => {
     if (isDraggingmMap && pointer.leftButtonDown()) {
-      // 计算摄像机偏移量
+      // Calculate camera offset
       let deltaX = startPointerPos.x - pointer.x;
       let deltaY = startPointerPos.y - pointer.y;
       player.body.setVelocity(deltaX * 5, deltaY * 5);
@@ -759,14 +759,14 @@ function create() {
     isDraggingmMap = false;
   });
   this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
-    // 获取缩放前的鼠标世界坐标
-    // 计算新缩放级别（deltaY > 0 滚轮向下）
+    // Get the mouse world coordinates before zooming in and out
+    // Calculate the new zoom level (deltaY>0, scroll down)
     const newZoom = Phaser.Math.Clamp(
       this.cameras.main.zoom - deltaY * 0.001,
-      0.5, // 最小缩放
-      3 // 最大缩放
+      0.5, // minimum-scale
+      3 // Maximum Zoom
     );
-    // 设置新缩放级别
+    // Set a new zoom level
     this.cameras.main.setZoom(newZoom);
   });
 }
@@ -1041,7 +1041,7 @@ function updatePersonaAnimation(
   curr_persona_name,
   pre_anims_direction_dict
 ) {
-  let baseTextureLowerCase = curr_persona_name.toLowerCase(); // 动态生成基础纹理名
+  let baseTextureLowerCase = curr_persona_name.toLowerCase(); // Dynamically generate basic texture names
   let baseTexture = baseTextureLowerCase.replace(" ", "_");
   if (anims_direction === "l") {
     curr_persona.anims.play(`${baseTexture}-left-walk`, true);

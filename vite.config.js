@@ -87,6 +87,11 @@ export default defineConfig({
         target: "http://192.168.1.6:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/login/, "/"),
+        bypass: (req) => {
+          if (req.url.includes(".jpg") || req.url.includes(".png")) {
+            return req.url; // Directly return to the original path without using a proxy
+          }
+        },
         configure: (proxy, options) => {
           proxy.on("error", (err) => {
             console.error("login agent error:", err);
