@@ -3,6 +3,7 @@
     <div class="formCont">
       <div class="title">Login</div>
       <el-form
+        @keydown.enter="submitForm"
         ref="elFormRef"
         :model="formData"
         :rules="rules"
