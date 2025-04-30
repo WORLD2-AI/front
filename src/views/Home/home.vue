@@ -23,10 +23,10 @@
                       <el-icon><User /></el-icon>
                       <span>Profile</span>
                     </el-dropdown-item>
-                    <el-dropdown-item command="settings">
+                    <!-- <el-dropdown-item command="settings">
                       <el-icon><Setting /></el-icon>
                       <span>Settings</span>
-                    </el-dropdown-item>
+                    </el-dropdown-item> -->
                     <el-dropdown-item divided command="logout">
                       <el-icon><SwitchButton /></el-icon>
                       <span>Logout</span>
@@ -50,7 +50,7 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Map from "./Map.vue";
 import BarOntainer from "./barOntainer.vue";
@@ -62,8 +62,18 @@ import {
   Setting,
   SwitchButton,
 } from "@element-plus/icons-vue";
-const user = reactive({
-  name: "Danny",
+import userApi from "../../api/user";
+onMounted(() => {
+  userApi.profile().then((res) => {
+    let url = res.data.data.avatar_url;
+    url &&
+      userApi.downLoad(url).then((res) => {
+        user.value.avatar = URL.createObjectURL(new Blob([res.data]));
+      });
+  });
+});
+const user = ref({
+  name: "user",
   avatar: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
 });
 const handleCommand = (command) => {
@@ -80,7 +90,9 @@ const handleCommand = (command) => {
   }
 };
 const logout = () => {
-  alert("logout");
+  userApi.logout().then(() => {
+    router.go();
+  });
 };
 </script>
 

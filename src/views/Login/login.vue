@@ -51,8 +51,7 @@
         Don`t have an account?<a class="link" @click="goRegister">Register</a>
       </p>
       <p :style="{ textAlign: 'center' }">Or</p>
-      <el-button round>GitHub</el-button>
-      <el-button round>Twitter</el-button>
+      <el-button round @click="user.twitter">Twitter</el-button>
     </div>
 
     <!-- <div class="bottom">
@@ -144,7 +143,7 @@ const submitForm = () => {
     justify-content: center;
     p {
       margin: 10px auto;
-      font-size: 12px;
+      font-size: 20px;
     }
     .link {
       font-weight: 600;

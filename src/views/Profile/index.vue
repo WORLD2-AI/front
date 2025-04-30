@@ -307,6 +307,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
 import {
   User,
   Avatar,
@@ -320,6 +321,7 @@ import {
 } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
 import userApi from "../../api/user";
+const router = useRouter();
 const files = ref([]);
 const filesList = ref([]);
 const uploadDisabled = computed(() => {
@@ -463,7 +465,9 @@ const finalRechargeAmount = computed(
 
 // Function
 const handleLogout = () => {
-  console.log("handleLogout");
+  userApi.logout().then(() => {
+    router.go();
+  });
 };
 
 const changePassword = () => {
@@ -503,7 +507,6 @@ onMounted(() => {
     url &&
       userApi.downLoad(url).then((res) => {
         user.value.avatar = URL.createObjectURL(new Blob([res.data]));
-        console.log(avatarTempUrl.value);
       });
   });
 });

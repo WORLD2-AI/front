@@ -69,8 +69,7 @@
       <el-button class="loginBtn" round @click="submitForm">Sign Up</el-button>
       <p>Already have an account?<a class="link" @click="goLogin">Log in</a></p>
       <p :style="{ textAlign: 'center' }">Or</p>
-      <el-button round>GitHub</el-button>
-      <el-button round>Twitter</el-button>
+      <el-button round @click="user.twitter">Twitter</el-button>
     </div>
     <!-- <div class="bottom">Existing accounts</div> -->
   </div>
@@ -217,7 +216,7 @@ const submitForm = () => {
     justify-content: center;
     p {
       margin: 10px auto;
-      font-size: 12px;
+      font-size: 20px;
     }
     .link {
       font-weight: 600;

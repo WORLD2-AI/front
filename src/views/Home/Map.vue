@@ -161,7 +161,7 @@ onMounted(() => {
     scene: {
       preload: preload,
       create: create,
-      // update: update,
+      update: update,
     },
     scale: { zoom: 0.9 },
   };
@@ -604,7 +604,6 @@ function create() {
   console.log(spawn_tile_loc, "createPerson");
   for (let i = 0; i < Object.keys(spawn_tile_loc).length; i++) {
     let persona_name = Object.keys(spawn_tile_loc)[i];
-    console.log(persona_name, "persona_namepersona_name");
     let start_pos = [
       spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
@@ -1019,7 +1018,6 @@ function getFrameData() {
           data = JSON.parse(update_xobj.responseText);
           if (data["data"] && data["data"].length > 0) {
             last_step = data["<step>"] + 1;
-            console.log(data, "data.data");
             data["data"].forEach((element) => {
               frame_data[element["<step>"]] = element;
             });
@@ -1211,13 +1209,13 @@ function update_dialog_user_info(visible) {
 }
 function display_main_box() {
   focus_name = "";
-  document.getElementById("gameDialog").style.display = "none";
-  document.getElementById("main_box").style.display = "inline-block";
+  // document.getElementById("gameDialog").style.display = "none";
+  // document.getElementById("main_box").style.display = "inline-block";
 }
 function display_game_dialog(user_name) {
   focus_name = user_name;
-  document.getElementById("gameDialog").style.display = "inline-block";
-  document.getElementById("main_box").style.display = "none";
+  // document.getElementById("gameDialog").style.display = "inline-block";
+  // document.getElementById("main_box").style.display = "none";
 }
 
 let all_user_data;
