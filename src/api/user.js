@@ -41,7 +41,7 @@ function login(userData) {
 function logout() {
   const oldurl = "/auth/user/logout";
   const url = "/characters/api/logout";
-  return axiosInstance.get(url);
+  return axiosInstance.post(url);
 }
 function profile() {
   const url = `/characters/api/user/profile`;

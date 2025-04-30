@@ -631,7 +631,7 @@ const saveRole = () => {
     // roles.value.push(newRole);
     let newroleForm = roleForm.value;
     let name = newroleForm.last_name + " " + newroleForm.first_name;
-    roleFormRef.value.characters
+    characters
       .register({ ...newroleForm, name })
       .then((res) => {
         characters.getRoles().then((res) => {
