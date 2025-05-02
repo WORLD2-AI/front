@@ -23,7 +23,7 @@
           <div class="first_name">{{ role.first_name }}</div>
           <div class="last_name">{{ role.last_name }}</div>
         </div>
-        <div class="characterDressUp">
+        <!-- <div class="characterDressUp">
           <div class="role">
             <div class="head"></div>
             <div class="body"></div>
@@ -36,7 +36,7 @@
             <div></div>
             <div></div>
           </div>
-        </div>
+        </div> -->
       </div>
       <div class="bottom-section">
         <el-table

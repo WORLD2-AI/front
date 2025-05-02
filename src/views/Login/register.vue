@@ -221,6 +221,7 @@ const submitForm = () => {
     }
     .link {
       font-weight: 600;
+      cursor: pointer;
     }
   }
   .title {

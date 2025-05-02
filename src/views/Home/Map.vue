@@ -145,7 +145,7 @@ onMounted(() => {
   config.value = {
     type: Phaser.AUTO,
     fps: {
-      target: 45,
+      target: 30,
       forceSetTimeOut: true,
     },
     width: 1500,
@@ -356,18 +356,17 @@ function preload() {
     "https://mikewesthad.github.io/phaser-3-tilemap-blog-posts/post-1/assets/atlas/atlas.png",
     "https://mikewesthad.github.io/phaser-3-tilemap-blog-posts/post-1/assets/atlas/atlas.json"
   );
-  rolesApi.visibleChars().then((res) => {
-    let data = res.data.data;
-    persona_names[data.current_character.name] =
-      data.current_character.position;
-
-    // add visible_characters
-    data.visible_characters.forEach((char) => {
+  rolesApi.allChars().then((res) => {
+    res.data.data.characters.forEach((char) => {
       persona_names[char.name] = char.position;
     });
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
     }
+    let myArray = Object.keys(spawn_tile_loc);
+    const randomIndex = Math.floor(Math.random() * myArray.length);
+    focus_name = myArray[randomIndex];
+    // focus_name = "kiki";
     for (let key in persona_names) {
       // key = persona_names[key];
       // ===============================
@@ -380,6 +379,7 @@ function preload() {
         `assets/characters/town/atlas.json`
       );
     }
+    console.log(persona_names, "persona_names");
   });
 }
 
@@ -824,11 +824,11 @@ function update(time, delta) {
   // Moving personas take place in three distinct phases: "process," "update,"
   // and "execute." These phases are determined by the value of <phase>.
   // Only one of the three phases is incurred in each update cycle.
-  if (drag_step && drag_step != step) {
-    step = drag_step;
-    drag_step = 0;
-    return;
-  }
+  // if (drag_step && drag_step != step) {
+  //   step = drag_step;
+  //   drag_step = 0;
+  //   return;
+  // }
   getFrameData();
 
   // This is where we actually move the personas in the visual world. Each
@@ -836,45 +836,61 @@ function update(time, delta) {
   // (or some personas might not move if they choose not to).
   // The execute_count_max is computed by tile_width/movement_speed, which
   // defines a one step sequence in this world.
-  if (frame_data.length <= 0) {
-    return;
-  }
+  // if (frame_data.length <= 0) {
+  //   return;
+  // }
   getFrameData();
 
-  execute_movement = frame_data[step + 1];
-  if (!execute_movement || !execute_movement["meta"]) {
+  // execute_movement = frame_data[step + 1];
+
+  if (!execute_movement || !execute_movement["persona"]) {
     return;
   }
   // document.getElementById("game-time-content").innerHTML =
   //   execute_movement["meta"]["curr_time"];
-  last_time = execute_movement["meta"]["curr_time"];
+  // last_time = execute_movement["meta"]["curr_time"];
+  console.log(personas, "personaspersonaspersonaspersonaspersonas");
+
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
     let curr_persona = personas[curr_persona_name];
     let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+
     let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
+    console.log(curr_persona_name, "curr_persona_name");
+    console.log(curr_persona, "curr_persona");
+    console.log(curr_pronunciatio, "curr_pronunciatio");
+    console.log(curr_persona_name_tags, "curr_persona_name_tags");
 
-    if (execute_count == execute_count_max + 1) {
-      let curr_x =
-        execute_movement["persona"][curr_persona_name]["movement"][0];
-      let curr_y =
-        execute_movement["persona"][curr_persona_name]["movement"][1];
-      movement_target[curr_persona_name] = [
-        curr_x * tile_width,
-        curr_y * tile_width,
-      ];
-      let pronunciatio_content =
-        execute_movement["persona"][curr_persona_name]["pronunciatio"];
-
-      let description =
-        execute_movement["persona"][curr_persona_name]["description"];
-      // This is what gives the pronunciatio balloon the name initials. We
-      // use regex to extract the initials of the personas.
-      // E.g., "Dolores Murphy" -> "DM"
-
-      initials = formatPersonName(curr_persona_name);
-      pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
+    // if (execute_count == execute_count_max + 1) {
+    if (!execute_movement["persona"][curr_persona_name]) {
+      curr_persona.setVisible(false);
+      curr_persona_name_tags.setVisible(false);
+      curr_pronunciatio.setVisible(false);
+      continue;
+    } else {
+      curr_persona.setVisible(true);
+      curr_persona_name_tags.setVisible(true);
+      curr_pronunciatio.setVisible(true);
     }
+    let curr_x = execute_movement["persona"][curr_persona_name]["movement"][0];
+    let curr_y = execute_movement["persona"][curr_persona_name]["movement"][1];
+    movement_target[curr_persona_name] = [
+      curr_x * tile_width,
+      curr_y * tile_width,
+    ];
+    let pronunciatio_content =
+      execute_movement["persona"][curr_persona_name]["pronunciatio"];
+
+    let description =
+      execute_movement["persona"][curr_persona_name]["description"];
+    // This is what gives the pronunciatio balloon the name initials. We
+    // use regex to extract the initials of the personas.
+    // E.g., "Dolores Murphy" -> "DM"
+
+    initials = formatPersonName(curr_persona_name);
+    pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
+    // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
     // console.log(curr_persona_name, x, y, movement_target[curr_persona_name][0], movement_target[curr_persona_name][1]);
@@ -916,24 +932,20 @@ function update(time, delta) {
         curr_persona_name,
         pre_anims_direction_dict
       );
+      curr_persona.body.x = movement_target[curr_persona_name][0];
+      curr_persona.body.y = movement_target[curr_persona_name][1];
+      // console.log("curr_persona_namecurr_persona_name", curr_persona_name);
+      if (curr_persona_name === "frank") {
+      }
     } else {
-      // Once we are done moving the personas, we move on to the "process"
-      // stage where we will send the current locations of all personas at the
-      // end of the movemments to the frontend server, and then the backend.
-      for (let i = 0; i < Object.keys(personas).length; i++) {
-        let curr_persona_name = Object.keys(personas)[i];
-        let curr_persona = personas[curr_persona_name];
-        curr_persona.body.x = movement_target[curr_persona_name][0];
-        curr_persona.body.y = movement_target[curr_persona_name][1];
-      }
-      phase = "update";
-      if (params["update"] == "true") {
-        phase = "process";
-      }
-      execute_count = execute_count_max + 1;
-      step = step + 1;
-      changeProgressBarToEnd(step);
-      return;
+      for (let i = 0; i < Object.keys(personas).length; i++) {}
+      // if (execute_count > 0) {
+      // } else {
+      //   // Once we are done moving the personas, we move on to the "process"
+      //   // stage where we will send the current locations of all personas at the
+      //   // end of the movemments to the frontend server, and then the backend.
+      //   return;
+      // }
     }
   }
 
@@ -996,43 +1008,84 @@ function update(time, delta) {
       }
     }
   }
-
-  execute_count = execute_count - 1;
+  // 注释掉计数更改
+  // execute_count = execute_count - 1;
 }
 function getFrameData() {
-  if (last_step <= step) {
-    last_step = step;
-  }
-  if (last_step - step < 10) {
-    if (postTimeoutHandle) {
-      return;
-    }
-    postTimeoutHandle = true;
-    var update_xobj = new XMLHttpRequest();
-    update_xobj.overrideMimeType("application/json");
-    update_xobj.open("POST", "/api/update_environment", !first_stop);
-    update_xobj?.addEventListener("load", function () {
-      first_stop = false;
-      if (this.readyState === 4) {
-        if (update_xobj.status === 200) {
-          data = JSON.parse(update_xobj.responseText);
-          if (data["data"] && data["data"].length > 0) {
-            last_step = data["<step>"] + 1;
-            data["data"].forEach((element) => {
-              frame_data[element["<step>"]] = element;
-            });
-          }
-          postTimeoutHandle = false;
-        }
-      }
+  rolesApi.visibleChars(focus_name).then((res) => {
+    let data = res.data.data;
+    const output = {
+      execute_movement: {
+        persona: [],
+      },
+    };
+    output.execute_movement.persona[data.current_character.name] = {
+      movement: data.current_character.position,
+      pronunciatio: data.current_character.emoji,
+      description: data.current_character.action,
+    };
+
+    // add visible_characters
+    data.visible_characters.forEach((char) => {
+      output.execute_movement.persona[char.name] = {
+        movement: char.position,
+        pronunciatio: char.emoji,
+        description: char.action,
+      };
     });
-    update_xobj.send(
-      JSON.stringify({ step: last_step, sim_code: sim_code, page: 10 })
-    );
-    setTimeout(() => {
-      postTimeoutHandle = false;
-    }, 2000);
-  }
+    execute_movement = output.execute_movement;
+  });
+  // rolesApi.allChars().then((res) => {
+  //   const output = {
+  //     execute_movement: {
+  //       persona: [],
+  //     },
+  //   };
+  //   // console.log(res.data.data);
+  //   res.data.data.characters.forEach((person) => {
+  //     output.execute_movement.persona[person.name] = {
+  //       movement: person.position,
+  //       pronunciatio: person.emoji,
+  //       description: person.action,
+  //     };
+  //   });
+  //   execute_movement = output.execute_movement;
+  // });
+
+  // if (last_step <= step) {
+  //   last_step = step;
+  // }
+  // if (last_step - step < 10) {
+  //   if (postTimeoutHandle) {
+  //     return;
+  //   }
+  //   postTimeoutHandle = true;
+  //   var update_xobj = new XMLHttpRequest();
+  //   update_xobj.overrideMimeType("application/json");
+  //   update_xobj.open("POST", "/api/update_environment", !first_stop);
+  //   update_xobj?.addEventListener("load", function () {
+  //     first_stop = false;
+  //     if (this.readyState === 4) {
+  //       if (update_xobj.status === 200) {
+  //         data = JSON.parse(update_xobj.responseText);
+  //         // console.log(data, "更新的数据结构");
+  //         if (data["data"] && data["data"].length > 0) {
+  //           last_step = data["<step>"] + 1;
+  //           data["data"].forEach((element) => {
+  //             frame_data[element["<step>"]] = element;
+  //           });
+  //         }
+  //         postTimeoutHandle = false;
+  //       }
+  //     }
+  //   });
+  //   update_xobj.send(
+  //     JSON.stringify({ step: last_step, sim_code: sim_code, page: 10 })
+  //   );
+  //   setTimeout(() => {
+  //     postTimeoutHandle = false;
+  //   }, 2000);
+  // }
 }
 
 function updatePersonaAnimation(
@@ -1041,6 +1094,12 @@ function updatePersonaAnimation(
   curr_persona_name,
   pre_anims_direction_dict
 ) {
+  // console.log({
+  //   curr_persona,
+  //   anims_direction,
+  //   curr_persona_name,
+  //   pre_anims_direction_dict,
+  // });
   let baseTextureLowerCase = curr_persona_name.toLowerCase(); // Dynamically generate basic texture names
   let baseTexture = baseTextureLowerCase.replace(" ", "_");
   if (anims_direction === "l") {
@@ -1304,7 +1363,7 @@ function update_user_info() {
     user_data.scratch.f_daily_schedule.forEach((req) => {
       content += '<p style="font-size:12px;">' + req[0] + "</p>";
     });
-    document.getElementById("character_schedule").innerHTML = content;
+    // document.getElementById("character_schedule").innerHTML = content;
     content = "<p><span>Age: " + user_data.scratch.age + "</span></p>";
     content += "<p><span>Innate: " + user_data.scratch.innate + "</span></p>";
     content += "<p><span>Learned: " + user_data.scratch.learned + "</span></p>";
@@ -1313,7 +1372,7 @@ function update_user_info() {
     content +=
       "<p><span>Vision_r: " + user_data.scratch.vision_r + "</span></p>";
     // content += "<p><span>Daily Plan: "+user_data.scratch.daily_plan_req+"</span></p>"
-    document.getElementById("character_info").innerHTML = content;
+    // document.getElementById("character_info").innerHTML = content;
   }
 }
 function switchTab(tabName) {
@@ -1329,7 +1388,6 @@ function switchTab(tabName) {
   });
 
   const tabElement = document.querySelector(`[data-tab="${tabName}"]`);
-  console.log(tabName, tabElement, "tabElementtabElementtabElement");
   if (tabElement) {
     tabElement.classList.add("active");
   }
