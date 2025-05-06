@@ -154,10 +154,10 @@ const rolelist = {
 };
 onMounted(() => {
   characters.getRoles().then((res) => {
-    roles.value = res.data;
-    role.value = roles.value[0];
-    let object = roles.value[0];
+    res.data.data && (roles.value = res.data.data);
     if (roles.value.length > 0) {
+      role.value = roles.value[0];
+      let object = roles.value[0];
       for (const key in rolelist) {
         let obj = {};
         if (Object.hasOwnProperty.call(object, key)) {

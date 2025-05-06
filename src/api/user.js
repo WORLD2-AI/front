@@ -4,7 +4,6 @@ import { ElNotification } from "element-plus";
 const baseURL = "http://192.168.1.6:5000/login";
 
 function register(userData) {
-  const oldurl = "/login/register"; 
   const url= '/characters/api/register_user'
   const formData = new FormData();
   for (const key in userData) {
@@ -21,7 +20,6 @@ function register(userData) {
     })
 }
 function login(userData) {
-  const oldurl = "/login/login"; 
   const url = "/characters/api/login"; 
   const formData = new FormData();
   for (const key in userData) {
@@ -39,8 +37,7 @@ function login(userData) {
 }
 
 function logout() {
-  const oldurl = "/auth/user/logout";
-  const url = "/characters/api/logout";
+  const url = "/characters/logout";
   return axiosInstance.post(url);
 }
 function profile() {

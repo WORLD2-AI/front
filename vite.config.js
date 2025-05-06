@@ -52,7 +52,7 @@ export default defineConfig({
         },
       },
       "/characters": {
-        target: "http://192.168.1.35:5000",
+        target: "http://192.168.1.6:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/characters/, "") ,
         configure: (proxy, options) => {
@@ -64,22 +64,6 @@ export default defineConfig({
           });
           proxy.on("proxyRes", (proxyRes) => {
             console.log("characters Agent Response Status:", proxyRes.statusCode);
-          });
-        },
-      },
-      "/assets": {
-        target: "http://192.168.1.6:8000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/assets/, "/static/assets"),
-        configure: (proxy, options) => {
-          proxy.on("error", (err) => {
-            console.error("Assets agent error:", err);
-          });
-          proxy.on("proxyReq", (proxyReq) => {
-            console.log("Assets proxy request:", proxyReq.path);
-          });
-          proxy.on("proxyRes", (proxyRes) => {
-            console.log("Assets Agent Response Status:", proxyRes.statusCode);
           });
         },
       },

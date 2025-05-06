@@ -284,7 +284,12 @@
           />
         </el-form-item>
         <el-form-item label="currently" prop="currently">
-          <el-input v-model="roleForm.currently" type="textarea" :rows="3" />
+          <el-input
+            v-model="roleForm.currently"
+            type="textarea"
+            placeholder="Please enter the role currently"
+            :rows="3"
+          />
         </el-form-item>
         <el-form-item label="lifestyle" prop="lifestyle">
           <el-input
@@ -498,12 +503,11 @@ const imgChange = (fileObj, fileList) => {
 onMounted(() => {
   // get RolesList
   characters.getRoles().then((res) => {
-    console.log(res.data);
-    roles.value = res.data;
+    res.data.data && (roles.value = res.data.data);
   });
   // get userInfo
   userApi.profile().then((res) => {
-    let url = res.data.data.avatar_url;
+    let url = res.data.data?.avatar_url;
     url &&
       userApi.downLoad(url).then((res) => {
         user.value.avatar = URL.createObjectURL(new Blob([res.data]));
@@ -595,15 +599,12 @@ const deleteRole = (role) => {
           characters.getRoles().then((res) => {
             roles.value = res.data.data;
             roleDialogVisible.value = false;
-            ElMessage.success("Role added successfully");
+            ElMessage.success("Delete successfully");
           });
         })
         .catch((req) => {
           ElMessage.error(req.message);
         });
-      roles.value = roles.value.filter((r) => r.id !== role.id);
-
-      ElMessage.success("Delete successfully");
     })
     .catch(() => {});
 };

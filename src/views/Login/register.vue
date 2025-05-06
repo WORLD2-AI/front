@@ -58,6 +58,19 @@
             </div>
           </div>
         </div>
+        <el-form-item label="" prop="invitation_code">
+          <div class="invitation_code">
+            <el-input
+              v-model="formData.invitation_code"
+              placeholder="Please enter your invitationCode"
+              clearable
+              prefix-icon="el-icon-user-solid"
+              :style="{ width: '100%' }"
+            >
+              <!-- <template #prefix>+86</template> -->
+            </el-input>
+          </div>
+        </el-form-item>
 
         <el-form-item>
           <div class="checkout">
@@ -88,6 +101,7 @@ const elFormRef = ref();
 const formData = ref({
   username: null,
   password: "",
+  invitation_code: "",
 });
 const strengthLevels = [
   { text: "Poor", minScore: 0, class: "level-1" },
@@ -154,6 +168,13 @@ const rules = ref({
     {
       required: true,
       message: "username is required",
+      trigger: "blur",
+    },
+  ],
+  invitation_code: [
+    {
+      required: true,
+      message: "invitation_code is required",
       trigger: "blur",
     },
   ],

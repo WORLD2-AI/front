@@ -161,7 +161,7 @@ onMounted(() => {
     scene: {
       preload: preload,
       create: create,
-      update: update,
+      // update: update,
     },
     scale: { zoom: 0.9 },
   };
@@ -353,34 +353,34 @@ function preload() {
   //       https://www.youtube.com/watch?v=fdXcD9X4NrQ&ab_channel=MorganPage
   this.load.atlas(
     "atlas",
-    "https://mikewesthad.github.io/phaser-3-tilemap-blog-posts/post-1/assets/atlas/atlas.png",
-    "https://mikewesthad.github.io/phaser-3-tilemap-blog-posts/post-1/assets/atlas/atlas.json"
+    "img/atlas.png",
+    "assets/characters/town/atlas.json"
   );
-  rolesApi.allChars().then((res) => {
-    res.data.data.characters.forEach((char) => {
-      persona_names[char.name] = char.position;
-    });
-    for (let key in persona_names) {
-      spawn_tile_loc[key] = persona_names[key];
-    }
-    let myArray = Object.keys(spawn_tile_loc);
-    const randomIndex = Math.floor(Math.random() * myArray.length);
-    focus_name = myArray[randomIndex];
-    // focus_name = "kiki";
-    for (let key in persona_names) {
-      // key = persona_names[key];
-      // ===============================
-      key = key.replace(" ", "_");
-      key = key.toLowerCase();
-      // console.log(`assets/characters/town/profile/${key}.png`, "");
-      this.load.atlas(
-        key,
-        `assets/characters/town/profile/${key}.png`,
-        `assets/characters/town/atlas.json`
-      );
-    }
-    console.log(persona_names, "persona_names");
-  });
+  // rolesApi.allChars().then((res) => {
+  //   res.data.data.characters.forEach((char) => {
+  //     persona_names[char.name] = char.position;
+  //   });
+  //   for (let key in persona_names) {
+  //     spawn_tile_loc[key] = persona_names[key];
+  //   }
+  //   let myArray = Object.keys(spawn_tile_loc);
+  //   const randomIndex = Math.floor(Math.random() * myArray.length);
+  //   focus_name = myArray[randomIndex];
+  //   // focus_name = "kiki";
+  //   for (let key in persona_names) {
+  //     // key = persona_names[key];
+  //     // ===============================
+  //     key = key.replace(" ", "_");
+  //     key = key.toLowerCase();
+  //     // console.log(`assets/characters/town/profile/${key}.png`, "");
+  //     this.load.atlas(
+  //       key,
+  //       `assets/characters/town/profile/${key}.png`,
+  //       `assets/characters/town/atlas.json`
+  //     );
+  //   }
+  //   console.log(persona_names, "persona_names");
+  // });
 }
 
 function create() {
@@ -840,6 +840,7 @@ function update(time, delta) {
   //   return;
   // }
   getFrameData();
+  // getFrameData();
 
   // execute_movement = frame_data[step + 1];
 
@@ -1283,32 +1284,6 @@ let date;
 let data;
 let story_template =
   '<p style="font-size:12px;"><span></span>[ #time# ] <span>#item#</span></p>';
-function get_all_user_data() {
-  var update_xobj = new XMLHttpRequest();
-  update_xobj.overrideMimeType("application/json");
-  var url = "/api/status/";
-  if (last_time) {
-    url += "?last_time=" + last_time;
-  }
-  update_xobj.open("GET", url, true);
-  update_xobj?.addEventListener("load", function () {
-    if (this.readyState === 4) {
-      if (update_xobj.status === 200) {
-        data = JSON.parse(update_xobj.responseText);
-        if (data && typeof data === "object" && Object.keys(data).length > 0) {
-          all_user_data = data;
-        }
-        update_story();
-        update_user_info();
-        setTimeout(() => {
-          get_all_user_data();
-        }, 5000);
-      }
-    }
-  });
-  update_xobj.send();
-}
-get_all_user_data();
 
 function update_story() {
   let data = [];

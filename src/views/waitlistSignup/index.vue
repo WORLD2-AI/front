@@ -3,7 +3,7 @@
     <div class="content-wrapper">
       <header>
         <div>
-          <img src="/static/85ea80fd-7496-4e6e-90b5-098f280fbde4.png" alt="" />
+          <img src="/img/85ea80fd-7496-4e6e-90b5-098f280fbde4.png" alt="" />
         </div>
       </header>
       <!-- title -->
@@ -39,7 +39,7 @@
       <div class="social-links">
         <a href="">
           <button class="social-link">
-            <img src="/static/github.jpg" alt="" />
+            <img src="/img/github.jpg" alt="" />
             <i>Follow on GitHub</i>
           </button>
         </a>
@@ -47,7 +47,7 @@
           href="/login/login/twitter?callback=http://localhost:5173/#/waitlistSignup"
         >
           <button class="social-link">
-            <img src="/static/x.png" alt="" />
+            <img src="/img/x.png" alt="" />
             <i>Follow on X</i>
           </button>
         </a>

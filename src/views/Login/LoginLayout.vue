@@ -17,7 +17,7 @@ import { ref, reactive } from "vue";
 .bg {
   width: 100%;
   height: 100vh;
-  background-image: url("static/loginBg.jpg");
+  background-image: url("img/loginBg.jpg");
   background-size: cover;
   .content {
     width: 100%;
@@ -30,8 +30,8 @@ import { ref, reactive } from "vue";
       justify-content: center;
       align-items: center;
       .card {
-        background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-        backdrop-filter: blur(1px); /* 关键属性 - 背景模糊 */
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(1px);
         padding: 20px;
         box-shadow: 0 0px 25px rgba(255, 255, 255, 0.8);
         width: 800px;

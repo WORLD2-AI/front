@@ -4,11 +4,20 @@
       <el-header style="background: #000">
         <ul class="container">
           <li>
-            <img class="media-object" src="/static/logo.jpg" alt="" />
+            <img
+              class="media-object"
+              src="/img/logo.jpg"
+              @click="goLogin"
+              alt=""
+            />
           </li>
           <li class="navbar-nav">
-            <template v-if="loginStatus">
-              <!-- <img src="/static/github.jpg" alt="" /> -->
+            <div v-show="!loginStatus">
+              <div class="user-auto">
+                <img src="/img/github.jpg" @click="goLogin" alt="" />
+              </div>
+            </div>
+            <div v-show="loginStatus">
               <el-dropdown @command="handleCommand" trigger="click">
                 <div class="user-avatar">
                   <el-avatar :size="40" :src="user.avatar" />
@@ -34,11 +43,7 @@
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
-            </template>
-            <template>
-              <img src="/static/github.jpg" alt="" />
-              <a href="/">Login In</a>
-            </template>
+            </div>
           </li>
         </ul>
       </el-header>
@@ -55,7 +60,7 @@ import { useRouter } from "vue-router";
 import Map from "./Map.vue";
 import BarOntainer from "./barOntainer.vue";
 const router = useRouter();
-const loginStatus = true;
+const loginStatus = ref(false);
 import {
   ArrowDown,
   User,
@@ -63,19 +68,24 @@ import {
   SwitchButton,
 } from "@element-plus/icons-vue";
 import userApi from "../../api/user";
+const user = ref({
+  name: "user",
+  avatar: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+});
+const goLogin = () => {
+  router.push("/login");
+};
 onMounted(() => {
   userApi.profile().then((res) => {
-    let url = res.data.data.avatar_url;
+    loginStatus.value = true;
+    let url = res.data.data?.avatar_url;
     url &&
       userApi.downLoad(url).then((res) => {
         user.value.avatar = URL.createObjectURL(new Blob([res.data]));
       });
   });
 });
-const user = ref({
-  name: "user",
-  avatar: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
-});
+
 const handleCommand = (command) => {
   switch (command) {
     case "profile":
@@ -91,7 +101,8 @@ const handleCommand = (command) => {
 };
 const logout = () => {
   userApi.logout().then(() => {
-    router.go();
+    loginStatus.value = false;
+    // router.go();
   });
 };
 </script>
@@ -110,7 +121,6 @@ const logout = () => {
     .user-avatar {
       display: flex;
       align-items: center;
-      padding: 10px 0;
     }
 
     .user-name {
@@ -177,6 +187,26 @@ const logout = () => {
         align-items: center;
         justify-content: space-between;
         padding: 0 15px;
+        position: relative;
+        .user-auto {
+          height: 40px;
+          width: 40px;
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          padding: 0;
+          img {
+            height: 40px;
+            width: 40px;
+          }
+        }
+        div {
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          padding: 10px 0;
+        }
         img {
           width: 30px;
           height: auto;
