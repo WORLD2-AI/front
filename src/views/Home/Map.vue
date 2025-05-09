@@ -880,7 +880,7 @@ function update(time, delta) {
   //   drag_step = 0;
   //   return;
   // }
-  getFrameData();
+  
 
   // This is where we actually move the personas in the visual world. Each
   // backend computation in execute_movement moves each persona by one tile
@@ -890,7 +890,7 @@ function update(time, delta) {
   // if (frame_data.length <= 0) {
   //   return;
   // }
-  getFrameData();
+  
   // getFrameData();
 
   // execute_movement = frame_data[step + 1];
@@ -940,7 +940,7 @@ function update(time, delta) {
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
-    // console.log(curr_persona_name, x, y, movement_target[curr_persona_name][0], movement_target[curr_persona_name][1]);
+    console.log(curr_persona_name, x, y, movement_target[curr_persona_name][0], movement_target[curr_persona_name][1],movement_speed);
     // console.log("persona pos:", Math.ceil(x / tile_width), Math.ceil(y / tile_width))
     if (execute_count > 0) {
       if (curr_persona.body.x < movement_target[curr_persona_name][0]) {
@@ -979,11 +979,9 @@ function update(time, delta) {
         curr_persona_name,
         pre_anims_direction_dict
       );
-      curr_persona.body.x = movement_target[curr_persona_name][0];
-      curr_persona.body.y = movement_target[curr_persona_name][1];
+      // curr_persona.body.x = movement_target[curr_persona_name][0];
+      // curr_persona.body.y = movement_target[curr_persona_name][1];
       // console.log("curr_persona_namecurr_persona_name", curr_persona_name);
-      if (curr_persona_name === "frank") {
-      }
     } else {
       for (let i = 0; i < Object.keys(personas).length; i++) {}
       // if (execute_count > 0) {
@@ -1058,6 +1056,9 @@ function update(time, delta) {
   // 注释掉计数更改
   // execute_count = execute_count - 1;
 }
+setInterval(() => {
+  getFrameData();
+}, 1000);
 function getFrameData() {
   rolesApi.visibleChars(focus_id.value).then((res) => {
     let data = res.data.data;
