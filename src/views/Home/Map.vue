@@ -425,7 +425,7 @@ function preload() {
       // console.log(`assets/characters/town/profile/${key}.png`, "");
       this.load.atlas(
         key,
-        `assets/characters/town/profile/${atlas}.png`,
+        `assets/characters/town/profile/${key}.png`,
         `assets/characters/town/atlas.json`
       );
     }
