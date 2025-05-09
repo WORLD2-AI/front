@@ -880,7 +880,6 @@ function update(time, delta) {
   //   drag_step = 0;
   //   return;
   // }
-  
 
   // This is where we actually move the personas in the visual world. Each
   // backend computation in execute_movement moves each persona by one tile
@@ -890,7 +889,7 @@ function update(time, delta) {
   // if (frame_data.length <= 0) {
   //   return;
   // }
-  
+
   // getFrameData();
 
   // execute_movement = frame_data[step + 1];
@@ -940,7 +939,14 @@ function update(time, delta) {
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
-    console.log(curr_persona_name, x, y, movement_target[curr_persona_name][0], movement_target[curr_persona_name][1],movement_speed);
+    console.log(
+      curr_persona_name,
+      x,
+      y,
+      movement_target[curr_persona_name][0],
+      movement_target[curr_persona_name][1],
+      movement_speed
+    );
     // console.log("persona pos:", Math.ceil(x / tile_width), Math.ceil(y / tile_width))
     if (execute_count > 0) {
       if (curr_persona.body.x < movement_target[curr_persona_name][0]) {
@@ -1069,7 +1075,7 @@ function getFrameData() {
     };
     output.execute_movement.persona[data.center_character.name] = {
       movement: data.center_character.position,
-      pronunciatio: data.center_character.emoji,
+      pronunciatio: data.center_character.level_emoji,
       description: data.center_character.action,
     };
 
@@ -1077,7 +1083,7 @@ function getFrameData() {
     data.visible_characters.forEach((char) => {
       output.execute_movement.persona[char.name] = {
         movement: char.position,
-        pronunciatio: char.emoji,
+        pronunciatio: char.level_emoji,
         description: char.action,
       };
     });
