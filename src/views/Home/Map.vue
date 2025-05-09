@@ -93,11 +93,11 @@ const game = ref();
 const progressBar = ref();
 const progress = ref();
 const slider = ref();
-let focus_id = ref(null);
+let focus_id = ref("");
 const dialogues = computed(() => {
   let flag = false;
   console.log(Profile.value, "ProfileProfileProfileProfileProfileProfile");
-  if (Profile && focus_id) {
+  if (Profile && focus_id.value) {
     flag = true;
   }
   return flag;
@@ -406,7 +406,7 @@ function preload() {
     persona_namesId = [];
     res.data.data.characters.forEach((char) => {
       persona_names[char.name] = char.position;
-      persona_namesId.push(char.id);
+      persona_namesId.push(char.character_id);
     });
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
@@ -425,7 +425,7 @@ function preload() {
       // console.log(`assets/characters/town/profile/${key}.png`, "");
       this.load.atlas(
         key,
-        `assets/characters/town/profile/${key}.png`,
+        `assets/characters/town/profile/${atlas}.png`,
         `assets/characters/town/atlas.json`
       );
     }

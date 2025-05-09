@@ -36,7 +36,7 @@ export default defineConfig({
         },
       },
       "/rolesreder": {
-        target: "http://192.168.1.37:5000",
+        target: "http://192.168.1.6:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/rolesreder/, ""),
         configure: (proxy, options) => {
@@ -55,7 +55,7 @@ export default defineConfig({
         },
       },
       "/roles": {
-        target: "http://192.168.1.37:8000",
+        target: "http://192.168.1.6:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/roles/, ""),
         configure: (proxy, options) => {
