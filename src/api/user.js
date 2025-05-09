@@ -4,7 +4,7 @@ import { ElNotification } from "element-plus";
 const baseURL = "http://192.168.1.6:5000/login";
 
 function register(userData) {
-  const url= '/characters/api/register_user'
+  const url = "/characters/api/register_user";
   const formData = new FormData();
   for (const key in userData) {
     if (Object.hasOwnProperty.call(userData, key)) {
@@ -12,15 +12,14 @@ function register(userData) {
       formData.append(key, element);
     }
   }
-  return axiosInstance
-    .post(url, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data", // Clearly set Content Type
-      },
-    })
+  return axiosInstance.post(url, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data", // Clearly set Content Type
+    },
+  });
 }
 function login(userData) {
-  const url = "/characters/api/login"; 
+  const url = "/characters/api/login";
   const formData = new FormData();
   for (const key in userData) {
     if (Object.hasOwnProperty.call(userData, key)) {
@@ -28,12 +27,7 @@ function login(userData) {
       formData.append(key, element);
     }
   }
-  return axiosInstance
-    .post(url, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data", // Clearly set Content Type
-      },
-    })
+  return axiosInstance.post(url, formData);
 }
 
 function logout() {
@@ -48,18 +42,16 @@ function twitter() {
   const url = `/login/login/twitter`;
   return axiosInstance.get(url);
 }
-function upload(fileData){
-  const url = "/characters/api/upload_avatar"; 
-  return axiosInstance
-    .post(url, fileData)
+function upload(fileData) {
+  const url = "/characters/api/upload_avatar";
+  return axiosInstance.post(url, fileData);
 }
 function downLoad(filename) {
-    return axiosInstance.get(
-       `/characters/images${filename}`,{
-      responseType: 'blob'}
-    )
-  }
-  // Export API for registered users
+  return axiosInstance.get(`/characters/images${filename}`, {
+    responseType: "blob",
+  });
+}
+// Export API for registered users
 export default {
   register,
   login,
@@ -67,5 +59,5 @@ export default {
   profile,
   twitter,
   upload,
-  downLoad
+  downLoad,
 };

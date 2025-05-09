@@ -7,17 +7,18 @@
         </div>
       </header>
       <!-- title -->
-      <h1 class="title">Infinitely supercharged AI</h1>
+
+      <h1 class="title">The Next Leap in AI Intelligence</h1>
 
       <!-- description -->
       <p class="description">
-        DARK integrates new tools into your AI automatically, so it uplevels
-        itself over time.
+        Your digital assistant now upgrades itself—seamlessly adopting
+        breakthroughs so you don't have to.
       </p>
 
       <!-- form fields -->
       <div class="form-section">
-        <p class="form-title">Be the first to get the app:</p>
+        <p class="form-title">Join the private beta:</p>
 
         <!-- Input Boxes and Buttons -->
         <div class="form-group-box">

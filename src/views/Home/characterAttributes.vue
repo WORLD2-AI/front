@@ -5,15 +5,15 @@
         <div class="arch"></div>
         <div class="clan">
           <el-row>
-            <el-col :span="6">Age</el-col>
+            <el-col :span="6">Age:</el-col>
             <el-col :span="18">{{ role.age }}</el-col>
           </el-row>
           <el-row>
-            <el-col :span="6">Sex</el-col>
+            <el-col :span="6">Sex:</el-col>
             <el-col :span="18">{{ role.sex }}</el-col>
           </el-row>
           <el-row>
-            <el-col :span="6">Name</el-col>
+            <el-col :span="6">Name:</el-col>
             <el-col :span="18">{{ role.name }}</el-col>
           </el-row>
         </div>
@@ -57,76 +57,7 @@
         </el-table>
       </div>
     </el-card>
-    <div class="timeLine">
-      <div class="card">
-        <div class="name">Carmen Oritz</div>
-        <el-timeline style="max-width: 600px">
-          <el-timeline-item center>
-            <el-card>
-              <div class="content">
-                <h4>Update Github template</h4>
-                <p>Tom committed 2018/4/12 20:46</p>
-              </div>
-            </el-card>
-            <template #dot>
-              <el-icon><Sunny /></el-icon>
-            </template>
-          </el-timeline-item>
-          <el-timeline-item center>
-            <el-card>
-              <div class="icon">
-                <el-icon><Sunny /></el-icon>
-              </div>
-              <div class="content">
-                <h4>Update Github template</h4>
-              </div>
-            </el-card>
-            <template #dot>
-              <div>6:00</div>
-            </template>
-          </el-timeline-item>
-          <el-timeline-item center>
-            <el-card>
-              <div class="icon">
-                <el-icon><Sunny /></el-icon>
-              </div>
-              <div class="content">
-                <h4>Update Github template</h4>
-              </div>
-            </el-card>
-            <template #dot>
-              <div>9:00</div>
-            </template>
-          </el-timeline-item>
-          <el-timeline-item placement="top" center>
-            <el-card>
-              <div class="icon">
-                <el-icon><Sunny /></el-icon>
-              </div>
-              <div class="content">
-                <h4>Update Github template</h4>
-              </div>
-            </el-card>
-            <template #dot>
-              <div>15:00</div>
-            </template>
-          </el-timeline-item>
-          <el-timeline-item placement="top" center>
-            <el-card>
-              <div class="icon">
-                <el-icon><Sunny /></el-icon>
-              </div>
-              <div class="content">
-                <h4>Update Github template</h4>
-              </div>
-            </el-card>
-            <template #dot>
-              <div>21:00</div>
-            </template>
-          </el-timeline-item>
-        </el-timeline>
-      </div>
-    </div>
+    <time-line></time-line>
   </div>
 </template>
 
@@ -134,6 +65,8 @@
 import { ref, onMounted } from "vue";
 import { Sunny } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
+import Text from "./text.vue";
+import TimeLine from "./timeLine.vue";
 const roles = ref([]);
 const role = ref({
   age: "",
@@ -174,37 +107,42 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
+$background: rgba(13, 31, 13, 0.9);
+$backgroundHover: rgba(13, 31, 13, 0.7);
 .container {
   padding: 20px;
   /* display: flex; */
 }
 .card {
+  color: #ebe7e7;
+  border: 2px solid #c9a769;
   width: 290px;
   height: auto;
   padding: 5px;
+  padding-bottom: 0px;
+  background: linear-gradient(to right, #1a2a1a, #0d1f0d);
   :deep(.el-card__body) {
     padding: 0;
   }
   /* border-radius: 50% 50% 0 0; */
-  background: #ccc;
+  /* background: #ccc; */
   .top-section {
     height: 130px;
     position: relative;
     overflow: hidden;
     .arch {
       position: absolute;
-      background: #fff;
       height: 130px;
       left: -6%;
       width: 113%;
-      border: 1px solid #fff;
+      border-top: 1px solid #fff;
       border-radius: 50% 50% 0 0;
+      box-shadow: $shadow;
     }
     .clan {
-      background: #fff;
       width: 100%;
       position: absolute;
-      top: 50px;
+      top: 48px;
       padding: 0 20px;
       .el-row {
         .el-col {
@@ -213,13 +151,14 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
             line-height: 27px;
             font-size: 14px;
             text-align: center;
-            background: #ccc;
+            /* background: #ccc; */
           }
           &:nth-child(2) {
-            box-shadow: $shadow;
+            border-bottom: #ccc 1px solid;
+            /* box-shadow: $shadow; */
             height: 27px;
             line-height: 27px;
-            text-align: right;
+            text-align: left;
           }
         }
       }
@@ -227,16 +166,18 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   }
 }
 .middle-section {
+  height: 40px;
   .name {
-    background: #fff;
     display: flex;
     height: 27px;
     padding: 0 20px;
     div {
-      box-shadow: $shadow;
+      /* box-shadow: $shadow; */
+      border-bottom: #ccc 1px solid;
       padding-right: 10px;
       height: 100%;
       flex: 1;
+      margin: 0 20px;
       line-height: 27px;
       text-align: right;
     }
@@ -257,13 +198,13 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
         height: 35px;
         transform: translateY(10px);
         background: #ccc;
-        box-shadow: $shadow;
+        /* box-shadow: $shadow; */
       }
       .body {
         width: 68px;
         height: 87px;
         background: #ccc;
-        box-shadow: $shadow;
+        /* box-shadow: $shadow; */
       }
       .replacement {
         transform: translateY(-30px);
@@ -272,7 +213,7 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
         justify-content: space-between;
         span {
           background: #ccc;
-          box-shadow: $shadow;
+          /* box-shadow: $shadow; */
           width: 35px;
           height: 35px;
         }
@@ -286,7 +227,7 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
         width: 35px;
         height: 35px;
         background: #ccc;
-        box-shadow: $shadow;
+        /* box-shadow: $shadow; */
       }
     }
   }
@@ -307,126 +248,22 @@ $shadow: inset 0 0 5px rgba(0, 0, 0, 0.6);
   margin-bottom: 5px;
 }
 .bottom-section {
-  background: #fff;
   font-size: 12px;
   padding: 0 20px;
   .el-table--fit {
-    border: 2px solid #ccc;
+    border: 1px solid #ccc;
   }
   :deep(.el-table__inner-wrapper) {
-    .el-table__body-wrapper {
-      .el-scrollbar {
-        .el-scrollbar__bar.is-vertical {
-          width: 10px;
-          .el-scrollbar__thumb {
-          }
-        }
-      }
+    color: #ebe7e7;
+    background-color: $background;
+    .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+      background-color: red;
     }
-  }
-}
-.timeLine {
-  width: 290px;
-  background: #ccc;
-  .card {
-    width: auto;
-    padding: 5px 15px;
-    background: #fff;
-    .name {
-      background: #000;
-      color: #fff;
-      height: 40px;
-      border-radius: 5px;
-      width: 100%;
-      line-height: 40px;
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-    .el-timeline {
-      :deep(.el-timeline-item) {
-        border-radius: 10px;
-        height: 60px;
-        width: 260px;
-        margin-top: 10px;
-        padding: 0;
-        .el-timeline-item__tail {
-          left: 0;
-          margin-left: 30px;
-          height: 56px;
-          border-left: 3px solid #ccc;
-          top: 37px;
-        }
-        .el-timeline-item__dot {
-          width: 60px;
-          height: 100%;
-          .el-icon {
-            font-size: 45px;
-          }
-          .content {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-          }
-        }
-        .el-timeline-item__wrapper {
-          height: 100%;
-          padding-left: 60px;
-          .el-card__body {
-            display: flex;
-            .icon {
-              flex-shrink: 0;
-              width: 60px;
-              height: 100%;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              .el-icon {
-                font-size: 45px;
-              }
-            }
-            padding: 5px;
-          }
-          .el-timeline-item__content {
-            .el-card {
-              border-radius: 10px;
-              border: none;
-            }
-          }
-        }
-        .el-timeline-item__timestamp {
-          margin-bottom: 0;
-          padding: 0;
-        }
-      }
-    }
-    :deep(.el-timeline) {
-      .el-timeline-item__center {
-        &:last-child {
-          overflow: hidden;
-        }
-        &:first-child {
-          padding: 0;
-          background: #fff;
-          box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
-          .el-timeline-item__tail {
-            top: 60px;
-            height: 33px;
-          }
-          .el-timeline-item__dot {
-            z-index: 100;
-          }
-          .el-timeline-item {
-            background: #fff;
-          }
-          .el-timeline-item__wrapper {
-            .el-timeline-item__content {
-              .el-card {
-                box-shadow: none;
-                border: none;
-              }
-            }
-          }
+    tr {
+      background-color: $background;
+      &:hover {
+        .el-table__cell {
+          background-color: $backgroundHover;
         }
       }
     }

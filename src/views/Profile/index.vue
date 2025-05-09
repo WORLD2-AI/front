@@ -306,11 +306,24 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- <el-dialog v-model="outerVisible" title="Choose your home site" width="800">
+      <Site></Site>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="outerVisible = false">Cancel</el-button>
+          <el-button type="primary" @click="innerVisible = true">
+            Open the inner Dialog
+          </el-button>
+        </div>
+      </template>
+    </el-dialog> -->
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import Site from "./Site.vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import {
@@ -464,6 +477,7 @@ const isEditRole = ref(false);
 const roleDialogTitle = computed(() =>
   isEditRole.value ? "Edit Role" : "Register  Role"
 );
+const outerVisible = ref(false);
 const finalRechargeAmount = computed(
   () => customAmount.value || rechargeAmount.value
 );
@@ -610,6 +624,8 @@ const deleteRole = (role) => {
 };
 
 const saveRole = () => {
+  // outerVisible.value = true;
+  // return;
   console.log(roleForm.value);
   console.log(isEditRole);
   if (isEditRole.value) {

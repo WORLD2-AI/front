@@ -6,7 +6,6 @@ import axios from "axios";
 // 创建axios实例
 const axiosInstance = axios.create({
   baseURL: "/",
-  timeout: 5000, // 请求超时时间
 });
 const axiosInstanceTicket = axios.create({
   baseURL: "/",

@@ -16,29 +16,60 @@
       <div class="col-md-7">
         <div id="game-container" style="text-align: center">
           <!-- <Map /> -->
+          <div class="game-dialogues" v-if="dialogues">
+            <input
+              v-model="dialoguesCont"
+              type="text"
+              class="chat-input"
+              placeholder="input chat content..."
+            />
+            <button
+              style="
+                background-color: #c9a769;
+                color: #1a2a1a;
+                padding: 8px 4px;
+                border: none;
+                border-radius: 4px;
+                margin-left: 10px;
+              "
+              @click="
+                () => {
+                  console.log(dialoguesCont);
+
+                  rolesApi.dialogues({
+                    character_id: focus_id,
+                    instruction: dialoguesCont,
+                  });
+                }
+              "
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
       <div class="col-md-4">
+        <CharacterAttributes />
         <!-- <DialogContainer
           :personNames="persona_names"
           :displayMainBox="display_main_box"
           :displayGameDialog="display_game_dialog"
           :switchTab="switchTab"
         /> -->
-        <CharacterAttributes />
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
 import Phaser from "phaser";
 import rolesApi from "../../api/roles";
-// import DialogContainer from "./dialogContainer.vue";
+import userApi from "../../api/user";
+import DialogContainer from "./dialogContainer.vue";
 import CharacterAttributes from "./characterAttributes.vue";
 
 /*
-	  Main resources:
+Main resources:
 	  https://www.youtube.com/watch?v=cKIG1lKwLeo&t=401s&ab_channel=HongLy
 	  For the ground zero code, see the exported files from here:
 	  https://codepen.io/mikewesthad/pen/BVeoYP?editors=1111
@@ -56,11 +87,21 @@ import CharacterAttributes from "./characterAttributes.vue";
 // <step> -- one full loop around all three phases determined by <phase> is
 // a step. We use this to link the steps in the backend.
 let gameContainerDom = ref();
+const Profile = ref(false);
 const config = ref();
 const game = ref();
 const progressBar = ref();
 const progress = ref();
 const slider = ref();
+let focus_id = ref(null);
+const dialogues = computed(() => {
+  let flag = false;
+  console.log(Profile.value, "ProfileProfileProfileProfileProfileProfile");
+  if (Profile && focus_id) {
+    flag = true;
+  }
+  return flag;
+});
 
 onUnmounted(() => {
   if (game.value) {
@@ -86,6 +127,7 @@ let currentFrame = currentEndFrame;
 let sim_code = "ai_and_v_coin2";
 // let persona_names = document.getElementById('persona_name_list').innerHTML.split(",");
 let persona_names = [];
+let persona_namesId = [];
 let spans = document
   .getElementById("persona_init_pos")
   ?.getElementsByTagName("span");
@@ -145,7 +187,7 @@ onMounted(() => {
   config.value = {
     type: Phaser.AUTO,
     fps: {
-      target: 30,
+      target: 1,
       forceSetTimeOut: true,
     },
     width: 1500,
@@ -161,7 +203,7 @@ onMounted(() => {
     scene: {
       preload: preload,
       create: create,
-      // update: update,
+      update: update,
     },
     scale: { zoom: 0.9 },
   };
@@ -172,11 +214,14 @@ onMounted(() => {
   // =======================
   progress.value = document.getElementById("progress");
   slider.value = document.getElementById("slider");
-  const containerRect = progressBar.value?.getBoundingClientRect();
   // event listener
   slider.value?.addEventListener("mousedown", startDragging);
   document?.addEventListener("mousemove", handleDragging);
   document?.addEventListener("mouseup", stopDragging);
+  userApi.profile().then(() => {
+    Profile.value = true;
+    console.log(Profile.value, "ProfileProfile");
+  });
 });
 // for (var i = 0; i < position.length; i++) {
 //   let x = position[i].split(",");
@@ -223,6 +268,7 @@ let movement_target = {};
 let isDraggingmMap = false;
 let startPointerPos = new Phaser.Math.Vector2();
 let focus_name = "";
+
 let dial_content =
   '<div style="color: #c9a769; margin-bottom: 8px;word-break: break-word"><span style="color:white;">#name#:</span><span><p>#content#</p></span></div>';
 // ###########################################################################
@@ -356,31 +402,34 @@ function preload() {
     "img/atlas.png",
     "assets/characters/town/atlas.json"
   );
-  // rolesApi.allChars().then((res) => {
-  //   res.data.data.characters.forEach((char) => {
-  //     persona_names[char.name] = char.position;
-  //   });
-  //   for (let key in persona_names) {
-  //     spawn_tile_loc[key] = persona_names[key];
-  //   }
-  //   let myArray = Object.keys(spawn_tile_loc);
-  //   const randomIndex = Math.floor(Math.random() * myArray.length);
-  //   focus_name = myArray[randomIndex];
-  //   // focus_name = "kiki";
-  //   for (let key in persona_names) {
-  //     // key = persona_names[key];
-  //     // ===============================
-  //     key = key.replace(" ", "_");
-  //     key = key.toLowerCase();
-  //     // console.log(`assets/characters/town/profile/${key}.png`, "");
-  //     this.load.atlas(
-  //       key,
-  //       `assets/characters/town/profile/${key}.png`,
-  //       `assets/characters/town/atlas.json`
-  //     );
-  //   }
-  //   console.log(persona_names, "persona_names");
-  // });
+  rolesApi.allChars().then((res) => {
+    persona_namesId = [];
+    res.data.data.characters.forEach((char) => {
+      persona_names[char.name] = char.position;
+      persona_namesId.push(char.id);
+    });
+    for (let key in persona_names) {
+      spawn_tile_loc[key] = persona_names[key];
+    }
+    let myArray = Object.keys(spawn_tile_loc);
+    const randomIndex = Math.floor(Math.random() * myArray.length);
+    // 循环出数据 获取下id
+    focus_name = myArray[randomIndex];
+    focus_id.value = persona_namesId[randomIndex];
+    // focus_name = "kiki";
+    for (let key in persona_names) {
+      // key = persona_names[key];
+      // ===============================
+      key = key.replace(" ", "_");
+      // key = key.toLowerCase();
+      // console.log(`assets/characters/town/profile/${key}.png`, "");
+      this.load.atlas(
+        key,
+        `assets/characters/town/profile/${key}.png`,
+        `assets/characters/town/atlas.json`
+      );
+    }
+  });
 }
 
 function create() {
@@ -601,7 +650,6 @@ function create() {
 
   // *** SET UP PERSONAS ***
   // We start by creating the game sprite objects.
-  console.log(spawn_tile_loc, "createPerson");
   for (let i = 0; i < Object.keys(spawn_tile_loc).length; i++) {
     let persona_name = Object.keys(spawn_tile_loc)[i];
     let start_pos = [
@@ -617,9 +665,11 @@ function create() {
     new_sprite.on("pointerup", () => {
       if (persona_name == focus_name) {
         focus_name = "";
+        focus_id.value = "";
         display_main_box();
       } else {
         focus_name = persona_name;
+        focus_id.value = persona_namesId[i];
         display_game_dialog(persona_name);
       }
     });
@@ -810,6 +860,7 @@ function update(time, delta) {
   }
 
   if (focus_name) {
+    console.log(personas[focus_name].body.x, personas[focus_name].body.y);
     player.body.x = personas[focus_name].body.x;
     player.body.y = personas[focus_name].body.y;
   }
@@ -850,7 +901,6 @@ function update(time, delta) {
   // document.getElementById("game-time-content").innerHTML =
   //   execute_movement["meta"]["curr_time"];
   // last_time = execute_movement["meta"]["curr_time"];
-  console.log(personas, "personaspersonaspersonaspersonaspersonas");
 
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
@@ -858,10 +908,6 @@ function update(time, delta) {
     let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
 
     let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
-    console.log(curr_persona_name, "curr_persona_name");
-    console.log(curr_persona, "curr_persona");
-    console.log(curr_pronunciatio, "curr_pronunciatio");
-    console.log(curr_persona_name_tags, "curr_persona_name_tags");
 
     // if (execute_count == execute_count_max + 1) {
     if (!execute_movement["persona"][curr_persona_name]) {
@@ -1013,17 +1059,17 @@ function update(time, delta) {
   // execute_count = execute_count - 1;
 }
 function getFrameData() {
-  rolesApi.visibleChars(focus_name).then((res) => {
+  rolesApi.visibleChars(focus_id.value).then((res) => {
     let data = res.data.data;
     const output = {
       execute_movement: {
         persona: [],
       },
     };
-    output.execute_movement.persona[data.current_character.name] = {
-      movement: data.current_character.position,
-      pronunciatio: data.current_character.emoji,
-      description: data.current_character.action,
+    output.execute_movement.persona[data.center_character.name] = {
+      movement: data.center_character.position,
+      pronunciatio: data.center_character.emoji,
+      description: data.center_character.action,
     };
 
     // add visible_characters
@@ -1386,9 +1432,45 @@ switchTab("dialogue");
       width: 100%;
       min-height: 50vh;
       height: 100%;
-      display: flex;
+      position: relative;
+      /* display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column; */
+      .game-dialogues {
+        position: absolute;
+        bottom: 0px;
+
+        padding: 16px;
+        border-top: 1px solid #c9a76933;
+        display: flex;
+        gap: 10px;
+        .chat-input {
+          &:focus {
+            outline: none;
+            border-color: #9c7d4a;
+            box-shadow: 0 0 8px rgba(201, 167, 105, 0.3);
+          }
+          flex: 1;
+          padding: 12px;
+          background: #0d1f0d;
+          border: 1px solid #c9a769;
+          border-radius: 4px;
+          color: #c9a769;
+          font-family: inherit;
+        }
+        button {
+          background-color: #c9a769;
+          color: #1a2a1a;
+          padding: 8px 16px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          &:hover {
+            background-color: #9c7d4a;
+          }
+        }
+      }
     }
 
     #game-container > canvas {
