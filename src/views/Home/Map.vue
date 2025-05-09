@@ -187,7 +187,7 @@ onMounted(() => {
   config.value = {
     type: Phaser.AUTO,
     fps: {
-      target: 1,
+      target: 30,
       forceSetTimeOut: true,
     },
     width: 1500,
@@ -420,12 +420,12 @@ function preload() {
     for (let key in persona_names) {
       // key = persona_names[key];
       // ===============================
-      key = key.replace(" ", "_");
+      // key = key.replace(" ", "_");
       // key = key.toLowerCase();
       // console.log(`assets/characters/town/profile/${key}.png`, "");
       this.load.atlas(
         key,
-        `assets/characters/town/profile/${atlas}.png`,
+        `assets/characters/town/kiki.png`,
         `assets/characters/town/atlas.json`
       );
     }
@@ -1148,7 +1148,7 @@ function updatePersonaAnimation(
   //   pre_anims_direction_dict,
   // });
   let baseTextureLowerCase = curr_persona_name.toLowerCase(); // Dynamically generate basic texture names
-  let baseTexture = baseTextureLowerCase.replace(" ", "_");
+  let baseTexture = baseTextureLowerCase;
   if (anims_direction === "l") {
     curr_persona.anims.play(`${baseTexture}-left-walk`, true);
   } else if (anims_direction === "r") {
