@@ -302,22 +302,20 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="roleDialogVisible = false">cancel</el-button>
-          <el-button type="primary" @click="saveRole">Register</el-button>
+          <el-button type="primary" @click="saveRole">next step</el-button>
         </span>
       </template>
     </el-dialog>
 
-    <!-- <el-dialog v-model="outerVisible" title="Choose your home site" width="800">
-      <Site></Site>
+    <el-dialog v-model="outerVisible" title="Choose your home site" width="800">
+      <Site v-model="roleForm.site"></Site>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="outerVisible = false">Cancel</el-button>
-          <el-button type="primary" @click="innerVisible = true">
-            Open the inner Dialog
-          </el-button>
+          <el-button type="primary" @click="confirmLand"> confirm </el-button>
         </div>
       </template>
-    </el-dialog> -->
+    </el-dialog>
   </div>
 </template>
 
@@ -345,6 +343,7 @@ const filesList = ref([]);
 const uploadDisabled = computed(() => {
   return filesList.value.length >= 1 ? true : false;
 });
+import { ElNotification } from "element-plus";
 // Role registration information
 let sexOptions = [
   {
@@ -360,6 +359,67 @@ let sexOptions = [
     value: 2,
   },
 ];
+const isAdding = ref(false);
+const optionName = ref("");
+const onAddOption = () => {
+  isAdding.value = true;
+};
+
+const onConfirm = () => {
+  if (optionName.value) {
+    learnedOptions.value.push({
+      label: optionName.value,
+      value: learnedOptions.value.length,
+    });
+    clear();
+  }
+};
+
+const clear = () => {
+  optionName.value = "";
+  isAdding.value = false;
+};
+
+// userData
+
+const user = ref({
+  name: "Danny",
+  phone: "133****1573",
+  email: "example@example.com",
+  gender: "male",
+  quote:
+    "Buddha never forced others to do things he didn't like, he just told sentient beings.",
+  signature:
+    "Buddha never forced others to do things he didn't like. Buddha only told sentient beings what is good? What is evil? Good and evil still need to be chosen by oneself, and life still needs to be controlled by oneself",
+  avatar: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+  balance: 123.45,
+});
+
+// Current activation menu
+const activeMenu = ref("personal");
+
+// Recharge related
+const rechargeAmount = ref(10);
+const customAmount = ref(null);
+const paymentMethod = ref("alipay");
+
+// Avatar Editing
+const avatarDialogVisible = ref(false);
+const avatarTempUrl = ref("");
+
+// Character Editing
+const roleDialogVisible = ref(false);
+const roleForm = ref({
+  first_name: "",
+  last_name: "",
+  age: null,
+  sex: null,
+  innate: "",
+  learned: null,
+  currently: "",
+  lifestyle: null,
+  site: "",
+});
 let rules = ref({
   first_name: {
     required: true,
@@ -402,41 +462,6 @@ let rules = ref({
     trigger: "blur",
   },
 });
-const isAdding = ref(false);
-const optionName = ref("");
-const onAddOption = () => {
-  isAdding.value = true;
-};
-
-const onConfirm = () => {
-  if (optionName.value) {
-    learnedOptions.value.push({
-      label: optionName.value,
-      value: learnedOptions.value.length,
-    });
-    clear();
-  }
-};
-
-const clear = () => {
-  optionName.value = "";
-  isAdding.value = false;
-};
-
-// userData
-
-const user = ref({
-  name: "Danny",
-  phone: "133****1573",
-  email: "example@example.com",
-  gender: "male",
-  quote:
-    "Buddha never forced others to do things he didn't like, he just told sentient beings.",
-  signature:
-    "Buddha never forced others to do things he didn't like. Buddha only told sentient beings what is good? What is evil? Good and evil still need to be chosen by oneself, and life still needs to be controlled by oneself",
-  avatar: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
-  balance: 123.45,
-});
 
 // rolesDate
 const roles = ref([]);
@@ -446,31 +471,6 @@ const resetForm = () => {
   console.log(roleFormRef.value);
   roleFormRef.value?.resetFields();
 };
-
-// Current activation menu
-const activeMenu = ref("personal");
-
-// Recharge related
-const rechargeAmount = ref(10);
-const customAmount = ref(null);
-const paymentMethod = ref("alipay");
-
-// Avatar Editing
-const avatarDialogVisible = ref(false);
-const avatarTempUrl = ref("");
-
-// Character Editing
-const roleDialogVisible = ref(false);
-const roleForm = ref({
-  first_name: "",
-  last_name: "",
-  age: null,
-  sex: null,
-  innate: "",
-  learned: null,
-  currently: "",
-  lifestyle: null,
-});
 const isEditRole = ref(false);
 
 // computed
@@ -624,44 +624,41 @@ const deleteRole = (role) => {
 };
 
 const saveRole = () => {
-  // outerVisible.value = true;
-  // return;
   console.log(roleForm.value);
   console.log(isEditRole);
-  if (isEditRole.value) {
-    // Update Role
-    // const index = roles.value.findIndex((r) => r.id === roleForm.value.id);
-    // if (index !== -1) {
-    //   roles.value[index] = { ...roleForm.value };
-    // }
-    ElMessage.success("Role update successful");
-  } else {
-    console.log(roleForm.value, "form");
-    // New Role
-    // const newRole = {
-    //   ...roleForm.value,
-    //   id: roles.value.length
-    //     ? Math.max(...roles.value.map((r) => r.id)) + 1
-    //     : 1,
-    //   createTime: new Date().toISOString().split("T")[0],
-    // };
-    // roles.value.push(newRole);
-    let newroleForm = roleForm.value;
-    let name = newroleForm.last_name + " " + newroleForm.first_name;
-    characters
-      .register({ ...newroleForm, name })
-      .then((res) => {
-        characters.getRoles().then((res) => {
-          roles.value = res.data.data;
-          roleDialogVisible.value = false;
-          ElMessage.success("Role added successfully");
-        });
-      })
-      .catch((req) => {
-        ElMessage.error("Only one role can be created per user");
+  roleFormRef.value?.validate((valid) => {
+    if (valid) {
+      outerVisible.value = true;
+    } else {
+      ElNotification({
+        title: "warning",
+        message: "Role information is incomplete",
+        type: "warning",
       });
-  }
-  // roleDialogVisible.value = false;
+    }
+  });
+};
+const confirmLand = () => {
+  // Call the query interface for homestead
+  // land to check if the user has already created it
+  // Then create a character on the map
+  console.log(roleForm.value, "roleForm.value");
+  return;
+  let newroleForm = roleForm.value;
+  let name = newroleForm.last_name + " " + newroleForm.first_name;
+  characters
+    .register({ ...newroleForm, name })
+    .then((res) => {
+      characters.getRoles().then((res) => {
+        roles.value = res.data.data;
+        outerVisible.value = false;
+        roleDialogVisible.value = false;
+        ElMessage.success("Role added successfully");
+      });
+    })
+    .catch((req) => {
+      ElMessage.error("Only one role can be created per user");
+    });
 };
 
 const handleRecharge = () => {

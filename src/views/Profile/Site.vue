@@ -4,6 +4,8 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
 import Phaser from "phaser";
+const props = defineProps(["modelValue"]);
+const emit = defineEmits(["update:modelValue"]);
 const gameContainerRef = ref();
 const config = ref();
 const game = ref();
@@ -17,7 +19,7 @@ let tile_height = 32;
 
 let dragStartPos = null;
 //Pixel threshold, exceeding which is considered dragging
-const DRAG_THRESHOLD = 10;
+const DRAG_THRESHOLD = 1;
 onMounted(() => {
   console.log(
     gameContainerRef.value,
@@ -55,8 +57,8 @@ onMounted(() => {
   // slider.value = document.getElementById("slider");
   // // event listener
   // slider.value?.addEventListener("mousedown", startDragging);
-  document?.addEventListener("mousemove", handleDragging);
-  document?.addEventListener("mouseup", stopDragging);
+  // document?.addEventListener("mousemove", handleDragging);
+  // document?.addEventListener("mouseup", stopDragging);
 });
 function handleDragging(e) {
   if (!isDragging) return;
@@ -371,6 +373,8 @@ function create() {
     .setSize(30, 40)
     .setOffset(0, 0);
   player.setDepth(-1);
+  this.physics.world.enable(player);
+  player.body.setDrag(1, 1);
 
   // Setting up the camera.
   const camera = this.cameras.main;
@@ -403,13 +407,22 @@ function create() {
   let selectionMarker = this.add.graphics();
   function updateSelection(x, y) {
     console.log(`更新选择标记: x=${x}, y=${y}`);
+    const MapX = x - tile_width / 2;
+    const MapY = y - tile_height / 2;
     // 清除旧图形
     selectionMarker.clear();
 
     // 绘制红色十字
-    selectionMarker.lineStyle(3, 0xff0000);
-    selectionMarker.moveTo(50, 30).lineTo(30, 30); // 横线
-    selectionMarker.moveTo(50, 30).lineTo(50, 50); // 竖线
+    let setMapX = Math.floor(x / tile_width);
+    let setMapY = Math.floor(y / tile_height);
+    selectionMarker.fillStyle(0xff0000, 0.5);
+    selectionMarker.fillRect(
+      setMapX * tile_width,
+      setMapY * tile_height,
+      tile_width,
+      tile_height
+    );
+    emit("update:modelValue", [setMapX, setMapY]);
   }
   // Input event binding
   this.input.on("pointerdown", (pointer) => {
@@ -421,7 +434,11 @@ function create() {
     }
     const worldPoint = pointer.positionToCamera(this.cameras.main);
     // 检查点击是否在地图范围内
-    console.log(`用户点击了坐标: x=${worldPoint.x}, y=${worldPoint.y}`);
+    console.log(
+      `用户点击了坐标: x=${Math.floor(
+        worldPoint.x / tile_width
+      )}, y=${Math.floor(worldPoint.y / tile_height)}`
+    );
     // 可以在这里添加标记或其他反馈
   });
 
@@ -433,7 +450,7 @@ function create() {
     //   player.body.setVelocity(deltaX * 5, deltaY * 5);
     // }
     if (pointer.isDown && dragStartPos) {
-      console.log(1);
+      // console.log(1);
       const distance = Phaser.Math.Distance.Between(
         dragStartPos.x,
         dragStartPos.y,
@@ -446,7 +463,7 @@ function create() {
         // this.cameras.main.scrollY -= pointer.y - pointer.prevPosition.y;
         let deltaX = startPointerPos.x - pointer.x;
         let deltaY = startPointerPos.y - pointer.y;
-        console.log(2, { deltaX, deltaY });
+        // console.log(2, { deltaX, deltaY });
         player.body.setVelocity(deltaX * 2, deltaY * 2);
       }
     }
@@ -471,9 +488,7 @@ function create() {
     if (distance < DRAG_THRESHOLD) {
       const worldX = pointer.worldX + this.cameras.main.scrollX;
       const worldY = pointer.worldY + this.cameras.main.scrollY;
-      const tile = map.getTileAtWorldXY(worldX, worldY);
-      console.log(tile, "tiletiletiletiletile");
-      if (tile) updateSelection(pointer.worldX, pointer.worldY);
+      updateSelection(pointer.worldX, pointer.worldY);
     }
 
     dragStartPos = null;

@@ -860,7 +860,6 @@ function update(time, delta) {
   }
 
   if (focus_name) {
-    console.log(personas[focus_name].body.x, personas[focus_name].body.y);
     player.body.x = personas[focus_name].body.x;
     player.body.y = personas[focus_name].body.y;
   }
@@ -940,6 +939,8 @@ function update(time, delta) {
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
     console.log(
+      curr_x,
+      curr_y,
       curr_persona_name,
       x,
       y,
@@ -1066,29 +1067,30 @@ setInterval(() => {
   getFrameData();
 }, 1000);
 function getFrameData() {
-  rolesApi.visibleChars(focus_id.value).then((res) => {
-    let data = res.data.data;
-    const output = {
-      execute_movement: {
-        persona: [],
-      },
-    };
-    output.execute_movement.persona[data.center_character.name] = {
-      movement: data.center_character.position,
-      pronunciatio: data.center_character.level_emoji,
-      description: data.center_character.action,
-    };
-
-    // add visible_characters
-    data.visible_characters.forEach((char) => {
-      output.execute_movement.persona[char.name] = {
-        movement: char.position,
-        pronunciatio: char.level_emoji,
-        description: char.action,
+  focus_id.value &&
+    rolesApi.visibleChars(focus_id.value).then((res) => {
+      let data = res.data.data;
+      const output = {
+        execute_movement: {
+          persona: [],
+        },
       };
+      output.execute_movement.persona[data.center_character.name] = {
+        movement: data.center_character.position,
+        pronunciatio: data.center_character.level_emoji,
+        description: data.center_character.action,
+      };
+
+      // add visible_characters
+      data.visible_characters.forEach((char) => {
+        output.execute_movement.persona[char.name] = {
+          movement: char.position,
+          pronunciatio: char.level_emoji,
+          description: char.action,
+        };
+      });
+      execute_movement = output.execute_movement;
     });
-    execute_movement = output.execute_movement;
-  });
   // rolesApi.allChars().then((res) => {
   //   const output = {
   //     execute_movement: {
