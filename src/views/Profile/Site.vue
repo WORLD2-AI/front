@@ -4,6 +4,7 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
 import Phaser from "phaser";
+import characters from "../../api/characters";
 const props = defineProps(["modelValue"]);
 const emit = defineEmits(["update:modelValue"]);
 const gameContainerRef = ref();
@@ -21,10 +22,6 @@ let dragStartPos = null;
 //Pixel threshold, exceeding which is considered dragging
 const DRAG_THRESHOLD = 1;
 onMounted(() => {
-  console.log(
-    gameContainerRef.value,
-    "gameContainerRef.value,gameContainerRef.value,"
-  );
   config.value = {
     type: Phaser.AUTO,
     fps: {
@@ -167,6 +164,27 @@ function preload() {
 }
 function create() {
   const map = this.make.tilemap({ key: "map" });
+  characters.getAllRoles().then((res) => {
+    let data = res.data?.data;
+    console.log("创建进入", data);
+    if (data) {
+      data.forEach((item) => {
+        const position = item.house.split(",");
+        if (position.length === 2) {
+          let conText = this.add.graphics();
+          let setMapX = position[0];
+          let setMapY = position[1];
+          conText.fillStyle(0xff0000, 0.5);
+          conText.fillRect(
+            setMapX * tile_width,
+            setMapY * tile_height,
+            tile_width,
+            tile_height
+          );
+        }
+      });
+    }
+  });
   // console.log(map, "addTilesetImage");
   // Joon: Logging map is really helpful for debugging here:
   //       console.log(map);
@@ -404,15 +422,15 @@ function create() {
     this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
   });
 
-  let selectionMarker = this.add.graphics();
-  function updateSelection(x, y) {
+  const conText = this.add.graphics();
+  function updateSelection(x, y, selectionMarker) {
     console.log(`更新选择标记: x=${x}, y=${y}`);
     const MapX = x - tile_width / 2;
     const MapY = y - tile_height / 2;
-    // 清除旧图形
+    // Clear old graphics
     selectionMarker.clear();
 
-    // 绘制红色十字
+    // Draw a red solid rectangle
     let setMapX = Math.floor(x / tile_width);
     let setMapY = Math.floor(y / tile_height);
     selectionMarker.fillStyle(0xff0000, 0.5);
@@ -432,14 +450,6 @@ function create() {
       isDraggingmMap = true;
       startPointerPos.set(pointer.x, pointer.y);
     }
-    const worldPoint = pointer.positionToCamera(this.cameras.main);
-    // 检查点击是否在地图范围内
-    console.log(
-      `用户点击了坐标: x=${Math.floor(
-        worldPoint.x / tile_width
-      )}, y=${Math.floor(worldPoint.y / tile_height)}`
-    );
-    // 可以在这里添加标记或其他反馈
   });
 
   this.input.on("pointermove", (pointer) => {
@@ -473,22 +483,19 @@ function create() {
     // isDraggingmMap = false;
     if (!dragStartPos) return;
 
-    // 计算指针移动距离
+    // Calculate pointer movement distance
     const distance = Phaser.Math.Distance.Between(
       dragStartPos.x,
       dragStartPos.y,
       pointer.worldX,
       pointer.worldY
     );
-    // console.log(
-    //   distance,
-    //   "DRAG_THRESHOLDDRAG_THRESHOLDDRAG_THRESHOLDDRAG_THRESHOLD"
-    // );
-    // 如果移动距离小于阈值，视为点击选择
+    // If the movement distance is less than the threshold,
+    // it is considered as a click to select
     if (distance < DRAG_THRESHOLD) {
       const worldX = pointer.worldX + this.cameras.main.scrollX;
       const worldY = pointer.worldY + this.cameras.main.scrollY;
-      updateSelection(pointer.worldX, pointer.worldY);
+      updateSelection(pointer.worldX, pointer.worldY, conText);
     }
 
     dragStartPos = null;

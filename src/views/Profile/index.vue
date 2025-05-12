@@ -247,10 +247,12 @@
             placeholder="Please enter the role last_name"
           />
         </el-form-item>
-        <el-form-item label="age" prop="age" :min="1" :max="120">
+        <el-form-item label="age" prop="age">
           <el-input
             type="number"
             v-model.number="roleForm.age"
+            :min="1"
+            :max="120"
             placeholder="Please enter the role age"
           />
         </el-form-item>
@@ -308,7 +310,7 @@
     </el-dialog>
 
     <el-dialog v-model="outerVisible" title="Choose your home site" width="800">
-      <Site v-model="roleForm.site"></Site>
+      <Site v-model="roleForm.house"></Site>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="outerVisible = false">Cancel</el-button>
@@ -418,7 +420,7 @@ const roleForm = ref({
   learned: null,
   currently: "",
   lifestyle: null,
-  site: "",
+  house: [],
 });
 let rules = ref({
   first_name: {
@@ -516,8 +518,9 @@ const imgChange = (fileObj, fileList) => {
 };
 onMounted(() => {
   // get RolesList
-  characters.getRoles().then((res) => {
-    res.data.data && (roles.value = res.data.data);
+  characters.getUserRoles().then((res) => {
+    console.log(res.data.characters, "characterscharacters");
+    res.data.characters && (roles.value = res.data.characters);
   });
   // get userInfo
   userApi.profile().then((res) => {
@@ -611,7 +614,7 @@ const deleteRole = (role) => {
         .delteteRoles(role.id)
         .then((res) => {
           characters.getRoles().then((res) => {
-            roles.value = res.data.data;
+            roles.value = res.data?.characters;
             roleDialogVisible.value = false;
             ElMessage.success("Delete successfully");
           });
@@ -643,21 +646,32 @@ const confirmLand = () => {
   // land to check if the user has already created it
   // Then create a character on the map
   console.log(roleForm.value, "roleForm.value");
-  return;
-  let newroleForm = roleForm.value;
-  let name = newroleForm.last_name + " " + newroleForm.first_name;
   characters
-    .register({ ...newroleForm, name })
-    .then((res) => {
-      characters.getRoles().then((res) => {
-        roles.value = res.data.data;
-        outerVisible.value = false;
-        roleDialogVisible.value = false;
-        ElMessage.success("Role added successfully");
-      });
+    .locationQuery(roleForm.value.house)
+    .then((status) => {
+      if (status.data.is_registered === false) {
+        let newroleForm = { ...roleForm.value };
+        let name = newroleForm.last_name + " " + newroleForm.first_name;
+        newroleForm.house = newroleForm.house.join(",");
+        characters
+          .register({ ...newroleForm, name })
+          .then((res) => {
+            characters.getRoles().then((res) => {
+              roles.value = res.data.characters;
+              outerVisible.value = false;
+              roleDialogVisible.value = false;
+              ElMessage.success("Role added successfully");
+            });
+          })
+          .catch((req) => {
+            ElMessage.error(req.data.message);
+          });
+      } else {
+        ElMessage.error("Location error, please select again");
+      }
     })
-    .catch((req) => {
-      ElMessage.error("Only one role can be created per user");
+    .catch(() => {
+      ElMessage.error("Location error, please select again");
     });
 };
 

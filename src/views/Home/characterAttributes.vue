@@ -86,7 +86,7 @@ const rolelist = {
   wake_time: "",
 };
 onMounted(() => {
-  characters.getRoles().then((res) => {
+  characters.getAllRoles().then((res) => {
     res.data.data && (roles.value = res.data.data);
     if (roles.value.length > 0) {
       role.value = roles.value[0];

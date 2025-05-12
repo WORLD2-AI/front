@@ -93,10 +93,10 @@ const game = ref();
 const progressBar = ref();
 const progress = ref();
 const slider = ref();
+const Interval = ref(null);
 let focus_id = ref("");
 const dialogues = computed(() => {
   let flag = false;
-  console.log(Profile.value, "ProfileProfileProfileProfileProfileProfile");
   if (Profile && focus_id.value) {
     flag = true;
   }
@@ -107,6 +107,7 @@ onUnmounted(() => {
   if (game.value) {
     game.value.destroy(true);
   }
+  // clearInterval(Interval.value);
   // Also removed when the game is destroyed
   game.value.events.on("destroy", () => {
     slider.value?.removeEventListener("mousedown", startDragging);
@@ -406,16 +407,17 @@ function preload() {
     persona_namesId = [];
     res.data.data.characters.forEach((char) => {
       persona_names[char.name] = char.position;
-      persona_namesId.push(char.character_id);
+      persona_namesId.push({ id: char.character_id, name: char.name });
     });
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
     }
-    let myArray = Object.keys(spawn_tile_loc);
+    let myArray = Object.keys(persona_namesId);
     const randomIndex = Math.floor(Math.random() * myArray.length);
     // 循环出数据 获取下id
-    focus_name = myArray[randomIndex];
-    focus_id.value = persona_namesId[randomIndex];
+    focus_name = persona_namesId[randomIndex].name;
+    console.log("focus_name", "focus_name", focus_name);
+    focus_id.value = persona_namesId[randomIndex].id;
     // focus_name = "kiki";
     for (let key in persona_names) {
       // key = persona_names[key];
@@ -938,16 +940,16 @@ function update(time, delta) {
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
-    console.log(
-      curr_x,
-      curr_y,
-      curr_persona_name,
-      x,
-      y,
-      movement_target[curr_persona_name][0],
-      movement_target[curr_persona_name][1],
-      movement_speed
-    );
+    // console.log(
+    //   curr_x,
+    //   curr_y,
+    //   curr_persona_name,
+    //   x,
+    //   y,
+    //   movement_target[curr_persona_name][0],
+    //   movement_target[curr_persona_name][1],
+    //   movement_speed
+    // );
     // console.log("persona pos:", Math.ceil(x / tile_width), Math.ceil(y / tile_width))
     if (execute_count > 0) {
       if (curr_persona.body.x < movement_target[curr_persona_name][0]) {
@@ -1063,34 +1065,33 @@ function update(time, delta) {
   // 注释掉计数更改
   // execute_count = execute_count - 1;
 }
-setInterval(() => {
+Interval.value = setInterval(() => {
   getFrameData();
 }, 1000);
 function getFrameData() {
-  focus_id.value &&
-    rolesApi.visibleChars(focus_id.value).then((res) => {
-      let data = res.data.data;
-      const output = {
-        execute_movement: {
-          persona: [],
-        },
-      };
-      output.execute_movement.persona[data.center_character.name] = {
-        movement: data.center_character.position,
-        pronunciatio: data.center_character.level_emoji,
-        description: data.center_character.action,
-      };
+  rolesApi.visibleChars(focus_id.value).then((res) => {
+    let data = res.data.data;
+    const output = {
+      execute_movement: {
+        persona: [],
+      },
+    };
+    output.execute_movement.persona[data.center_character.name] = {
+      movement: data.center_character.position,
+      pronunciatio: data.center_character.level_emoji,
+      description: data.center_character.action,
+    };
 
-      // add visible_characters
-      data.visible_characters.forEach((char) => {
-        output.execute_movement.persona[char.name] = {
-          movement: char.position,
-          pronunciatio: char.level_emoji,
-          description: char.action,
-        };
-      });
-      execute_movement = output.execute_movement;
+    // add visible_characters
+    data.visible_characters.forEach((char) => {
+      output.execute_movement.persona[char.name] = {
+        movement: char.position,
+        pronunciatio: char.level_emoji,
+        description: char.action,
+      };
     });
+    execute_movement = output.execute_movement;
+  });
   // rolesApi.allChars().then((res) => {
   //   const output = {
   //     execute_movement: {

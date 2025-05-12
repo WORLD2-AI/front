@@ -197,8 +197,8 @@ const submitForm = () => {
     font-size: 20px;
     border-radius: 60px;
     border: none;
-    background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-    backdrop-filter: blur(1px); /* 关键属性 - 背景模糊 */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(1px);
     margin: 10px auto;
     &:hover {
       background-color: rgb(52, 48, 48);
