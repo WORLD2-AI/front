@@ -18,7 +18,7 @@
           <!-- <Map /> -->
           <div class="game-dialogues" v-if="dialogues">
             <input
-              v-model="dialoguesCont"
+              v-model.trim="dialoguesCont"
               type="text"
               class="chat-input"
               placeholder="input chat content..."
@@ -107,7 +107,7 @@ onUnmounted(() => {
   if (game.value) {
     game.value.destroy(true);
   }
-  // clearInterval(Interval.value);
+  clearInterval(Interval.value);
   // Also removed when the game is destroyed
   game.value.events.on("destroy", () => {
     slider.value?.removeEventListener("mousedown", startDragging);
@@ -1069,29 +1069,30 @@ Interval.value = setInterval(() => {
   getFrameData();
 }, 1000);
 function getFrameData() {
-  rolesApi.visibleChars(focus_id.value).then((res) => {
-    let data = res.data.data;
-    const output = {
-      execute_movement: {
-        persona: [],
-      },
-    };
-    output.execute_movement.persona[data.center_character.name] = {
-      movement: data.center_character.position,
-      pronunciatio: data.center_character.level_emoji,
-      description: data.center_character.action,
-    };
-
-    // add visible_characters
-    data.visible_characters.forEach((char) => {
-      output.execute_movement.persona[char.name] = {
-        movement: char.position,
-        pronunciatio: char.level_emoji,
-        description: char.action,
+  focus_id.value &&
+    rolesApi.visibleChars(focus_id.value).then((res) => {
+      let data = res.data.data;
+      const output = {
+        execute_movement: {
+          persona: [],
+        },
       };
+      output.execute_movement.persona[data.center_character.name] = {
+        movement: data.center_character.position,
+        pronunciatio: data.center_character.level_emoji,
+        description: data.center_character.action,
+      };
+
+      // add visible_characters
+      data.visible_characters.forEach((char) => {
+        output.execute_movement.persona[char.name] = {
+          movement: char.position,
+          pronunciatio: char.level_emoji,
+          description: char.action,
+        };
+      });
+      execute_movement = output.execute_movement;
     });
-    execute_movement = output.execute_movement;
-  });
   // rolesApi.allChars().then((res) => {
   //   const output = {
   //     execute_movement: {

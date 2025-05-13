@@ -653,10 +653,13 @@ const confirmLand = () => {
         let newroleForm = { ...roleForm.value };
         let name = newroleForm.last_name + " " + newroleForm.first_name;
         newroleForm.house = newroleForm.house.join(",");
+        newroleForm.position_name = status.data.position_name;
+        console.log(newroleForm, "============================");
+        return;
         characters
           .register({ ...newroleForm, name })
           .then((res) => {
-            characters.getRoles().then((res) => {
+            characters.getUserRoles().then((res) => {
               roles.value = res.data.characters;
               outerVisible.value = false;
               roleDialogVisible.value = false;
@@ -664,7 +667,7 @@ const confirmLand = () => {
             });
           })
           .catch((req) => {
-            ElMessage.error(req.data.message);
+            ElMessage.error(req.data?.message);
           });
       } else {
         ElMessage.error("Location error, please select again");
