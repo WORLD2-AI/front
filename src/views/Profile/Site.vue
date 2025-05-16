@@ -152,10 +152,7 @@ function preload() {
   );
 
   // Joon: This is the export json file you get from Tiled.
-  this.load.tilemapTiledJSON(
-    "map",
-    "assets/the_ville/visuals/the_ville_jan7-2.json"
-  );
+  this.load.tilemapTiledJSON("map", "assets/the_ville/visuals/the_ville.json");
   this.load.atlas(
     "atlas",
     "img/atlas.png",

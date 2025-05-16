@@ -386,10 +386,7 @@ function preload() {
   );
 
   // Joon: This is the export json file you get from Tiled.
-  this.load.tilemapTiledJSON(
-    "map",
-    "assets/the_ville/visuals/the_ville.json"
-  );
+  this.load.tilemapTiledJSON("map", "assets/the_ville/visuals/the_ville.json");
 
   // An atlas is a way to pack multiple images together into one texture. I'm
   // using it to load all the player animations (walking left, walking right,
@@ -413,11 +410,6 @@ function preload() {
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
     }
-    console.log(
-      spawn_tile_loc,
-      persona_names,
-      "spawn_tile_locspawn_tile_locspawn_tile_locspawn_tile_loc"
-    );
     // focus_name = "kiki";
     let randomIndex;
     userApi
@@ -433,10 +425,6 @@ function preload() {
         console.log("randomIndex", randomIndex);
         focus_name = persona_namesList[randomIndex].name;
         console.log("focus_name", "focus_name", focus_name);
-        console.log(
-          persona_namesList[randomIndex],
-          "persona_namesListpersona_namesListpersona_namesListpersona_namesList"
-        );
         focus_id.value = persona_namesList[randomIndex].id;
       });
     for (let key in persona_names) {
