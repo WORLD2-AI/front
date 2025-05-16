@@ -83,7 +83,7 @@ $accent-hover: #e5e7eb;
   min-height: 100vh;
 
   background-color: $bg-dark;
-  background: url("img/SignUpBg.jpg");
+  background: url("/img/SignUpBg.jpg");
   background-size: cover;
   color: $text-primary;
   display: flex;

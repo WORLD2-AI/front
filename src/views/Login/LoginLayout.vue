@@ -17,7 +17,7 @@ import { ref, reactive } from "vue";
 .bg {
   width: 100%;
   height: 100vh;
-  background-image: url("img/loginBg.jpg");
+  background-image: url("/img/loginBg.jpg");
   background-size: cover;
   .content {
     width: 100%;
