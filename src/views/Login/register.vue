@@ -43,7 +43,7 @@
               opacity: formData.password.length > 0 ? 1 : 0,
             }"
           >
-            <div class="strength-meter">
+            <!-- <div class="strength-meter">
               <div
                 v-for="(level, index) in strengthLevels"
                 :key="index"
@@ -52,7 +52,7 @@
                   activeLevel > index ? 'active-' + activeLevel : '',
                 ]"
               ></div>
-            </div>
+            </div> -->
             <div class="strength-feedback" :class="'level-' + activeLevel">
               {{ strengthFeedback }}
             </div>
@@ -82,8 +82,8 @@
     <div class="BtnCont">
       <el-button class="loginBtn" round @click="submitForm">Sign Up</el-button>
       <p>Already have an account?<a class="link" @click="goLogin">Log in</a></p>
-      <p :style="{ textAlign: 'center' }">Or</p>
-      <el-button round @click="user.twitter">Twitter</el-button>
+      <!-- <p :style="{ textAlign: 'center' }">Or</p> -->
+      <!-- <el-button round @click="user.twitter">Twitter</el-button> -->
     </div>
     <!-- <div class="bottom">Existing accounts</div> -->
   </div>
@@ -186,37 +186,37 @@ const submitForm = () => {
   elFormRef.value?.validate((valid) => {
     console.log(valid, "valid");
     if (valid) {
-      if (activeLevel.value > 2) {
-        user
-          .register(formData.value)
-          .then((res) => {
-            console.log(res);
-            if (res.status == 200 && res.data) {
-              ElNotification({
-                title: "success",
-                message: "register Successful",
-                type: "success",
-              });
-
-              setTimeout(() => {
-                router.push("/login");
-              }, 500);
-            }
-          })
-          .catch((req) => {
+      // if (activeLevel.value > 2) {
+      user
+        .register(formData.value)
+        .then((res) => {
+          console.log(res);
+          if (res.status == 200 && res.data) {
             ElNotification({
-              title: "prompt",
-              message: req?.data,
-              type: "warning",
+              title: "success",
+              message: "register Successful",
+              type: "success",
             });
+
+            setTimeout(() => {
+              router.push("/login");
+            }, 500);
+          }
+        })
+        .catch((req) => {
+          ElNotification({
+            title: "prompt",
+            message: req?.data,
+            type: "warning",
           });
-      } else {
-        ElNotification({
-          title: "prompt",
-          message: "The password is too low.",
-          type: "warning",
         });
-      }
+      // } else {
+      //   ElNotification({
+      //     title: "prompt",
+      //     message: "The password is too low.",
+      //     type: "warning",
+      //   });
+      // }
     }
   });
 };

@@ -16,9 +16,9 @@
       <div class="col-md-7">
         <div id="game-container" style="text-align: center">
           <!-- <Map /> -->
-          <div class="game-dialogues" v-if="dialogues">
+          <div class="game-dialogues">
             <input
-              v-model.trim="dialoguesCont"
+              v-model="dialoguesCont"
               type="text"
               class="chat-input"
               placeholder="input chat content..."
@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <CharacterAttributes />
+        <CharacterAttributes :focusId="focus_id" />
         <!-- <DialogContainer
           :personNames="persona_names"
           :displayMainBox="display_main_box"
@@ -87,6 +87,7 @@ Main resources:
 // <step> -- one full loop around all three phases determined by <phase> is
 // a step. We use this to link the steps in the backend.
 let gameContainerDom = ref();
+const dialoguesCont = ref("");
 const Profile = ref(false);
 const config = ref();
 const game = ref();
@@ -128,7 +129,7 @@ let currentFrame = currentEndFrame;
 let sim_code = "ai_and_v_coin2";
 // let persona_names = document.getElementById('persona_name_list').innerHTML.split(",");
 let persona_names = [];
-let persona_namesId = [];
+let persona_namesList = [];
 let spans = document
   .getElementById("persona_init_pos")
   ?.getElementsByTagName("span");
@@ -219,10 +220,6 @@ onMounted(() => {
   slider.value?.addEventListener("mousedown", startDragging);
   document?.addEventListener("mousemove", handleDragging);
   document?.addEventListener("mouseup", stopDragging);
-  userApi.profile().then(() => {
-    Profile.value = true;
-    console.log(Profile.value, "ProfileProfile");
-  });
 });
 // for (var i = 0; i < position.length; i++) {
 //   let x = position[i].split(",");
@@ -328,6 +325,10 @@ function preload() {
     "assets/the_ville/visuals/map_assets/v1/interiors_pt5.png"
   );
   this.load.image(
+    "interiors_pt7",
+    "assets/the_ville/visuals/map_assets/v2/TopDownHouse_FurnitureState1.png"
+  );
+  this.load.image(
     "CuteRPG_Field_B",
     "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png"
   );
@@ -404,21 +405,40 @@ function preload() {
     "assets/characters/town/atlas.json"
   );
   rolesApi.allChars().then((res) => {
-    persona_namesId = [];
-    res.data.data.characters.forEach((char) => {
+    persona_namesList = [];
+    res.data.data.forEach((char) => {
       persona_names[char.name] = char.position;
-      persona_namesId.push({ id: char.character_id, name: char.name });
+      persona_namesList.push({ id: char.id, name: char.name });
     });
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
     }
-    let myArray = Object.keys(persona_namesId);
-    const randomIndex = Math.floor(Math.random() * myArray.length);
-    // 循环出数据 获取下id
-    focus_name = persona_namesId[randomIndex].name;
-    console.log("focus_name", "focus_name", focus_name);
-    focus_id.value = persona_namesId[randomIndex].id;
+    console.log(
+      spawn_tile_loc,
+      persona_names,
+      "spawn_tile_locspawn_tile_locspawn_tile_locspawn_tile_loc"
+    );
     // focus_name = "kiki";
+    let randomIndex;
+    userApi
+      .profile()
+      .then(() => {
+        Profile.value = true;
+        randomIndex = persona_namesList.length - 1;
+      })
+      .catch(() => {
+        randomIndex = Math.floor(Math.random() * persona_namesList.length);
+      })
+      .finally(() => {
+        console.log("randomIndex", randomIndex);
+        focus_name = persona_namesList[randomIndex].name;
+        console.log("focus_name", "focus_name", focus_name);
+        console.log(
+          persona_namesList[randomIndex],
+          "persona_namesListpersona_namesListpersona_namesListpersona_namesList"
+        );
+        focus_id.value = persona_namesList[randomIndex].id;
+      });
     for (let key in persona_names) {
       // key = persona_names[key];
       // ===============================
@@ -671,28 +691,29 @@ function create() {
         display_main_box();
       } else {
         focus_name = persona_name;
-        focus_id.value = persona_namesId[i];
+        focus_id.value = persona_namesList[i].id;
         display_game_dialog(persona_name);
       }
     });
     // Here, we are creating the persona and its pronunciatio sprites.
     personas[persona_name] = new_sprite;
-    pronunciatios[persona_name] = this.add
-      .text(
-        new_sprite.body.x - 6,
-        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-        "🦁",
-        {
-          font: "18px Arial",
-          fill: "#fff",
-          //    padding: { x: 8, y: 8},
-          backgroundColor: "#00000066",
-          stroke: "#000",
-          strokeThickness: 0,
-          border: "none",
-        }
-      )
-      .setDepth(3);
+    // Emoji garbled characters
+    // pronunciatios[persona_name] = this.add
+    //   .text(
+    //     new_sprite.body.x - 6,
+    //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+    //     "🦁",
+    //     {
+    //       font: "18px Arial",
+    //       fill: "#fff",
+    //       //    padding: { x: 8, y: 8},
+    //       backgroundColor: "#00000066",
+    //       stroke: "#000",
+    //       strokeThickness: 0,
+    //       border: "none",
+    //     }
+    //   )
+    //   .setDepth(3);
 
     persona_name_tags[persona_name] = this.add
       .text(
@@ -905,7 +926,7 @@ function update(time, delta) {
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
     let curr_persona = personas[curr_persona_name];
-    let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+    // let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
 
     let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
 
@@ -913,12 +934,12 @@ function update(time, delta) {
     if (!execute_movement["persona"][curr_persona_name]) {
       curr_persona.setVisible(false);
       curr_persona_name_tags.setVisible(false);
-      curr_pronunciatio.setVisible(false);
+      // curr_pronunciatio.setVisible(false);
       continue;
     } else {
       curr_persona.setVisible(true);
       curr_persona_name_tags.setVisible(true);
-      curr_pronunciatio.setVisible(true);
+      // curr_pronunciatio.setVisible(true);
     }
     let curr_x = execute_movement["persona"][curr_persona_name]["movement"][0];
     let curr_y = execute_movement["persona"][curr_persona_name]["movement"][1];
@@ -926,8 +947,8 @@ function update(time, delta) {
       curr_x * tile_width,
       curr_y * tile_width,
     ];
-    let pronunciatio_content =
-      execute_movement["persona"][curr_persona_name]["pronunciatio"];
+    // let pronunciatio_content =
+    //   execute_movement["persona"][curr_persona_name]["pronunciatio"];
 
     let description =
       execute_movement["persona"][curr_persona_name]["description"];
@@ -936,7 +957,7 @@ function update(time, delta) {
     // E.g., "Dolores Murphy" -> "DM"
 
     initials = formatPersonName(curr_persona_name);
-    pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
+    // pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
@@ -976,8 +997,8 @@ function update(time, delta) {
         anims_direction = "";
       }
 
-      curr_pronunciatio.x = curr_persona.body.x + 38;
-      curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      // curr_pronunciatio.x = curr_persona.body.x + 38;
+      // curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
 
       curr_persona_name_tags.x = curr_persona.body.x;
       curr_persona_name_tags.y = curr_persona.body.y - 42;
@@ -1069,6 +1090,7 @@ Interval.value = setInterval(() => {
   getFrameData();
 }, 1000);
 function getFrameData() {
+  console.log("getFrameData", "focus_id", focus_id.value);
   focus_id.value &&
     rolesApi.visibleChars(focus_id.value).then((res) => {
       let data = res.data.data;
@@ -1077,73 +1099,22 @@ function getFrameData() {
           persona: [],
         },
       };
-      output.execute_movement.persona[data.center_character.name] = {
-        movement: data.center_character.position,
-        pronunciatio: data.center_character.level_emoji,
-        description: data.center_character.action,
+      output.execute_movement.persona[data.name] = {
+        movement: data.position,
+        // pronunciatio: data.center_character.level_emoji,
+        description: data.action,
       };
 
       // add visible_characters
       data.visible_characters.forEach((char) => {
         output.execute_movement.persona[char.name] = {
           movement: char.position,
-          pronunciatio: char.level_emoji,
+          // pronunciatio: char.level_emoji,
           description: char.action,
         };
       });
       execute_movement = output.execute_movement;
     });
-  // rolesApi.allChars().then((res) => {
-  //   const output = {
-  //     execute_movement: {
-  //       persona: [],
-  //     },
-  //   };
-  //   // console.log(res.data.data);
-  //   res.data.data.characters.forEach((person) => {
-  //     output.execute_movement.persona[person.name] = {
-  //       movement: person.position,
-  //       pronunciatio: person.emoji,
-  //       description: person.action,
-  //     };
-  //   });
-  //   execute_movement = output.execute_movement;
-  // });
-
-  // if (last_step <= step) {
-  //   last_step = step;
-  // }
-  // if (last_step - step < 10) {
-  //   if (postTimeoutHandle) {
-  //     return;
-  //   }
-  //   postTimeoutHandle = true;
-  //   var update_xobj = new XMLHttpRequest();
-  //   update_xobj.overrideMimeType("application/json");
-  //   update_xobj.open("POST", "/api/update_environment", !first_stop);
-  //   update_xobj?.addEventListener("load", function () {
-  //     first_stop = false;
-  //     if (this.readyState === 4) {
-  //       if (update_xobj.status === 200) {
-  //         data = JSON.parse(update_xobj.responseText);
-  //         // console.log(data, "更新的数据结构");
-  //         if (data["data"] && data["data"].length > 0) {
-  //           last_step = data["<step>"] + 1;
-  //           data["data"].forEach((element) => {
-  //             frame_data[element["<step>"]] = element;
-  //           });
-  //         }
-  //         postTimeoutHandle = false;
-  //       }
-  //     }
-  //   });
-  //   update_xobj.send(
-  //     JSON.stringify({ step: last_step, sim_code: sim_code, page: 10 })
-  //   );
-  //   setTimeout(() => {
-  //     postTimeoutHandle = false;
-  //   }, 2000);
-  // }
 }
 
 function updatePersonaAnimation(
@@ -1439,9 +1410,9 @@ switchTab("dialogue");
   .col-md-7 {
     flex-grow: 7;
     #game-container {
-      min-width: 50vw;
       width: 100%;
-      min-height: 50vh;
+      max-width: 1350px;
+      max-height: 900px;
       height: 100%;
       position: relative;
       /* display: flex;
@@ -1457,12 +1428,13 @@ switchTab("dialogue");
         display: flex;
         gap: 10px;
         .chat-input {
+          white-space: pre; /* 允许空格 */
+          overflow: visible; /* 避免截断 */
           &:focus {
             outline: none;
             border-color: #9c7d4a;
             box-shadow: 0 0 8px rgba(201, 167, 105, 0.3);
           }
-          flex: 1;
           padding: 12px;
           background: #0d1f0d;
           border: 1px solid #c9a769;

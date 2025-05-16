@@ -8,17 +8,17 @@
       </header>
       <!-- title -->
 
-      <h1 class="title">The Next Leap in AI Intelligence</h1>
+      <h1 class="title">Your Digital Self, Forever Evolving</h1>
 
       <!-- description -->
       <p class="description">
-        Your digital assistant now upgrades itself—seamlessly adopting
-        breakthroughs so you don't have to.
+        Create an AI that learns like you, feels for you, and lives long after
+        you.
       </p>
 
       <!-- form fields -->
       <div class="form-section">
-        <p class="form-title">Join the private beta:</p>
+        <p class="form-title">Welcome to the age of digital immortality:</p>
 
         <!-- Input Boxes and Buttons -->
         <div class="form-group-box">
@@ -37,7 +37,7 @@
       </div>
 
       <!-- social link -->
-      <div class="social-links">
+      <!-- <div class="social-links">
         <a href="">
           <button class="social-link">
             <img src="/img/github.jpg" alt="" />
@@ -52,9 +52,9 @@
             <i>Follow on X</i>
           </button>
         </a>
-        <!-- <a href="#" class="social-link">Follow on GitHub</a>
-        <a href="#" class="social-link"></a> -->
-      </div>
+        <a href="#" class="social-link">Follow on GitHub</a>
+        <a href="#" class="social-link"></a> 
+      </div> -->
     </div>
   </div>
 </template>
@@ -81,7 +81,10 @@ $accent-hover: #e5e7eb;
 /* global container */
 .page-container {
   min-height: 100vh;
+
   background-color: $bg-dark;
+  background: url("img/SignUpBg.jpg");
+  background-size: cover;
   color: $text-primary;
   display: flex;
   /* align-items: center; */
@@ -124,7 +127,6 @@ $accent-hover: #e5e7eb;
 
 /* form fields */
 .form-section {
-  background-color: $bg-dark;
   border-radius: 0.75rem;
   /* padding: 1.5rem; */
   margin-bottom: 2rem;

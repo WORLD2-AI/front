@@ -9,6 +9,10 @@ import './style/index.css'
 const app = createApp(App)
 
 app.use(router)
-app.use(ElementPlus)
+app.use(ElementPlus, {
+  input: {
+    trim: false, // 关闭自动 trim
+  }
+});
 
 app.mount('#app')

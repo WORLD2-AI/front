@@ -1,4 +1,4 @@
-import { axiosInstance } from "./baseaxios.js";
+import { axiosInstance } from "../utils/baseaxios";
 function register(userData) {
   return axiosInstance
     .post("/characters/api/register_role", userData)

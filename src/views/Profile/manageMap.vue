@@ -1,15 +1,45 @@
 <template>
-  <div ref="gameContainerRef"></div>
+  <div ref="gameContainerRef" class="game-container">
+    <div class="game-dialogues">
+      <input
+        v-model="dialoguesCont"
+        type="text"
+        class="chat-input"
+        placeholder="input chat content..."
+      />
+      <button
+        style="
+          background-color: #c9a769;
+          color: #1a2a1a;
+          padding: 8px 4px;
+          border: none;
+          border-radius: 4px;
+          margin-left: 10px;
+        "
+        @click="mapMarkerHandler"
+      >
+        Send
+      </button>
+    </div>
+  </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watchEffect } from "vue";
 import Phaser from "phaser";
-import characters from "../../api/characters";
+import { ElMessage } from "element-plus";
+import manageApi from "../../api/manage";
+import { all } from "axios";
 const props = defineProps(["modelValue"]);
 const emit = defineEmits(["update:modelValue"]);
+const dialoguesCont = ref("");
+const site = ref([]);
 const gameContainerRef = ref();
 const config = ref();
 const game = ref();
+const siteList = ref([]);
+const MapADD = ref();
+const MapChildren = ref();
+let conText;
 let player;
 let cursors;
 let isDragging = false;
@@ -19,8 +49,34 @@ let tile_width = 32;
 let tile_height = 32;
 
 let dragStartPos = null;
+let container;
+
+const mapMarkerHandler = () => {
+  let dialoguesArr = dialoguesCont.value.split(":");
+  if (site.value.length === 0) {
+    ElMessage.error("Please select a coordinate first");
+  } else if (dialoguesArr.length < 2) {
+    ElMessage.error("Please enter the contents of the tag name correctly");
+  } else {
+    manageApi
+      .mapMarker({
+        x: site.value[0],
+        y: site.value[1],
+        sector: dialoguesArr[0],
+        arena: dialoguesArr[1],
+      })
+      .then((res) => {
+        ElMessage.success("Marking Success");
+        conText.clear();
+        site.value = null;
+        manageApi.renderSite().then((res) => {
+          siteList.value = res.data?.data;
+        });
+      });
+  }
+};
 //Pixel threshold, exceeding which is considered dragging
-const DRAG_THRESHOLD = 1;
+const DRAG_THRESHOLD = 3;
 onMounted(() => {
   config.value = {
     type: Phaser.AUTO,
@@ -28,8 +84,12 @@ onMounted(() => {
       target: 30,
       forceSetTimeOut: true,
     },
-    width: 800,
-    height: 750,
+    scale: {
+      mode: Phaser.Scale.NONE, // Disable scaling
+      autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
+    },
+    width: "100%",
+    height: "100%",
     parent: gameContainerRef.value,
     pixelArt: true,
     physics: {
@@ -43,20 +103,30 @@ onMounted(() => {
       create: create,
       // update: update,
     },
-    scale: { zoom: 0.9 },
   };
   game.value = new Phaser.Game(config.value);
-
-  // Initializing the progress bar
-  // progressBar.value = document.getElementById("progress-bar");
-  // =======================
-  // progress.value = document.getElementById("progress");
-  // slider.value = document.getElementById("slider");
-  // // event listener
-  // slider.value?.addEventListener("mousedown", startDragging);
-  // document?.addEventListener("mousemove", handleDragging);
-  // document?.addEventListener("mouseup", stopDragging);
 });
+watchEffect(() => {
+  container?.list && [...container.list].forEach((g) => g.destroy());
+  container && (container = MapADD.value.container(0, 0));
+  console.log(siteList.value, "siteList.valuevaluevaluevaluevaluevalue");
+  MapADD.value &&
+    siteList.value.length > 0 &&
+    siteList.value.forEach((item) => {
+      let conText = MapADD.value.graphics(item.coordinates);
+      container.add(conText);
+      const MapSite = item.coordinates.split(",");
+      let setMapX = MapSite[0];
+      let setMapY = MapSite[1];
+      conText.fillStyle(0xff0000, 0.5);
+      conText.fillRect(
+        setMapX * tile_width,
+        setMapY * tile_height,
+        tile_width,
+        tile_height
+      );
+    });
+}, [siteList, MapADD]);
 function handleDragging(e) {
   if (!isDragging) return;
   updateProgress(e.clientX);
@@ -66,6 +136,7 @@ function stopDragging() {
   isDragging = false;
 }
 function preload() {
+  MapADD.value = this.add;
   this.load.image(
     "blocks_1",
     "assets/the_ville/visuals/map_assets/blocks/blocks_1.png"
@@ -163,29 +234,10 @@ function preload() {
   );
 }
 function create() {
-  const map = this.make.tilemap({ key: "map" });
-  characters.getAllRoles().then((res) => {
-    let data = res.data?.data;
-    console.log("创建进入", data);
-    if (data) {
-      data.forEach((item) => {
-        console.log(item, "item");
-        const position = item.house.split(",");
-        if (position.length === 2) {
-          let conText = this.add.graphics();
-          let setMapX = position[0];
-          let setMapY = position[1];
-          conText.fillStyle(0xff0000, 0.5);
-          conText.fillRect(
-            setMapX * tile_width,
-            setMapY * tile_height,
-            tile_width,
-            tile_height
-          );
-        }
-      });
-    }
+  manageApi.renderSite().then((res) => {
+    siteList.value = res.data?.data;
   });
+  const map = this.make.tilemap({ key: "map" });
   // console.log(map, "addTilesetImage");
   // Joon: Logging map is really helpful for debugging here:
   //       console.log(map);
@@ -397,9 +449,22 @@ function create() {
 
   // Setting up the camera.
   const camera = this.cameras.main;
+  let mapWidthInPixels = map.widthInPixels;
+  let mapHeightInPixels = map.heightInPixels;
   camera.setZoom(0.5);
   camera.startFollow(player);
-  camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+  camera.setBounds(0, 0, mapWidthInPixels, mapHeightInPixels);
+
+  camera.scrollX = Phaser.Math.Clamp(
+    camera.scrollX,
+    0,
+    mapWidthInPixels - camera.width
+  );
+  camera.scrollY = Phaser.Math.Clamp(
+    camera.scrollY,
+    0,
+    mapHeightInPixels - camera.height
+  );
   cursors = this.input.keyboard.createCursorKeys();
 
   // *** SET UP PERSONAS ***
@@ -422,10 +487,9 @@ function create() {
     const newZoom = this.cameras.main.zoom * 0.9;
     this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
   });
-
-  const conText = this.add.graphics();
+  container = this.add.container(0, 0);
+  conText = this.add.graphics();
   function updateSelection(x, y, selectionMarker) {
-    console.log(`更新选择标记: x=${x}, y=${y}`);
     const MapX = x - tile_width / 2;
     const MapY = y - tile_height / 2;
     // Clear old graphics
@@ -441,7 +505,7 @@ function create() {
       tile_width,
       tile_height
     );
-    emit("update:modelValue", [setMapX, setMapY]);
+    site.value = [setMapX, setMapY];
   }
   // Input event binding
   this.input.on("pointerdown", (pointer) => {
@@ -469,7 +533,6 @@ function create() {
         pointer.worldY
       );
       if (distance >= DRAG_THRESHOLD) {
-        // 这里实现地图拖动逻辑（例如移动camera）
         // this.cameras.main.scrollX -= pointer.x - pointer.prevPosition.x;
         // this.cameras.main.scrollY -= pointer.y - pointer.prevPosition.y;
         let deltaX = startPointerPos.x - pointer.x;
@@ -517,4 +580,51 @@ function create() {
 
 
 <style lang='scss' scoped>
+.game-container {
+  min-width: 50vw;
+  width: 100%;
+  min-height: 50vh;
+  height: 100%;
+  position: relative;
+  /* display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column; */
+  .game-dialogues {
+    position: absolute;
+    top: 0px;
+
+    padding: 16px;
+    border-top: 1px solid #c9a76933;
+    display: flex;
+    gap: 10px;
+    .chat-input {
+      height: 65px;
+      width: 355px;
+      &:focus {
+        outline: none;
+        border-color: #9c7d4a;
+        box-shadow: 0 0 8px rgba(201, 167, 105, 0.3);
+      }
+      flex: 1;
+      padding: 12px;
+      background: #0d1f0d;
+      border: 1px solid #c9a769;
+      border-radius: 4px;
+      color: #c9a769;
+      font-family: inherit;
+    }
+    button {
+      background-color: #c9a769;
+      color: #1a2a1a;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover {
+        background-color: #9c7d4a;
+      }
+    }
+  }
+}
 </style>

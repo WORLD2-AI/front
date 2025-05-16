@@ -1,7 +1,7 @@
 <template>
   <div class="timeLine">
     <div class="card">
-      <div class="name">Carmen Oritz</div>
+      <div class="name">{{ name }}</div>
       <div class="ScrollBox">
         <el-scrollbar
           height="420px"
@@ -46,23 +46,29 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { Loading } from "@element-plus/icons-vue";
 import characterApi from "../../api/characters";
-
+const props = defineProps({
+  focusId: {
+    type: Number,
+    required: true,
+  },
+});
 const containerRef = ref(null);
 
-// 数据状态
+// Data status
 const allItems = ref([]);
-let allItemsLength = ref(0);
+const allItemsLength = ref(0);
+const name = ref("");
 const loadingTop = ref(false);
 const loadingBottom = ref(false);
 const scrollTop = ref(0);
 const hasMore = ref(true);
 
-const ITEM_HEIGHT = 70; // 预估每个时间线项高度
-const BUFFER_SIZE = 6; // 缓冲项数
-const PAGE_SIZE = 15; // 每页加载数量
+const ITEM_HEIGHT = 70; // Estimate the height of each timeline item
+const BUFFER_SIZE = 6; // Number of buffer items
+const PAGE_SIZE = 15; // Number of loads per page
 let PAGE = 1;
 
 const containerHeight = computed(
@@ -94,8 +100,8 @@ const Toformatted = (start_minute) => {
     .padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
   return formattedStartTime;
 };
-// 加载新数据（向下滚动）
-const loadMoreNewer = async () => {
+// Load new data (scroll down)
+const loadMoreNewer = async (focusId) => {
   let isLoading = false;
   let lastLoadTime = 0;
   const now = Date.now();
@@ -104,10 +110,11 @@ const loadMoreNewer = async () => {
   lastLoadTime = now;
   try {
     const data = await characterApi.getTimeLine({
-      characterId: 0,
+      characterId: focusId,
       page_size: PAGE_SIZE,
       page: PAGE,
     });
+    name.value = data.data.name;
     const items = data.data.activities;
     // console.log(items.reverse(), "items.reverse()items.reverse()");
 
@@ -119,7 +126,6 @@ const loadMoreNewer = async () => {
     if (items.length > 0) {
       allItems.value = [...allItems.value, ...items];
       PAGE++;
-      // 保持滚动位置
       nextTick(() => {
         // Node setScrollTop
 
@@ -137,12 +143,22 @@ const loadMoreNewer = async () => {
     loadingBottom.value = false;
   }
 };
-// 初始化
-onMounted(() => {
-  loadMoreNewer();
-});
+watch(
+  () => props.focusId, // 监听的具体依赖
+  (newVal, oldVal) => {
+    allItems.value = [];
+    allItemsLength.length = 0;
+    console.log("props.focusId", "发生变化来更新");
+    props.focusId && loadMoreNewer(props.focusId);
+  },
+  { immediate: true }
+);
+// initialization
+// onMounted(() => {
+//   loadMoreNewer();
+// });
 
-// 滚动处理
+// Rolling processing
 let debounceTimer = null;
 
 const handleScroll = () => {
@@ -163,19 +179,15 @@ const handleScroll = () => {
     clientHeight,
   });
   debounceTimer = setTimeout(() => {
-    // 向下滚动接近底部（加载更新数据）
     console.log(
       "totalHeight.value - clientHeight - 100",
       totalHeight.value - clientHeight - 100
     );
     if (st > totalHeight.value - clientHeight - 100) {
-      loadMoreNewer();
-      console.log("向下滚动接近底部（加载更新数据）");
+      loadMoreNewer(props.focusId);
     }
-    // 向上滚动接近顶部（加载旧数据）
     if (st < 100) {
       // loadMoreOlder();
-      // console.log("向上滚动接近顶部（加载旧数据）");
     }
   }, 500);
 
@@ -206,7 +218,6 @@ const handleScroll = () => {
 .timeline-container {
   overflow: auto;
   position: relative;
-  border: 1px solid #ebeef5;
 }
 
 .virtual-scroller {
@@ -228,14 +239,15 @@ const handleScroll = () => {
 }
 .timeLine {
   width: 290px;
-  background: #ccc;
+  border: 2px solid #c9a769;
+  background: linear-gradient(to right, #1a2a1a, #0d1f0d);
   .card {
     width: auto;
     padding: 5px 15px;
-    background: #fff;
+    background: linear-gradient(to right, #1a2a1a, #0d1f0d);
+    color: #ebe7e7;
     .name {
       background: #000;
-      color: #fff;
       height: 40px;
       border-radius: 5px;
       width: 100%;
@@ -293,12 +305,12 @@ const handleScroll = () => {
             }
             .content {
               p {
-                display: -webkit-box; /* 关键：使用旧版弹性盒子模型 */
-                -webkit-box-orient: vertical; /* 关键：内容垂直排列 */
-                -webkit-line-clamp: 3; /* 关键：限制3行 */
-                overflow: hidden; /* 关键：隐藏超出部分 */
-                text-overflow: ellipsis; /* 显示省略号 */
-                word-break: break-word; /* 长单词换行 */
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-break: break-word;
               }
             }
             padding: 5px;

@@ -10,22 +10,22 @@
       </div>
 
       <el-menu class="nav-menu" :default-active="activeMenu">
-        <el-menu-item index="personal" @click="activeMenu = 'personal'">
+        <!-- <el-menu-item index="personal" @click="activeMenu = 'personal'">
           <el-icon><User /></el-icon>
           <span>Personal Center</span>
-        </el-menu-item>
+        </el-menu-item> -->
         <el-menu-item index="roles" @click="activeMenu = 'roles'">
           <el-icon><Avatar /></el-icon>
           <span>Character Settings</span>
         </el-menu-item>
-        <el-menu-item index="recharge" @click="activeMenu = 'recharge'">
+        <!-- <el-menu-item index="recharge" @click="activeMenu = 'recharge'">
           <el-icon><Wallet /></el-icon>
           <span>Recharge Account</span>
         </el-menu-item>
         <el-menu-item index="about" @click="activeMenu = 'about'">
           <el-icon><InfoFilled /></el-icon>
           <span>About Us</span>
-        </el-menu-item>
+        </el-menu-item> -->
       </el-menu>
     </el-aside>
 
@@ -188,7 +188,7 @@
               </el-radio-group>
             </div>
 
-            <div class="recharge-actions">
+            <div class="recharge-actions" v-show="roles.length < 0">
               <el-button type="primary" size="large" @click="handleRecharge">
                 <span>Recharge now</span>
               </el-button>
@@ -309,8 +309,13 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="outerVisible" title="Choose your home site" width="800">
-      <Site v-model="roleForm.house"></Site>
+    <el-dialog
+      destroy-on-close
+      v-model="outerVisible"
+      title="Choose your home site"
+      width="800"
+    >
+      <Site v-model="house"></Site>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="outerVisible = false">Cancel</el-button>
@@ -398,7 +403,7 @@ const user = ref({
 });
 
 // Current activation menu
-const activeMenu = ref("personal");
+const activeMenu = ref("roles");
 
 // Recharge related
 const rechargeAmount = ref(10);
@@ -420,8 +425,10 @@ const roleForm = ref({
   learned: null,
   currently: "",
   lifestyle: null,
-  house: [],
+  x: 0,
+  y: 0,
 });
+const house = ref(null);
 let rules = ref({
   first_name: {
     required: true,
@@ -470,7 +477,6 @@ const roles = ref([]);
 const roleFormRef = ref();
 const resetForm = () => {
   if (!roleFormRef) return;
-  console.log(roleFormRef.value);
   roleFormRef.value?.resetFields();
 };
 const isEditRole = ref(false);
@@ -507,19 +513,16 @@ const imgChange = (fileObj, fileList) => {
     if (item.url) {
       if (item.raw) {
         if (item.raw.type.includes("image")) {
-          console.log(item.raw);
           newValue.push(item.raw);
         }
       }
     }
   });
   filesList.value = newValue;
-  console.log(filesList.value, "files");
 };
 onMounted(() => {
   // get RolesList
   characters.getUserRoles().then((res) => {
-    console.log(res.data.characters, "characterscharacters");
     res.data.characters && (roles.value = res.data.characters);
   });
   // get userInfo
@@ -532,8 +535,6 @@ onMounted(() => {
   });
 });
 const requestFun = (fileObj) => {
-  console.log(fileObj);
-
   const formData = new FormData();
   formData.append("file", fileObj.file);
   // userApi.upload(formData)
@@ -573,11 +574,9 @@ const saveAvatar = () => {
   );
   user.value.avatar = avatarTempUrl.value;
   avatarDialogVisible.value = false;
-  ElMessage.success("Avatar updated successfully");
-  console.log(filesList.value[0], "filesList.value[0]");
+  // ElMessage.success("Avatar updated successfully");
   if (beforeAvatarUpload(filesList.value[0])) {
     const formData = new FormData();
-    console.log("the file is loading");
     formData.append("avatar", filesList.value[0]);
     userApi.upload(formData).catch((req) => {
       ElMessage.warning("Avatar updated unsuccessfully");
@@ -599,7 +598,6 @@ const editRole = (role) => {
 };
 
 const deleteRole = (role) => {
-  console.log(role.id);
   ElMessageBox.confirm(
     `Are you sure you want to delete the role "${role.name}" ?`,
     "prompt",
@@ -613,7 +611,7 @@ const deleteRole = (role) => {
       characters
         .delteteRoles(role.id)
         .then((res) => {
-          characters.getRoles().then((res) => {
+          characters.getUserRoles().then((res) => {
             roles.value = res.data?.characters;
             roleDialogVisible.value = false;
             ElMessage.success("Delete successfully");
@@ -627,8 +625,6 @@ const deleteRole = (role) => {
 };
 
 const saveRole = () => {
-  console.log(roleForm.value);
-  console.log(isEditRole);
   roleFormRef.value?.validate((valid) => {
     if (valid) {
       outerVisible.value = true;
@@ -645,17 +641,16 @@ const confirmLand = () => {
   // Call the query interface for homestead
   // land to check if the user has already created it
   // Then create a character on the map
-  console.log(roleForm.value, "roleForm.value");
   characters
-    .locationQuery(roleForm.value.house)
+    .locationQuery(house.value)
     .then((status) => {
       if (status.data.is_registered === false) {
         let newroleForm = { ...roleForm.value };
         let name = newroleForm.last_name + " " + newroleForm.first_name;
-        newroleForm.house = newroleForm.house.join(",");
-        newroleForm.position_name = status.data.position_name;
-        console.log(newroleForm, "============================");
-        return;
+        newroleForm.x = house?.value[0];
+        newroleForm.y = house?.value[1];
+        newroleForm.house = status.data.position_name;
+
         characters
           .register({ ...newroleForm, name })
           .then((res) => {

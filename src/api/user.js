@@ -1,4 +1,4 @@
-import { axiosInstance } from "./baseaxios.js";
+import { axiosInstance } from "../utils/baseaxios";
 import { ElNotification } from "element-plus";
 // import router from "vue-router";
 const baseURL = "http://192.168.1.6:5000/login";
@@ -39,7 +39,7 @@ function profile() {
   return axiosInstance.get(url);
 }
 function twitter() {
-  const url = `/login/login/twitter`;
+  const url = `/characters/login/twitter`;
   return axiosInstance.get(url);
 }
 function upload(fileData) {

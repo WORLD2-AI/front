@@ -49,7 +49,7 @@
       </el-header>
       <el-main>
         <Map></Map>
-        <BarOntainer></BarOntainer>
+        <!-- <BarOntainer></BarOntainer> -->
       </el-main>
     </el-container>
   </div>

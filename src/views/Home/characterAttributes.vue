@@ -43,7 +43,6 @@
           :show-header="false"
           scrollbar-always-on
           :data="roleForm"
-          height="200"
           max-height="200"
           style="width: 100%"
         >
@@ -57,16 +56,22 @@
         </el-table>
       </div>
     </el-card>
-    <time-line></time-line>
+    <time-line :focusId="props.focusId"></time-line>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watchEffect, defineAsyncComponent } from "vue";
 import { Sunny } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
-import Text from "./text.vue";
-import TimeLine from "./timeLine.vue";
+// import TimeLine from "./timeLine.vue";
+const TimeLine = defineAsyncComponent(() => import("./timeLine.vue"));
+const props = defineProps({
+  focusId: {
+    type: Number,
+    required: true,
+  },
+});
 const roles = ref([]);
 const role = ref({
   age: "",
@@ -85,22 +90,29 @@ const rolelist = {
   sleep_time: "",
   wake_time: "",
 };
+watchEffect(() => {
+  if (roles.value.length > 0) {
+    let object = {};
+    roles.value.forEach((element) => {
+      if (element.id === props.focusId) {
+        role.value = element;
+        object = element;
+      }
+    });
+    for (const key in rolelist) {
+      let obj = {};
+      if (Object.hasOwnProperty.call(object, key)) {
+        const element = object[key];
+        obj.name = key;
+        obj.value = element;
+        roleForm.value.push(obj);
+      }
+    }
+  }
+}, [props.focusId]);
 onMounted(() => {
   characters.getAllRoles().then((res) => {
     res.data.data && (roles.value = res.data.data);
-    if (roles.value.length > 0) {
-      role.value = roles.value[0];
-      let object = roles.value[0];
-      for (const key in rolelist) {
-        let obj = {};
-        if (Object.hasOwnProperty.call(object, key)) {
-          const element = object[key];
-          obj.name = key;
-          obj.value = element;
-          roleForm.value.push(obj);
-        }
-      }
-    }
   });
 });
 </script>

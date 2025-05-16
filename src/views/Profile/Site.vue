@@ -166,10 +166,8 @@ function create() {
   const map = this.make.tilemap({ key: "map" });
   characters.getAllRoles().then((res) => {
     let data = res.data?.data;
-    console.log("创建进入", data);
     if (data) {
       data.forEach((item) => {
-        console.log(item, "item");
         const position = item.house.split(",");
         if (position.length === 2) {
           let conText = this.add.graphics();
@@ -425,7 +423,6 @@ function create() {
 
   const conText = this.add.graphics();
   function updateSelection(x, y, selectionMarker) {
-    console.log(`更新选择标记: x=${x}, y=${y}`);
     const MapX = x - tile_width / 2;
     const MapY = y - tile_height / 2;
     // Clear old graphics
@@ -469,7 +466,6 @@ function create() {
         pointer.worldY
       );
       if (distance >= DRAG_THRESHOLD) {
-        // 这里实现地图拖动逻辑（例如移动camera）
         // this.cameras.main.scrollX -= pointer.x - pointer.prevPosition.x;
         // this.cameras.main.scrollY -= pointer.y - pointer.prevPosition.y;
         let deltaX = startPointerPos.x - pointer.x;

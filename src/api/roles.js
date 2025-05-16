@@ -1,10 +1,10 @@
-import { axiosInstance } from "./baseaxios.js";
+import { axiosInstance } from "../utils/baseaxios";
 function allChars() {
-  return axiosInstance.get("/rolesreder/api/all-characters");
+  return axiosInstance.get("/rolesreder/api/characters");
 }
 function visibleChars(id) {
   return axiosInstance.get(
-    `/rolesreder/api/visible-characters/${id}?radius=20`
+    `/rolesreder/api/visible-characters/${id}`
   );
 }
 function dialogues(data) {
