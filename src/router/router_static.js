@@ -1,7 +1,7 @@
 import LoginLayout from "../views/Login/LoginLayout.vue";
 import Login from "../views/Login/login.vue";
 import Register from "../views/Login/register.vue";
-import Profile from "../views/profile/index.vue";
+import Profile from "../views/Profile/index.vue";
 import Home from "../views/Home/home.vue";
 import waitlistSignup from "../views/waitlistSignup/index.vue";
 export default [
