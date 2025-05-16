@@ -388,7 +388,7 @@ function preload() {
   // Joon: This is the export json file you get from Tiled.
   this.load.tilemapTiledJSON(
     "map",
-    "assets/the_ville/visuals/the_ville_jan7-2.json"
+    "assets/the_ville/visuals/the_ville.json"
   );
 
   // An atlas is a way to pack multiple images together into one texture. I'm
@@ -797,7 +797,7 @@ function create() {
   }
 
   // set the view zoom
-  const minZoom = 0.3; // minimal scaling
+  const minZoom = 0.01; // minimal scaling
   const maxZoom = 3; // maximum scale
   // Play audio normally
 
