@@ -20,7 +20,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/rolesreder": {
-        target: "http://192.168.1.35:5000",
+        target: "http://192.168.1.6:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/rolesreder/, ""),
         configure: (proxy, options) => {
@@ -39,7 +39,7 @@ export default defineConfig({
         },
       },
       "/characters": {
-        target: "http://192.168.1.35:5000",
+        target: "http://192.168.1.6:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/characters/, ""),
         configure: (proxy, options) => {

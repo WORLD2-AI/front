@@ -72,6 +72,9 @@ const mapMarkerHandler = () => {
         manageApi.renderSite().then((res) => {
           siteList.value = res.data?.data;
         });
+      })
+      .catch((err) => {
+        ElMessage.error(err.err);
       });
   }
 };
@@ -109,7 +112,6 @@ onMounted(() => {
 watchEffect(() => {
   container?.list && [...container.list].forEach((g) => g.destroy());
   container && (container = MapADD.value.container(0, 0));
-  console.log(siteList.value, "siteList.valuevaluevaluevaluevaluevalue");
   MapADD.value &&
     siteList.value.length > 0 &&
     siteList.value.forEach((item) => {
@@ -495,6 +497,7 @@ function create() {
     // Draw a red solid rectangle
     let setMapX = Math.floor(x / tile_width);
     let setMapY = Math.floor(y / tile_height);
+    console.log([setMapX, setMapY], "setMapX,setMapY ");
     selectionMarker.fillStyle(0xff0000, 0.5);
     selectionMarker.fillRect(
       setMapX * tile_width,

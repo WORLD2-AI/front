@@ -16,7 +16,7 @@
       <div class="col-md-7">
         <div id="game-container" style="text-align: center">
           <!-- <Map /> -->
-          <div class="game-dialogues">
+          <div class="game-dialogues" v-if="dialogues">
             <input
               v-model="dialoguesCont"
               type="text"
@@ -96,9 +96,15 @@ const progress = ref();
 const slider = ref();
 const Interval = ref(null);
 let focus_id = ref("");
+let focu_user_id = ref(0);
 const dialogues = computed(() => {
   let flag = false;
-  if (Profile && focus_id.value) {
+  console.log(
+    focu_user_id.value !== 0,
+    focu_user_id.value,
+    "focu_user_id.valuefocu_user_id.value========================"
+  );
+  if (Profile && focus_id.value && focu_user_id.value !== 0) {
     flag = true;
   }
   return flag;
@@ -405,7 +411,11 @@ function preload() {
     persona_namesList = [];
     res.data.data.forEach((char) => {
       persona_names[char.name] = char.position;
-      persona_namesList.push({ id: char.id, name: char.name });
+      persona_namesList.push({
+        id: char.id,
+        name: char.name,
+        user_id: char.user_id,
+      });
     });
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
@@ -415,7 +425,6 @@ function preload() {
     userApi
       .profile()
       .then(() => {
-        Profile.value = true;
         randomIndex = persona_namesList.length - 1;
       })
       .catch(() => {
@@ -426,6 +435,7 @@ function preload() {
         focus_name = persona_namesList[randomIndex].name;
         console.log("focus_name", "focus_name", focus_name);
         focus_id.value = persona_namesList[randomIndex].id;
+        focu_user_id.value = persona_namesList[randomIndex].user_id;
       });
     for (let key in persona_names) {
       // key = persona_names[key];
@@ -680,6 +690,7 @@ function create() {
       } else {
         focus_name = persona_name;
         focus_id.value = persona_namesList[i].id;
+        focu_user_id.value = persona_namesList[i].user_id;
         display_game_dialog(persona_name);
       }
     });
