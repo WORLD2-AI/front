@@ -471,7 +471,7 @@ function create() {
   // stored in the global animation manager so any sprite can access them.
 
   // set the view zoom
-  const minZoom = 0.3; // minimal scaling
+  const minZoom = 0.1; // minimal scaling
   const maxZoom = 3; // maximum scale
   // Play audio normally
 
@@ -503,6 +503,9 @@ function create() {
       tile_height
     );
     site.value = [setMapX, setMapY];
+    // site.value[0] 写入剪切板
+    navigator.clipboard.writeText(site.value[0]+","+site.value[1]);
+    console.log(site.value[0]+","+site.value[1])
   }
   // Input event binding
   this.input.on("pointerdown", (pointer) => {
