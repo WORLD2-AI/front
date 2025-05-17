@@ -38,6 +38,22 @@ export default defineConfig({
           });
         },
       },
+      "/roles": {
+        target: "http://192.168.1.35:8000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/roles/, ""),
+        configure: (proxy, options) => {
+          proxy.on("error", (err) => {
+            console.error("roles agent error:", err);
+          });
+          proxy.on("proxyReq", (proxyReq) => {
+            console.log("roles proxy request:", proxyReq.path);
+          });
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log("roles Agent Response Status:", proxyRes.statusCode);
+          });
+        },
+      },
       "/characters": {
         target: "http://192.168.1.35:5000",
         changeOrigin: true,
@@ -58,7 +74,7 @@ export default defineConfig({
         },
       },
       "/login": {
-        target: "http://192.168.1.6:5000",
+        target: "http://192.168.1.35:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/login/, "/"),
         bypass: (req) => {
