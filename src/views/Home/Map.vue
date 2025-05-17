@@ -653,7 +653,7 @@ function create() {
 
   // Setting up the camera.
   const camera = this.cameras.main;
-  camera.setZoom(0.5);
+  camera.setZoom(0.7);
   camera.startFollow(player);
   camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
   cursors = this.input.keyboard.createCursorKeys();
