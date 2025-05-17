@@ -4,9 +4,9 @@
     <el-aside class="sidebar">
       <div class="user-info">
         <el-avatar :size="80" :src="user.avatar" class="user-avatar" />
-        <h1 class="user-name">{{ user.name }}</h1>
+        <!-- <h1 class="user-name">{{ user.name }}</h1>
         <p class="user-phone">{{ user.phone }}</p>
-        <p class="user-quote">{{ user.signature }}</p>
+        <p class="user-quote">{{ user.signature }}</p> -->
       </div>
 
       <el-menu class="nav-menu" :default-active="activeMenu">
@@ -42,7 +42,7 @@
                 <span class="edit">edit</span>
               </div>
             </div>
-            <div class="info-grid">
+            <!-- <div class="info-grid">
               <div class="info-item">
                 <label class="info-label">phone</label>
                 <div class="info-value">
@@ -80,7 +80,7 @@
                   {{ user.signature }}
                 </div>
               </div>
-            </div>
+            </div> -->
             <div class="operation-grid">
               <el-divider />
               <div class="info-item">
@@ -238,13 +238,13 @@
         <el-form-item label="firstName" prop="first_name">
           <el-input
             v-model="roleForm.first_name"
-            placeholder="Please enter the role first_name"
+            placeholder="Enter first name (e.g., Alex)"
           />
         </el-form-item>
         <el-form-item label="lastName" prop="last_name">
           <el-input
             v-model="roleForm.last_name"
-            placeholder="Please enter the role last_name"
+            placeholder="Enter last name (e.g., Lee)"
           />
         </el-form-item>
         <el-form-item label="age" prop="age">
@@ -253,13 +253,13 @@
             v-model.number="roleForm.age"
             :min="1"
             :max="120"
-            placeholder="Please enter the role age"
+            placeholder="Enter age (e.g., 25)"
           />
         </el-form-item>
         <el-form-item label="sex" prop="sex">
           <el-select
             v-model="roleForm.sex"
-            placeholder="Please select the role sex"
+            placeholder="Select gender (e.g., Male)"
             size="large"
             style="width: 240px"
           >
@@ -275,21 +275,21 @@
           <el-input
             type="text"
             v-model="roleForm.innate"
-            placeholder="Please enter the role innate"
+            placeholder="Natural traits (e.g., curious, calm)"
           />
         </el-form-item>
         <el-form-item label="learned" prop="learned">
           <el-input
             type="text"
             v-model="roleForm.learned"
-            placeholder="Please enter the role learned"
+            placeholder="Learned skills (e.g., cooking, coding)"
           />
         </el-form-item>
         <el-form-item label="currently" prop="currently">
           <el-input
             v-model="roleForm.currently"
             type="textarea"
-            placeholder="Please enter the role currently"
+            placeholder="Current role/job (e.g., explorer)"
             :rows="3"
           />
         </el-form-item>
@@ -297,7 +297,7 @@
           <el-input
             type="text"
             v-model="roleForm.lifestyle"
-            placeholder="Please enter the role lifestyle"
+            placeholder="Living style (e.g., latoya williams goes to bed around 10pm, awakes up around 6am, eats dinner around 17:30pm.)"
           />
         </el-form-item>
       </el-form>
