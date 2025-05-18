@@ -451,7 +451,7 @@ function preload() {
     }
   });
 }
-function addUser(persona_name,that,start_pos){
+function addUser(persona_name,that,start_pos,id,user_id){
   let new_sprite = that.physics.add
       .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
       .setSize(30, 40)
@@ -465,8 +465,8 @@ function addUser(persona_name,that,start_pos){
         display_main_box();
       } else {
         focus_name = persona_name;
-        focus_id.value = persona_namesList[i].id;
-        focu_user_id.value = persona_namesList[i].user_id;
+        focus_id.value = id;
+        focu_user_id.value = user_id;
         display_game_dialog(persona_name);
       }
     });
@@ -737,7 +737,7 @@ function create() {
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
     ];
     let that = this;
-    addUser(persona_name,that,start_pos);
+    addUser(persona_name,that,start_pos,persona_namesList[i].id,persona_namesList[i].user_id);
   }
 
   // Create the player's walking animations from the texture atlas. These are
@@ -1128,7 +1128,7 @@ function getFrameData() {
         }
         if (!personas[char['name']]){
           let that = this;
-          addUser(char['name'],that,[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width]);
+          addUser(char['name'],that,[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width],char['id'],char['user_id']);
         }
         tempData[char['name']] = 1
       });
