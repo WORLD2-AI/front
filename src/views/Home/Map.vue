@@ -1128,7 +1128,7 @@ function getFrameData() {
           return;
         }
         if (!personas[char['name']]){
-          let that = this;
+          let that = config.value.scene;
           addUser(char['name'],that,[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width],char['id'],char['user_id']);
         }
         tempData[char['name']] = 1
