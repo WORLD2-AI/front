@@ -549,7 +549,7 @@ function create() {
   this.input.on("pointerup", (pointer) => {
     // isDraggingmMap = false;
     if (!dragStartPos) return;
-
+    player.body.setVelocity(0,0)
     // Calculate pointer movement distance
     const distance = Phaser.Math.Distance.Between(
       dragStartPos.x,

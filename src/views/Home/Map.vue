@@ -838,6 +838,7 @@ function create() {
 
   this.input.on("pointerup", () => {
     isDraggingmMap = false;
+    player.body.setVelocity(0,0);
   });
   this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
     // Get the mouse world coordinates before zooming in and out
