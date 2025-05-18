@@ -451,7 +451,61 @@ function preload() {
     }
   });
 }
+function addUser(persona_name,that,start_pos){
+  let new_sprite = that.physics.add
+      .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
+      .setSize(30, 40)
+      .setOffset(0, 0);
 
+    new_sprite.setInteractive();
+    new_sprite.on("pointerup", () => {
+      if (persona_name == focus_name) {
+        focus_name = "";
+        focus_id.value = "";
+        display_main_box();
+      } else {
+        focus_name = persona_name;
+        focus_id.value = persona_namesList[i].id;
+        focu_user_id.value = persona_namesList[i].user_id;
+        display_game_dialog(persona_name);
+      }
+    });
+    // Here, we are creating the persona and its pronunciatio sprites.
+    personas[persona_name] = new_sprite;
+    // Emoji garbled characters
+    // pronunciatios[persona_name] = this.add
+    //   .text(
+    //     new_sprite.body.x - 6,
+    //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+    //     "🦁",
+    //     {
+    //       font: "18px Arial",
+    //       fill: "#fff",
+    //       //    padding: { x: 8, y: 8},
+    //       backgroundColor: "#00000066",
+    //       stroke: "#000",
+    //       strokeThickness: 0,
+    //       border: "none",
+    //     }
+    //   )
+    //   .setDepth(3);
+
+    persona_name_tags[persona_name] = that.add
+      .text(
+        new_sprite.body.x-6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        formatPersonName(persona_name),
+        {
+          font: "bold 16px velvet",
+          stroke: "#fff",
+          strokeThickness: 2,
+          fill: "#000",
+          border: "solid",
+          borderRadius: "10px",
+        }
+      )
+      .setDepth(3);
+}
 function create() {
   const map = this.make.tilemap({ key: "map" });
   // console.log(map, "addTilesetImage");
@@ -682,59 +736,8 @@ function create() {
       spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
     ];
-    let new_sprite = this.physics.add
-      .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
-      .setSize(30, 40)
-      .setOffset(0, 32);
-
-    new_sprite.setInteractive();
-    new_sprite.on("pointerup", () => {
-      if (persona_name == focus_name) {
-        focus_name = "";
-        focus_id.value = "";
-        display_main_box();
-      } else {
-        focus_name = persona_name;
-        focus_id.value = persona_namesList[i].id;
-        focu_user_id.value = persona_namesList[i].user_id;
-        display_game_dialog(persona_name);
-      }
-    });
-    // Here, we are creating the persona and its pronunciatio sprites.
-    personas[persona_name] = new_sprite;
-    // Emoji garbled characters
-    // pronunciatios[persona_name] = this.add
-    //   .text(
-    //     new_sprite.body.x - 6,
-    //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-    //     "🦁",
-    //     {
-    //       font: "18px Arial",
-    //       fill: "#fff",
-    //       //    padding: { x: 8, y: 8},
-    //       backgroundColor: "#00000066",
-    //       stroke: "#000",
-    //       strokeThickness: 0,
-    //       border: "none",
-    //     }
-    //   )
-    //   .setDepth(3);
-
-    persona_name_tags[persona_name] = this.add
-      .text(
-        new_sprite.body.x,
-        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-        formatPersonName(persona_name),
-        {
-          font: "bold 16px velvet",
-          stroke: "#fff",
-          strokeThickness: 2,
-          fill: "#000",
-          border: "solid",
-          borderRadius: "10px",
-        }
-      )
-      .setDepth(3);
+    let that = this;
+    addUser(persona_name,that,start_pos);
   }
 
   // Create the player's walking animations from the texture atlas. These are
@@ -1111,13 +1114,33 @@ function getFrameData() {
       };
 
       // add visible_characters
+      let tempData = {}
+      tempData[data.name]
       data.visible_characters.forEach((char) => {
         output.execute_movement.persona[char.name] = {
           movement: char.position,
           // pronunciatio: char.level_emoji,
           description: char.action,
         };
+        
+        if (!char||!char['name']) {
+          return;
+        }
+        if (!personas[char['name']]){
+          let that = this;
+          addUser(char['name'],that,[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width]);
+        }
+        tempData[char['name']] = 1
       });
+      for (let key in personas) {
+        if (!tempData || !tempData[key]) {
+          personas && personas[key]&& personas[key].setVisible(false);
+          persona_name_tags && persona_name_tags[key] && persona_name_tags[key].setVisible(false);
+        } else {
+          personas && personas[key]&& personas[key].setVisible(true);
+          persona_name_tags && persona_name_tags[key] && persona_name_tags[key].setVisible(true);
+        }
+      }
       execute_movement = output.execute_movement;
     });
 }
