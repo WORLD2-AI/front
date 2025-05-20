@@ -97,6 +97,7 @@ const slider = ref();
 const Interval = ref(null);
 let focus_id = ref("");
 let focu_user_id = ref(0);
+let currentScene = ref(null);
 const dialogues = computed(() => {
   let flag = false;
   console.log(
@@ -294,6 +295,7 @@ let dial_content =
 //         update() is called on each frame during the game play
 
 function preload() {
+  currentScene = this; 
   // Loading the necessary images (e.g., the background image, character
   // sprites).
 
@@ -451,8 +453,8 @@ function preload() {
     }
   });
 }
-function addUser(persona_name,that,start_pos,id,user_id){
-  let new_sprite = that.physics.add
+function addUser(persona_name,start_pos,id,user_id){
+  let new_sprite = currentScene.physics.add
       .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
       .setSize(30, 40)
       .setOffset(0, 0);
@@ -490,7 +492,7 @@ function addUser(persona_name,that,start_pos,id,user_id){
     //   )
     //   .setDepth(3);
 
-    persona_name_tags[persona_name] = that.add
+    persona_name_tags[persona_name] = currentScene.add
       .text(
         new_sprite.body.x-6,
         new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
@@ -736,8 +738,7 @@ function create() {
       spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
     ];
-    let that = this;
-    addUser(persona_name,that,start_pos,persona_namesList[i].id,persona_namesList[i].user_id);
+    addUser(persona_name,start_pos,persona_namesList[i].id,persona_namesList[i].user_id);
   }
 
   // Create the player's walking animations from the texture atlas. These are
@@ -1128,8 +1129,7 @@ function getFrameData() {
           return;
         }
         if (!personas[char['name']]){
-          let that = config.value.scene;
-          addUser(char['name'],that,[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width],char['id'],char['user_id']);
+          addUser(char['name'],[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width],char['id'],char['user_id']);
         }
         tempData[char['name']] = 1
       });
