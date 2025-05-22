@@ -64,8 +64,10 @@
 import { ref, onMounted, watchEffect, defineAsyncComponent } from "vue";
 import { Sunny } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
+import userStore from "../../store/user.js";
 // import TimeLine from "./timeLine.vue";
 const TimeLine = defineAsyncComponent(() => import("./timeLine.vue"));
+const userState = userStore();
 const props = defineProps({
   focusId: {
     type: Number,
@@ -99,6 +101,7 @@ watchEffect(() => {
         object = element;
       }
     });
+    roleForm.value = [];
     for (const key in rolelist) {
       let obj = {};
       if (Object.hasOwnProperty.call(object, key)) {

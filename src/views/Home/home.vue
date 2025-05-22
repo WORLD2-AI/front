@@ -12,38 +12,97 @@
             />
           </li>
           <li class="navbar-nav">
-            <div v-show="!loginStatus">
-              <div class="user-auto">
-                <img src="/img/github.jpg" @click="goLogin" alt="" />
-              </div>
-            </div>
-            <div v-show="loginStatus">
-              <el-dropdown @command="handleCommand" trigger="click">
-                <div class="user-avatar">
-                  <el-avatar :size="40" :src="user.avatar" />
-                  <span class="user-name">{{ user.name }}</span>
-                  <el-icon class="el-icon--right">
-                    <arrow-down />
-                  </el-icon>
+            <ul class="navbar-list">
+              <li class="nav-item" style="width: 45px">
+                <a
+                  class="nav-link nav-link-custom"
+                  href="https://github.com/AI-HelloWorld/AI-HelloWorld"
+                  target="_blank"
+                >
+                  <img
+                    src="/img/github.jpg"
+                    style="width: 30px; height: auto"
+                  />
+                </a>
+              </li>
+              <li class="nav-item" style="width: 45px">
+                <a
+                  class="nav-link nav-link-custom"
+                  href="https://t.me/AIHelloWorld"
+                  target="_blank"
+                >
+                  <img
+                    src="/img/telegram.png"
+                    style="width: 30px; height: auto"
+                  />
+                </a>
+              </li>
+              <li class="nav-item" style="width: 45px">
+                <a
+                  class="nav-link nav-link-custom"
+                  href="https://twitter.com/E3A_EternalAI"
+                  target="_blank"
+                  ><img src="/img/x.png" style="width: 30px; height: auto"
+                /></a>
+              </li>
+              <li class="nav-item" style="width: 45px">
+                <a
+                  class="nav-link nav-link-custom"
+                  href="https://discord.gg/ZM7EdkCHZP"
+                  target="_blank"
+                  ><img
+                    src="/img/discord.jpg"
+                    style="width: 30px; height: auto"
+                /></a>
+              </li>
+              <li class="nav-item" style="padding-left: 40px">
+                <a class="nav-link nav-link-custom" href="/Helloworld.pdf"
+                  >White Paper</a
+                >
+              </li>
+              <li class="nav-item" style="padding-left: 40px">
+                <div v-show="!loginStatus">
+                  <div class="user-auto">
+                    <img src="/img/github.jpg" @click="goLogin" alt="" />
+                  </div>
                 </div>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item command="profile">
-                      <el-icon><User /></el-icon>
-                      <span>Profile</span>
-                    </el-dropdown-item>
-                    <!-- <el-dropdown-item command="settings">
+                <div v-show="loginStatus">
+                  <el-dropdown @command="handleCommand" trigger="click">
+                    <div class="user-avatar">
+                      <el-avatar :size="40" :src="user.avatar" />
+                      <span class="user-name">{{ user.name }}</span>
+                      <el-icon class="el-icon--right">
+                        <arrow-down />
+                      </el-icon>
+                    </div>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="profile">
+                          <el-icon><User /></el-icon>
+                          <span>Profile</span>
+                        </el-dropdown-item>
+                        <!-- <el-dropdown-item command="settings">
                       <el-icon><Setting /></el-icon>
                       <span>Settings</span>
                     </el-dropdown-item> -->
-                    <el-dropdown-item divided command="logout">
-                      <el-icon><SwitchButton /></el-icon>
-                      <span>Logout</span>
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </div>
+                        <el-dropdown-item divided command="logout">
+                          <el-icon><SwitchButton /></el-icon>
+                          <span>Logout</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
+              </li>
+              <!-- <li class="nav-item">
+                <a
+                  class="nav-link nav-link-custom"
+                  href="#"
+                  onclick="alert('please wait...')"
+                  ><span style="color: rgba(87, 89, 89 0.2)">Login In</span></a
+                >
+              </li> -->
+            </ul>
           </li>
         </ul>
       </el-header>
@@ -181,13 +240,17 @@ const logout = () => {
         margin-left: 2px;
       }
       .navbar-nav {
-        width: 150px;
+        li {
+          list-style: none;
+        }
         height: 47px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
         padding: 0 15px;
         position: relative;
+        .navbar-list {
+          display: flex;
+        }
         .user-auto {
           height: 40px;
           width: 40px;
@@ -200,12 +263,15 @@ const logout = () => {
             width: 40px;
           }
         }
-        div {
+        .userA {
           height: 100%;
-          position: absolute;
+          position: relative;
           top: 0;
           left: 0;
           padding: 10px 0;
+          .class-moren {
+            position: absolute;
+          }
         }
         img {
           width: 30px;

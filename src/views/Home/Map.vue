@@ -46,6 +46,9 @@
               Send
             </button>
           </div>
+          <!-- <div class="game-controls">
+            <el-icon @click="userState.restorefocusId"><Place /></el-icon>
+          </div> -->
         </div>
       </div>
       <div class="col-md-4">
@@ -61,12 +64,15 @@
   </div>
 </template>
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import Phaser from "phaser";
+import { Place } from "@element-plus/icons-vue";
 import rolesApi from "../../api/roles";
 import userApi from "../../api/user";
 import DialogContainer from "./dialogContainer.vue";
 import CharacterAttributes from "./characterAttributes.vue";
+import userStore from "../../store/user.js";
+const userState = userStore();
 
 /*
 Main resources:
@@ -100,16 +106,18 @@ let focu_user_id = ref(0);
 let currentScene = ref(null);
 const dialogues = computed(() => {
   let flag = false;
-  console.log(
-    focu_user_id.value !== 0,
-    focu_user_id.value,
-    "focu_user_id.valuefocu_user_id.value========================"
-  );
   if (Profile && focus_id.value && focu_user_id.value !== 0) {
     flag = true;
   }
   return flag;
 });
+watch(
+  () => userState.focusId, // 监听目标（需用函数返回）
+  (newValue, oldValue) => {
+    newValue && (focus_id.value = newValue);
+  },
+  { immediate: false } // 可选：立即触发一次
+);
 
 onUnmounted(() => {
   if (game.value) {
@@ -295,7 +303,7 @@ let dial_content =
 //         update() is called on each frame during the game play
 
 function preload() {
-  currentScene = this; 
+  currentScene = this;
   // Loading the necessary images (e.g., the background image, character
   // sprites).
 
@@ -437,6 +445,8 @@ function preload() {
         focus_name = persona_namesList[randomIndex].name;
         console.log("focus_name", "focus_name", focus_name);
         focus_id.value = persona_namesList[randomIndex].id;
+        userState.changeInitialFocusId(focus_id.value);
+        userState.changeFocusId(focus_id.value);
         focu_user_id.value = persona_namesList[randomIndex].user_id;
       });
     for (let key in persona_names) {
@@ -453,60 +463,63 @@ function preload() {
     }
   });
 }
-function addUser(persona_name,start_pos,id,user_id){
+function addUser(persona_name, start_pos, id, user_id) {
   let new_sprite = currentScene.physics.add
-      .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
-      .setSize(30, 40)
-      .setOffset(0, 0);
+    .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
+    .setSize(30, 40)
+    .setOffset(0, 0);
 
-    new_sprite.setInteractive();
-    new_sprite.on("pointerup", () => {
-      if (persona_name == focus_name) {
-        focus_name = "";
-        focus_id.value = "";
-        display_main_box();
-      } else {
-        focus_name = persona_name;
-        focus_id.value = id;
-        focu_user_id.value = user_id;
-        display_game_dialog(persona_name);
+  new_sprite.setInteractive();
+  new_sprite.on("pointerup", () => {
+    if (persona_name == focus_name) {
+      focus_name = "";
+      focus_id.value = "";
+      focu_user_id.value = user_id;
+      userState.changeFocusId(focus_id.value);
+      display_main_box();
+    } else {
+      focus_name = persona_name;
+      focus_id.value = id;
+      focu_user_id.value = user_id;
+      userState.changeFocusId(focus_id.value);
+      display_game_dialog(persona_name);
+    }
+  });
+  // Here, we are creating the persona and its pronunciatio sprites.
+  personas[persona_name] = new_sprite;
+  // Emoji garbled characters
+  // pronunciatios[persona_name] = this.add
+  //   .text(
+  //     new_sprite.body.x - 6,
+  //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+  //     "🦁",
+  //     {
+  //       font: "18px Arial",
+  //       fill: "#fff",
+  //       //    padding: { x: 8, y: 8},
+  //       backgroundColor: "#00000066",
+  //       stroke: "#000",
+  //       strokeThickness: 0,
+  //       border: "none",
+  //     }
+  //   )
+  //   .setDepth(3);
+
+  persona_name_tags[persona_name] = currentScene.add
+    .text(
+      new_sprite.body.x - 6,
+      new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+      formatPersonName(persona_name),
+      {
+        font: "bold 16px velvet",
+        stroke: "#fff",
+        strokeThickness: 2,
+        fill: "#000",
+        border: "solid",
+        borderRadius: "10px",
       }
-    });
-    // Here, we are creating the persona and its pronunciatio sprites.
-    personas[persona_name] = new_sprite;
-    // Emoji garbled characters
-    // pronunciatios[persona_name] = this.add
-    //   .text(
-    //     new_sprite.body.x - 6,
-    //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-    //     "🦁",
-    //     {
-    //       font: "18px Arial",
-    //       fill: "#fff",
-    //       //    padding: { x: 8, y: 8},
-    //       backgroundColor: "#00000066",
-    //       stroke: "#000",
-    //       strokeThickness: 0,
-    //       border: "none",
-    //     }
-    //   )
-    //   .setDepth(3);
-
-    persona_name_tags[persona_name] = currentScene.add
-      .text(
-        new_sprite.body.x-6,
-        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-        formatPersonName(persona_name),
-        {
-          font: "bold 16px velvet",
-          stroke: "#fff",
-          strokeThickness: 2,
-          fill: "#000",
-          border: "solid",
-          borderRadius: "10px",
-        }
-      )
-      .setDepth(3);
+    )
+    .setDepth(3);
 }
 function create() {
   const map = this.make.tilemap({ key: "map" });
@@ -726,7 +739,7 @@ function create() {
     up: Phaser.Input.Keyboard.KeyCodes.UP,
     down: Phaser.Input.Keyboard.KeyCodes.DOWN,
     left: Phaser.Input.Keyboard.KeyCodes.LEFT,
-    right: Phaser.Input.Keyboard.KeyCodes.RIGHT
+    right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
     // 不绑定 SPACE 或 SHIFT
   });
 
@@ -738,7 +751,12 @@ function create() {
       spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
     ];
-    addUser(persona_name,start_pos,persona_namesList[i].id,persona_namesList[i].user_id);
+    addUser(
+      persona_name,
+      start_pos,
+      persona_namesList[i].id,
+      persona_namesList[i].user_id
+    );
   }
 
   // Create the player's walking animations from the texture atlas. These are
@@ -839,7 +857,7 @@ function create() {
 
   this.input.on("pointerup", () => {
     isDraggingmMap = false;
-    player.body.setVelocity(0,0);
+    player.body.setVelocity(0, 0);
   });
   this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
     // Get the mouse world coordinates before zooming in and out
@@ -1100,7 +1118,6 @@ Interval.value = setInterval(() => {
   getFrameData();
 }, 1000);
 function getFrameData() {
-  console.log("getFrameData", "focus_id", focus_id.value);
   focus_id.value &&
     rolesApi.visibleChars(focus_id.value).then((res) => {
       let data = res.data.data;
@@ -1116,30 +1133,42 @@ function getFrameData() {
       };
 
       // add visible_characters
-      let tempData = {}
-      tempData[data.name]
+      let tempData = {};
+      tempData[data.name];
       data.visible_characters.forEach((char) => {
         output.execute_movement.persona[char.name] = {
           movement: char.position,
           // pronunciatio: char.level_emoji,
           description: char.action,
         };
-        
-        if (!char||!char['name']) {
+
+        if (!char || !char["name"]) {
           return;
         }
-        if (!personas[char['name']]){
-          addUser(char['name'],[char.position[0] * tile_width + tile_width / 2, char.position[1] * tile_width + tile_width],char['id'],char['user_id']);
+        if (!personas[char["name"]]) {
+          addUser(
+            char["name"],
+            [
+              char.position[0] * tile_width + tile_width / 2,
+              char.position[1] * tile_width + tile_width,
+            ],
+            char["id"],
+            char["user_id"]
+          );
         }
-        tempData[char['name']] = 1
+        tempData[char["name"]] = 1;
       });
       for (let key in personas) {
         if (!tempData || !tempData[key]) {
-          personas && personas[key]&& personas[key].setVisible(false);
-          persona_name_tags && persona_name_tags[key] && persona_name_tags[key].setVisible(false);
+          personas && personas[key] && personas[key].setVisible(false);
+          persona_name_tags &&
+            persona_name_tags[key] &&
+            persona_name_tags[key].setVisible(false);
         } else {
-          personas && personas[key]&& personas[key].setVisible(true);
-          persona_name_tags && persona_name_tags[key] && persona_name_tags[key].setVisible(true);
+          personas && personas[key] && personas[key].setVisible(true);
+          persona_name_tags &&
+            persona_name_tags[key] &&
+            persona_name_tags[key].setVisible(true);
         }
       }
       execute_movement = output.execute_movement;
@@ -1481,6 +1510,23 @@ switchTab("dialogue");
           &:hover {
             background-color: #9c7d4a;
           }
+        }
+      }
+      .game-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        font-size: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1f0d;
+        color: aliceblue;
+        &:hover {
+          color: #3291c8;
         }
       }
     }
