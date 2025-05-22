@@ -46,9 +46,11 @@
               Send
             </button>
           </div>
-          <!-- <div class="game-controls">
-            <el-icon @click="userState.restorefocusId"><Place /></el-icon>
-          </div> -->
+          <div class="game-controls">
+            <el-icon @click="() => userState.restoreFocusId()"
+              ><Place
+            /></el-icon>
+          </div>
         </div>
       </div>
       <div class="col-md-4">
@@ -72,6 +74,7 @@ import userApi from "../../api/user";
 import DialogContainer from "./dialogContainer.vue";
 import CharacterAttributes from "./characterAttributes.vue";
 import userStore from "../../store/user.js";
+import user from "../../api/user";
 const userState = userStore();
 
 /*
@@ -102,11 +105,11 @@ const progress = ref();
 const slider = ref();
 const Interval = ref(null);
 let focus_id = ref("");
-let focu_user_id = ref(0);
+let focus_user_id = ref(0);
 let currentScene = ref(null);
 const dialogues = computed(() => {
   let flag = false;
-  if (Profile && focus_id.value && focu_user_id.value !== 0) {
+  if (Profile && focus_id.value && focus_user_id.value !== 0) {
     flag = true;
   }
   return flag;
@@ -114,7 +117,12 @@ const dialogues = computed(() => {
 watch(
   () => userState.focusId, // 监听目标（需用函数返回）
   (newValue, oldValue) => {
-    newValue && (focus_id.value = newValue);
+    console.log(newValue, "获取到的userState");
+    if (newValue && newValue === userState.initialFocusInfo.id) {
+      focus_id.value = newValue;
+      focus_name = userState.initialFocusInfo.name;
+      focus_user_id.value = userState.initialFocusInfo.user_id;
+    }
   },
   { immediate: false } // 可选：立即触发一次
 );
@@ -207,9 +215,9 @@ onMounted(() => {
       target: 30,
       forceSetTimeOut: true,
     },
-    width: 1500,
-    height: 1000,
-    parent: gameContainerDom.value,
+    width: 1200,
+    height: 800,
+    // parent: gameContainerDom.value,
     pixelArt: true,
     physics: {
       default: "arcade",
@@ -222,7 +230,8 @@ onMounted(() => {
       create: create,
       update: update,
     },
-    scale: { zoom: 0.9 },
+    mode: Phaser.Scale.NONE, // 自动缩放并保持比例
+    parent: gameContainerDom.value,
   };
   game.value = new Phaser.Game(config.value);
 
@@ -445,9 +454,13 @@ function preload() {
         focus_name = persona_namesList[randomIndex].name;
         console.log("focus_name", "focus_name", focus_name);
         focus_id.value = persona_namesList[randomIndex].id;
-        userState.changeInitialFocusId(focus_id.value);
+        focus_user_id.value = persona_namesList[randomIndex].user_id;
+        userState.changeInitialFocusInfo({
+          id: focus_id.value,
+          name: focus_name,
+          user_id: focus_user_id.value,
+        });
         userState.changeFocusId(focus_id.value);
-        focu_user_id.value = persona_namesList[randomIndex].user_id;
       });
     for (let key in persona_names) {
       // key = persona_names[key];
@@ -474,13 +487,13 @@ function addUser(persona_name, start_pos, id, user_id) {
     if (persona_name == focus_name) {
       focus_name = "";
       focus_id.value = "";
-      focu_user_id.value = user_id;
+      focus_user_id.value = user_id;
       userState.changeFocusId(focus_id.value);
       display_main_box();
     } else {
       focus_name = persona_name;
       focus_id.value = id;
-      focu_user_id.value = user_id;
+      focus_user_id.value = user_id;
       userState.changeFocusId(focus_id.value);
       display_game_dialog(persona_name);
     }

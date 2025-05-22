@@ -66,8 +66,8 @@ import { Sunny } from "@element-plus/icons-vue";
 import characters from "../../api/characters.js";
 import userStore from "../../store/user.js";
 // import TimeLine from "./timeLine.vue";
-const TimeLine = defineAsyncComponent(() => import("./timeLine.vue"));
 const userState = userStore();
+const TimeLine = defineAsyncComponent(() => import("./timeLine.vue"));
 const props = defineProps({
   focusId: {
     type: Number,

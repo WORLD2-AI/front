@@ -148,7 +148,6 @@ watch(
   (newVal, oldVal) => {
     allItems.value = [];
     allItemsLength.length = 0;
-    console.log("props.focusId", "发生变化来更新");
     props.focusId && loadMoreNewer(props.focusId);
   },
   { immediate: true }
