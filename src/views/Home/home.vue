@@ -56,7 +56,10 @@
                 /></a>
               </li>
               <li class="nav-item" style="padding-left: 40px">
-                <a class="nav-link nav-link-custom" href="/Helloworld.pdf"
+                <a
+                  class="nav-link nav-link-custom"
+                  target="_blank"
+                  href="/Helloworld.pdf"
                   >White Paper</a
                 >
               </li>
