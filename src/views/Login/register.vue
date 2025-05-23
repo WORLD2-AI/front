@@ -198,7 +198,7 @@ const submitForm = () => {
             });
 
             setTimeout(() => {
-              router.push("/login");
+              router.push("/home");
             }, 500);
           }
         })

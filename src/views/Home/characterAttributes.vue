@@ -99,9 +99,10 @@ watchEffect(() => {
       if (element.id === props.focusId) {
         role.value = element;
         object = element;
+      } else if (props.focusId) {
+        roleForm.value = [];
       }
     });
-    roleForm.value = [];
     for (const key in rolelist) {
       let obj = {};
       if (Object.hasOwnProperty.call(object, key)) {
@@ -269,6 +270,7 @@ $backgroundHover: rgba(13, 31, 13, 0.7);
     border: 1px solid #ccc;
   }
   :deep(.el-table__inner-wrapper) {
+    height: 163px;
     color: #ebe7e7;
     background-color: $background;
     .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {

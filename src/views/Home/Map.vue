@@ -230,7 +230,7 @@ onMounted(() => {
       create: create,
       update: update,
     },
-    mode: Phaser.Scale.NONE, // 自动缩放并保持比例
+    mode: Phaser.Scale.FIT, // 自动缩放并保持比例
     parent: gameContainerDom.value,
   };
   game.value = new Phaser.Game(config.value);
@@ -837,7 +837,7 @@ function create() {
   }
 
   // set the view zoom
-  const minZoom = 0.01; // minimal scaling
+  const minZoom = 0.5; // minimal scaling
   const maxZoom = 3; // maximum scale
   // Play audio normally
 
@@ -875,13 +875,16 @@ function create() {
   this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
     // Get the mouse world coordinates before zooming in and out
     // Calculate the new zoom level (deltaY>0, scroll down)
-    const newZoom = Phaser.Math.Clamp(
-      this.cameras.main.zoom - deltaY * 0.001,
-      0.5, // minimum-scale
-      3 // Maximum Zoom
-    );
-    // Set a new zoom level
-    this.cameras.main.setZoom(newZoom);
+    if (pointer.event.ctrlKey) {
+      pointer.event.preventDefault();
+      const newZoom = Phaser.Math.Clamp(
+        this.cameras.main.zoom - deltaY * 0.001,
+        0.5, // minimum-scale
+        3 // Maximum Zoom
+      );
+      // Set a new zoom level
+      this.cameras.main.setZoom(newZoom);
+    }
   });
 }
 
