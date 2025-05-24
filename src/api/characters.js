@@ -18,7 +18,7 @@ function getUserRoles(){
   function getTimeLine({characterId,...params}){
     console.log(characterId);
     return axiosInstance
-      .get(`/characters/api/character/${characterId}/schedule`,{params})
+      .get(`/characters/api/character/${characterId}/schedule`,)
   }
   function locationQuery(site){
     return axiosInstance

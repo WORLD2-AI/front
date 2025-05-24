@@ -54,13 +54,13 @@
         </div>
       </div>
       <div class="col-md-4">
-        <CharacterAttributes :focusId="focus_id" />
-        <!-- <DialogContainer
+        <CharacterAttributes
           :personNames="persona_names"
           :displayMainBox="display_main_box"
           :displayGameDialog="display_game_dialog"
           :switchTab="switchTab"
-        /> -->
+          :focusId="focus_id"
+        />
       </div>
     </div>
   </div>
@@ -263,6 +263,7 @@ let pre_anims_direction;
 let pre_anims_direction_dict = {};
 let offset = 0;
 let curr_maze = "the_ville";
+let anims;
 
 // <tile_width> is the width of one individual tile (tiles are square)
 let tile_width = 32;
@@ -312,7 +313,7 @@ let dial_content =
 //         update() is called on each frame during the game play
 
 function preload() {
-  currentScene = this;
+  currentScene.value = this;
   // Loading the necessary images (e.g., the background image, character
   // sprites).
 
@@ -477,7 +478,12 @@ function preload() {
   });
 }
 function addUser(persona_name, start_pos, id, user_id) {
-  let new_sprite = currentScene.physics.add
+  currentScene.value.load.atlas(
+    persona_name,
+    `assets/characters/town/kiki.png`,
+    `assets/characters/town/atlas.json`
+  );
+  let new_sprite = currentScene.value.physics.add
     .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
     .setSize(30, 40)
     .setOffset(0, 0);
@@ -500,6 +506,7 @@ function addUser(persona_name, start_pos, id, user_id) {
   });
   // Here, we are creating the persona and its pronunciatio sprites.
   personas[persona_name] = new_sprite;
+  anims && createWalk(persona_name, currentScene.value.anims);
   // Emoji garbled characters
   // pronunciatios[persona_name] = this.add
   //   .text(
@@ -518,7 +525,7 @@ function addUser(persona_name, start_pos, id, user_id) {
   //   )
   //   .setDepth(3);
 
-  persona_name_tags[persona_name] = currentScene.add
+  persona_name_tags[persona_name] = currentScene.value.add
     .text(
       new_sprite.body.x - 6,
       new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
@@ -534,7 +541,65 @@ function addUser(persona_name, start_pos, id, user_id) {
     )
     .setDepth(3);
 }
+function createWalk(persona_name, anims) {
+  console.log("createWalkanimsanimsanimsanimsanimsanims", anims);
+  let left_walk_name = persona_name + "-left-walk";
+  let right_walk_name = persona_name + "-right-walk";
+  let down_walk_name = persona_name + "-down-walk";
+  let up_walk_name = persona_name + "-up-walk";
+
+  //   console.log(persona_name, left_walk_name, "DEUBG")
+
+  anims.create({
+    key: left_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "left-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: right_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "right-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: down_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "down-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: up_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "up-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+}
 function create() {
+  anims = this.anims;
   const map = this.make.tilemap({ key: "map" });
   // console.log(map, "addTilesetImage");
   // Joon: Logging map is really helpful for debugging here:
@@ -758,6 +823,7 @@ function create() {
 
   // *** SET UP PERSONAS ***
   // We start by creating the game sprite objects.
+  anims = this.anims;
   for (let i = 0; i < Object.keys(spawn_tile_loc).length; i++) {
     let persona_name = Object.keys(spawn_tile_loc)[i];
     let start_pos = [
@@ -770,70 +836,71 @@ function create() {
       persona_namesList[i].id,
       persona_namesList[i].user_id
     );
+    // createWalk(persona_name, anims);
   }
 
   // Create the player's walking animations from the texture atlas. These are
   // stored in the global animation manager so any sprite can access them.
-  const anims = this.anims;
   for (let i = 0; i < Object.keys(persona_names).length; i++) {
     // ===========================================================
     let persona_name = Object.keys(persona_names)[i];
     // let persona_name = persona_names[i];
     // console.log(persona_name,"persona_namepersona_namepersona_namepersona_namepersona_namepersona_name");
-    let left_walk_name = persona_name + "-left-walk";
-    let right_walk_name = persona_name + "-right-walk";
-    let down_walk_name = persona_name + "-down-walk";
-    let up_walk_name = persona_name + "-up-walk";
+    anims && createWalk(persona_name, anims);
+    // let left_walk_name = persona_name + "-left-walk";
+    // let right_walk_name = persona_name + "-right-walk";
+    // let down_walk_name = persona_name + "-down-walk";
+    // let up_walk_name = persona_name + "-up-walk";
 
-    //   console.log(persona_name, left_walk_name, "DEUBG")
+    // //   console.log(persona_name, left_walk_name, "DEUBG")
 
-    anims.create({
-      key: left_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "left-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: left_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "left-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
 
-    anims.create({
-      key: right_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "right-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: right_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "right-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
 
-    anims.create({
-      key: down_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "down-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: down_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "down-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
 
-    anims.create({
-      key: up_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "up-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: up_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "up-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
   }
 
   // set the view zoom
@@ -891,6 +958,7 @@ function create() {
 function update(time, delta) {
   // *** SETUP PLAY AND PAUSE BUTTON ***
   let play_context = this;
+  anims = this.anims;
   function game_resume() {
     play_context.scene.resume();
   }
@@ -969,6 +1037,7 @@ function update(time, delta) {
 
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
+    console.log("curr_persona_name", curr_persona_name);
     let curr_persona = personas[curr_persona_name];
     // let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
 
@@ -979,6 +1048,7 @@ function update(time, delta) {
       curr_persona.setVisible(false);
       curr_persona_name_tags.setVisible(false);
       // curr_pronunciatio.setVisible(false);
+
       continue;
     } else {
       curr_persona.setVisible(true);
@@ -1162,6 +1232,8 @@ function getFrameData() {
           return;
         }
         if (!personas[char["name"]]) {
+          console.log("addUser 创建角色", char["name"]);
+          //
           addUser(
             char["name"],
             [
@@ -1171,8 +1243,9 @@ function getFrameData() {
             char["id"],
             char["user_id"]
           );
+          // createWalk(char["name"],anims)
         }
-        tempData[char["name"]] = 1;
+        // tempData[char["name"]] = 1;
       });
       for (let key in personas) {
         if (!tempData || !tempData[key]) {
@@ -1554,6 +1627,7 @@ switchTab("dialogue");
   .col-md-4 {
     width: calc(100% / 3);
     flex-grow: 6;
+    display: flex;
   }
 }
 </style>

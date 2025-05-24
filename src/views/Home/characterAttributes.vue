@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="dialog-container">
     <el-card class="card">
       <div class="top-section">
         <div class="arch"></div>
@@ -23,20 +23,6 @@
           <div class="first_name">{{ role.first_name }}</div>
           <div class="last_name">{{ role.last_name }}</div>
         </div>
-        <!-- <div class="characterDressUp">
-          <div class="role">
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="replacement">
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-          <div class="skill">
-            <div></div>
-            <div></div>
-          </div>
-        </div> -->
       </div>
       <div class="bottom-section">
         <el-table
@@ -56,7 +42,74 @@
         </el-table>
       </div>
     </el-card>
-    <time-line :focusId="props.focusId"></time-line>
+    <div class="tab-container">
+      <div class="tabs">
+        <button
+          data-tab="schedule"
+          class="tab-button active"
+          @click="props.switchTab('schedule')"
+        >
+          Daily
+        </button>
+        <button
+          data-tab="dialogue"
+          class="tab-button"
+          @click="props.switchTab('dialogue')"
+        >
+          Chat
+        </button>
+        <!-- <button
+          data-tab="attributes"
+          class="tab-button"
+          @click="props.switchTab('attributes')"
+        >
+          Character
+        </button> -->
+      </div>
+    </div>
+
+    <div id="schedule" class="tab-content">
+      <div class="schedule-content" id="character_schedule">
+        <time-line :focusId="props.focusId"></time-line>
+      </div>
+    </div>
+
+    <div id="dialogue" class="tab-content">
+      <div class="chat-content">
+        <div class="user_action" style="display: inline-block; color: #ebe7e7">
+          Chat:
+        </div>
+        <div class="user_action" style="overflow-y: auto; height: 176px">
+          <p id="dialog_content">None</p>
+        </div>
+      </div>
+      <div class="input-section">
+        <input
+          type="text"
+          class="chat-input"
+          placeholder="input chat content..."
+        />
+        <button
+          style="
+            background-color: #c9a769;
+            color: #1a2a1a;
+            padding: 8px 4px;
+            border: none;
+            border-radius: 4px;
+            margin-left: 10px;
+          "
+          @click="alert('Sorry, It will be ok as soon as possible.')"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+
+    <div id="attributes" class="tab-content">
+      <div class="schedule-content" id="character_info"></div>
+    </div>
+
+    <!-- <time-line :focusId="props.focusId"></time-line> -->
   </div>
 </template>
 
@@ -72,6 +125,19 @@ const props = defineProps({
   focusId: {
     type: Number,
     required: true,
+  },
+  personNames: {
+    type: Array,
+    required: true,
+  },
+  displayMainBox: {
+    type: Function,
+  },
+  displayGameDialog: {
+    type: Function,
+  },
+  switchTab: {
+    type: Function,
   },
 });
 const roles = ref([]);
@@ -118,6 +184,7 @@ onMounted(() => {
   characters.getAllRoles().then((res) => {
     res.data.data && (roles.value = res.data.data);
   });
+  props.switchTab("schedule");
 });
 </script>
 
@@ -131,8 +198,8 @@ $backgroundHover: rgba(13, 31, 13, 0.7);
 }
 .card {
   color: #ebe7e7;
-  border: 2px solid #c9a769;
-  width: 290px;
+  border: none;
+  /* width: 290px; */
   height: auto;
   padding: 5px;
   padding-bottom: 0px;
@@ -286,4 +353,138 @@ $backgroundHover: rgba(13, 31, 13, 0.7);
     }
   }
 }
+.dialog-container {
+  width: 60%;
+  height: 720px;
+  background: linear-gradient(145deg, #0d1f0d 30%, #1a2a1a 100%);
+  border: 2px solid #c9a769;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(201, 167, 105, 0.3);
+  font-family: "Arial", sans-serif;
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+}
+
+.header-section {
+  padding: 16px;
+  border-bottom: 1px solid #c9a76933;
+  background: linear-gradient(to right, #1a2a1a, #0d1f0d);
+}
+.character-name {
+  color: #c9a769;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.character-info {
+  display: flex;
+  overflow-x: auto;
+  height: 100px;
+  white-space: nowrap;
+  color: #c9a769;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.location-info,
+.user_action {
+  color: #8d9e8d;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.chat-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(13, 31, 13, 0.9);
+  color: #8d9e8d;
+}
+
+.story-content {
+  flex: 1;
+  padding: 16px;
+  background: rgba(13, 31, 13, 0.9);
+  color: #8d9e8d;
+  height: 400px;
+}
+.input-section {
+  padding: 16px;
+  border-top: 1px solid #c9a76933;
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px;
+  background: #0d1f0d;
+  border: 1px solid #c9a769;
+  border-radius: 4px;
+  color: #c9a769;
+  font-family: inherit;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #9c7d4a;
+  box-shadow: 0 0 8px rgba(201, 167, 105, 0.3);
+}
+
+.input-section button {
+  background-color: #c9a769;
+  color: #1a2a1a;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.input-section button:hover {
+  background-color: #9c7d4a;
+}
+
+.tab-container {
+  height: 30px;
+  background-color: #1a2a1a;
+  padding: 2px;
+  border-bottom: 1px solid #c9a76933;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-around;
+}
+
+.tab-button {
+  background-color: #1a2a1a;
+  color: #c9a769;
+  border: none;
+  padding: 1px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 2px;
+}
+
+.tab-button.active {
+  background-color: #c9a769;
+  color: #1a2a1a;
+}
+
+.tab-content {
+  display: none;
+  padding: 16px;
+  background: rgba(13, 31, 13, 0.9);
+  color: #8d9e8d;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* .schedule-content {
+  overflow-y: auto;
+  max-height: 390px;
+} */
 </style>

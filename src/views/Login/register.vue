@@ -205,7 +205,7 @@ const submitForm = () => {
         .catch((req) => {
           ElNotification({
             title: "prompt",
-            message: req?.data,
+            message: req?.data.message,
             type: "warning",
           });
         });

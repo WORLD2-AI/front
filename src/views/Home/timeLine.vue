@@ -4,21 +4,19 @@
       <div class="name">{{ name }}</div>
       <div class="ScrollBox">
         <el-scrollbar
-          height="420px"
+          height="250px"
           class="timeline-container"
           ref="containerRef"
-          @scroll="handleScroll"
-          :style="{ height: `${totalHeight}px` }"
         >
-          <el-timeline
-            class="timeline-content"
-            :style="{
+          <!-- @scroll="handleScroll" -->
+          <!-- :style="{ height: `${totalHeight}px` }" -->
+          <!-- :style="{
               transform: `translateY(${offset}px)`,
-            }"
-          >
+            }" -->
+          <el-timeline class="timeline-content">
             <el-timeline-item
               center
-              v-for="item in visibleItems"
+              v-for="(item, index) in visibleItems"
               :key="item.start_minute"
             >
               <el-card>
@@ -31,23 +29,26 @@
                 </div>
               </el-card>
               <template #dot>
+                <template v-if="index === visibleItems.length - 1">
+                  <el-icon><CaretRight /></el-icon>
+                </template>
                 <div>{{ Toformatted(item.start_minute) }}</div>
               </template>
             </el-timeline-item>
           </el-timeline>
         </el-scrollbar>
-        <div class="loading-indicator">
+        <!-- <div class="loading-indicator">
           <el-icon v-show="loadingBottom" class="is-loading"
             ><Loading
           /></el-icon>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
 </template>
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
-import { Loading } from "@element-plus/icons-vue";
+import { CaretRight } from "@element-plus/icons-vue";
 import characterApi from "../../api/characters";
 const props = defineProps({
   focusId: {
@@ -124,7 +125,8 @@ const loadMoreNewer = async (focusId) => {
     //   pageSize: PAGE_SIZE,
     // });
     if (items.length > 0) {
-      allItems.value = [...allItems.value, ...items];
+      // allItems.value = [...allItems.value, ...items];
+      allItems.value = items;
       PAGE++;
       nextTick(() => {
         // Node setScrollTop
@@ -143,15 +145,18 @@ const loadMoreNewer = async (focusId) => {
     loadingBottom.value = false;
   }
 };
-watch(
-  () => props.focusId, // 监听的具体依赖
-  (newVal, oldVal) => {
-    allItems.value = [];
-    allItemsLength.length = 0;
-    props.focusId && loadMoreNewer(props.focusId);
-  },
-  { immediate: true }
-);
+// watch(
+//   () => props.focusId, // 监听的具体依赖
+//   (newVal, oldVal) => {
+//     props.focusId && (allItems.value = []);
+//     allItemsLength.length = 0;
+//     props.focusId && loadMoreNewer(props.focusId);
+//   },
+//   { immediate: true }
+// );
+setInterval(() => {
+  props.focusId && loadMoreNewer(props.focusId);
+}, 60 * 60);
 // initialization
 // onMounted(() => {
 //   loadMoreNewer();
@@ -183,7 +188,7 @@ const handleScroll = () => {
       totalHeight.value - clientHeight - 100
     );
     if (st > totalHeight.value - clientHeight - 100) {
-      loadMoreNewer(props.focusId);
+      // loadMoreNewer(props.focusId);
     }
     if (st < 100) {
       // loadMoreOlder();
@@ -201,7 +206,6 @@ const handleScroll = () => {
 </script>
 <style lang="scss" scoped>
 .ScrollBox {
-  height: 420px;
   overflow: hidden;
   position: relative;
   .loading-indicator {
@@ -237,14 +241,14 @@ const handleScroll = () => {
   margin-bottom: 10px;
 }
 .timeLine {
-  width: 290px;
-  border: 2px solid #c9a769;
+  /* width: 290px; */
+  /* border: 2px solid #c9a769; */
   background: linear-gradient(to right, #1a2a1a, #0d1f0d);
   .card {
     width: auto;
     padding: 5px 15px;
     background: linear-gradient(to right, #1a2a1a, #0d1f0d);
-    color: #ebe7e7;
+    color: #8d9e8d;
     .name {
       background: #000;
       height: 40px;
@@ -256,24 +260,45 @@ const handleScroll = () => {
       margin-bottom: 10px;
     }
     .el-timeline {
+      width: 100%;
       :deep(.el-timeline-item) {
         border-radius: 10px;
         height: 60px;
-        width: 260px;
+        /* width: 260px; */
         margin-top: 10px;
         padding: 0;
         .el-timeline-item__tail {
           left: 0;
           margin-left: 30px;
           height: 56px;
-          border-left: 3px solid #ccc;
+          border-left: 3px solid #c9a769;
           top: 37px;
+        }
+        &:last-child {
+          .el-timeline-item__dot {
+            div {
+              width: 100%;
+              position: absolute;
+              top: 0;
+              left: 0;
+            }
+            .el-icon {
+              font-size: 18px;
+              position: absolute;
+              left: -8px;
+              top: 20px;
+            }
+          }
         }
         .el-timeline-item__dot {
           width: 60px;
           height: 100%;
+          display: block;
+          text-align: center;
+          line-height: 60px;
+          position: relative;
           .el-icon {
-            font-size: 45px;
+            font-size: 18px;
           }
           .content {
             display: flex;
@@ -283,8 +308,9 @@ const handleScroll = () => {
         }
         .el-timeline-item__wrapper {
           height: 100%;
-          padding-left: 60px;
           .el-card__body {
+            background: #c9a769;
+            opacity: 0.8;
             display: flex;
             .icon {
               flex-shrink: 0;

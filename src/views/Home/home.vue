@@ -3,7 +3,7 @@
     <el-container>
       <el-header style="background: #000">
         <ul class="container">
-          <li>
+          <li class="logo">
             <img
               class="media-object"
               src="/img/logo.jpg"
@@ -163,8 +163,7 @@ const handleCommand = (command) => {
 };
 const logout = () => {
   userApi.logout().then(() => {
-    loginStatus.value = false;
-    // router.go();
+    router.go();
   });
 };
 </script>
@@ -173,8 +172,26 @@ const logout = () => {
 .el-container {
   background: #212529;
   height: 100vh;
+
+  :deep(.el-header) {
+    height: auto;
+  }
+  .container {
+    .logo {
+      height: 50px;
+      /* line-height: 34px; */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
   .el-header {
+    height: auto;
     position: relative;
+    box-sizing: content-box;
+    padding: 15px 13.5px;
+
+    border-bottom: 1px solid rgba(55, 16, 16, 0.1);
 
     .user-info {
       cursor: pointer;
@@ -226,11 +243,7 @@ const logout = () => {
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-    box-sizing: content-box;
-    height: 116px;
-    padding: 15px 13.5px;
 
-    border-bottom: 1px solid rgba(55, 16, 16, 0.1);
     .container {
       margin-left: 10%;
       margin-right: 10%;
