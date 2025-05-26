@@ -517,7 +517,7 @@ function addUser(persona_name, start_pos, id, user_id) {
       "",
       {
         font: "18px Arial",
-        fill: "#fff",
+        fill: "#000",
         //    padding: { x: 8, y: 8},
         backgroundColor: "#00000066",
         stroke: "#000",
@@ -1071,7 +1071,7 @@ function update(time, delta) {
     // E.g., "Dolores Murphy" -> "DM"
 
     initials = formatPersonName(curr_persona_name);
-    pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
+    pronunciatios[curr_persona_name].setText(`${pronunciatio_content}`);
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;

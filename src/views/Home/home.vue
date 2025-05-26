@@ -156,36 +156,36 @@ const goLogin = () => {
 
 onMounted(() => {
   const driver = new Driver();
-  console.log(document.getElementById("start-tour"));
-  document.getElementById("start-tour").addEventListener("click", function () {
-    console.log("开始引导");
-    driver.defineSteps([
-      {
-        element: ".w1", // 第一步目标元素
-        popover: {
-          title: "第一步",
-          description: "这是第一个引导步骤",
-          position: "bottom",
-        },
-      },
-      {
-        element: ".w2", // 第二步目标元素
-        popover: {
-          title: "第二步",
-          description: "请点击这里继续",
-          position: "right",
-        },
-      },
-      {
-        element: ".w3", // 第三步目标元素
-        popover: {
-          title: "最后一步",
-          description: "完成所有引导",
-          position: "top",
-        },
-      },
-    ]);
-  });
+  // console.log(document.getElementById("start-tour"));
+  // document.getElementById("start-tour").addEventListener("click", function () {
+  //   console.log("开始引导");
+  //   driver.defineSteps([
+  //     {
+  //       element: ".w1", // 第一步目标元素
+  //       popover: {
+  //         title: "第一步",
+  //         description: "这是第一个引导步骤",
+  //         position: "bottom",
+  //       },
+  //     },
+  //     {
+  //       element: ".w2", // 第二步目标元素
+  //       popover: {
+  //         title: "第二步",
+  //         description: "请点击这里继续",
+  //         position: "right",
+  //       },
+  //     },
+  //     {
+  //       element: ".w3", // 第三步目标元素
+  //       popover: {
+  //         title: "最后一步",
+  //         description: "完成所有引导",
+  //         position: "top",
+  //       },
+  //     },
+  //   ]);
+  // });
   userApi.profile().then((res) => {
     loginStatus.value = true;
     let url = res.data.data?.avatar_url;
