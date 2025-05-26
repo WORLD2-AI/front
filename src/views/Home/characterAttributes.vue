@@ -51,13 +51,13 @@
         >
           Daily
         </button>
-        <button
+        <!-- <button
           data-tab="dialogue"
           class="tab-button"
           @click="props.switchTab('dialogue')"
         >
           Chat
-        </button>
+        </button> -->
         <!-- <button
           data-tab="attributes"
           class="tab-button"
@@ -74,7 +74,7 @@
       </div>
     </div>
 
-    <div id="dialogue" class="tab-content">
+    <!-- <div id="dialogue" class="tab-content">
       <div class="chat-content">
         <div class="user_action" style="display: inline-block; color: #ebe7e7">
           Chat:
@@ -103,7 +103,7 @@
           Send
         </button>
       </div>
-    </div>
+    </div> -->
 
     <div id="attributes" class="tab-content">
       <div class="schedule-content" id="character_info"></div>

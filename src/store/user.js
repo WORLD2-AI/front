@@ -7,8 +7,7 @@ export default defineStore('user', {
       name:'',
       user_id:''
     },
-    initialFocuUserId:'',
-    initialFocusId:'',
+    initialFocuUserId:null,
   }),
   getters: {
    
@@ -17,11 +16,15 @@ export default defineStore('user', {
     changeInitialFocusInfo (info) {
       this.initialFocusInfo=info
     },
+    changeInitialFocuUserId(userId){
+      this.initialFocuUserId=userId
+    },
     restoreFocusId () {
       this.focusId = this.initialFocusInfo.id
     },
     changeFocusId(id){
       this.focusId = id
-    }
+    },
+    
   }
 })

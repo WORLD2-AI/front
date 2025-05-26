@@ -47,7 +47,7 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted, nextTick, watch, onUnmounted } from "vue";
 import { CaretRight } from "@element-plus/icons-vue";
 import characterApi from "../../api/characters";
 const props = defineProps({
@@ -71,6 +71,7 @@ const ITEM_HEIGHT = 70; // Estimate the height of each timeline item
 const BUFFER_SIZE = 6; // Number of buffer items
 const PAGE_SIZE = 15; // Number of loads per page
 let PAGE = 1;
+let timeInterval;
 
 const containerHeight = computed(
   () => containerRef.value?.wrapRef?.clientHeight || 0
@@ -154,13 +155,15 @@ const loadMoreNewer = async (focusId) => {
 //   },
 //   { immediate: true }
 // );
-setInterval(() => {
-  props.focusId && loadMoreNewer(props.focusId);
-}, 60 * 60);
 // initialization
-// onMounted(() => {
-//   loadMoreNewer();
-// });
+onMounted(() => {
+  timeInterval = setInterval(() => {
+    props.focusId && loadMoreNewer(props.focusId);
+  }, 60 * 60);
+});
+onUnmounted(() => {
+  clearInterval(timeInterval);
+});
 
 // Rolling processing
 let debounceTimer = null;

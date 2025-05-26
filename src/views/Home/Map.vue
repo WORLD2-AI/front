@@ -12,7 +12,7 @@
       </span> -->
     </div>
     <div class="row">
-      <div class="col-md-1">1</div>
+      <div class="col-md-1"></div>
       <div class="col-md-7">
         <div id="game-container" style="text-align: center">
           <!-- <Map /> -->
@@ -117,7 +117,6 @@ const dialogues = computed(() => {
 watch(
   () => userState.focusId, // 监听目标（需用函数返回）
   (newValue, oldValue) => {
-    console.log(newValue, "获取到的userState");
     if (newValue && newValue === userState.initialFocusInfo.id) {
       focus_id.value = newValue;
       focus_name = userState.initialFocusInfo.name;
@@ -291,6 +290,7 @@ let movement_target = {};
 let isDraggingmMap = false;
 let startPointerPos = new Phaser.Math.Vector2();
 let focus_name = "";
+let randomIndex;
 
 let dial_content =
   '<div style="color: #c9a769; margin-bottom: 8px;word-break: break-word"><span style="color:white;">#name#:</span><span><p>#content#</p></span></div>';
@@ -429,8 +429,12 @@ function preload() {
   );
   rolesApi.allChars().then((res) => {
     persona_namesList = [];
-    res.data.data.forEach((char) => {
+    res.data.data.forEach((char, index) => {
       persona_names[char.name] = char.position;
+      if (!char.is_system_character) {
+        randomIndex = index;
+        userState.changeInitialFocuUserId(char.user_id);
+      }
       persona_namesList.push({
         id: char.id,
         name: char.name,
@@ -441,19 +445,17 @@ function preload() {
       spawn_tile_loc[key] = persona_names[key];
     }
     // focus_name = "kiki";
-    let randomIndex;
+
     userApi
       .profile()
-      .then(() => {
-        randomIndex = persona_namesList.length - 1;
-      })
+      // .then(() => {
+      //   randomIndex = persona_namesList.length - 1;
+      // })
       .catch(() => {
         randomIndex = Math.floor(Math.random() * persona_namesList.length);
       })
       .finally(() => {
-        console.log("randomIndex", randomIndex);
         focus_name = persona_namesList[randomIndex].name;
-        console.log("focus_name", "focus_name", focus_name);
         focus_id.value = persona_namesList[randomIndex].id;
         focus_user_id.value = persona_namesList[randomIndex].user_id;
         userState.changeInitialFocusInfo({
@@ -491,11 +493,11 @@ function addUser(persona_name, start_pos, id, user_id) {
   new_sprite.setInteractive();
   new_sprite.on("pointerup", () => {
     if (persona_name == focus_name) {
-      focus_name = "";
-      focus_id.value = "";
-      focus_user_id.value = user_id;
-      userState.changeFocusId(focus_id.value);
-      display_main_box();
+      // focus_name = "";
+      // focus_id.value = "";
+      // focus_user_id.value = user_id;
+      // userState.changeFocusId(focus_id.value);
+      // display_main_box();
     } else {
       focus_name = persona_name;
       focus_id.value = id;
@@ -508,22 +510,22 @@ function addUser(persona_name, start_pos, id, user_id) {
   personas[persona_name] = new_sprite;
   anims && createWalk(persona_name, currentScene.value.anims);
   // Emoji garbled characters
-  // pronunciatios[persona_name] = this.add
-  //   .text(
-  //     new_sprite.body.x - 6,
-  //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-  //     "🦁",
-  //     {
-  //       font: "18px Arial",
-  //       fill: "#fff",
-  //       //    padding: { x: 8, y: 8},
-  //       backgroundColor: "#00000066",
-  //       stroke: "#000",
-  //       strokeThickness: 0,
-  //       border: "none",
-  //     }
-  //   )
-  //   .setDepth(3);
+  pronunciatios[persona_name] = currentScene.value.add
+    .text(
+      new_sprite.body.x - 6,
+      new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+      "",
+      {
+        font: "18px Arial",
+        fill: "#fff",
+        //    padding: { x: 8, y: 8},
+        backgroundColor: "#00000066",
+        stroke: "#000",
+        strokeThickness: 0,
+        border: "none",
+      }
+    )
+    .setDepth(3);
 
   persona_name_tags[persona_name] = currentScene.value.add
     .text(
@@ -542,7 +544,6 @@ function addUser(persona_name, start_pos, id, user_id) {
     .setDepth(3);
 }
 function createWalk(persona_name, anims) {
-  console.log("createWalkanimsanimsanimsanimsanimsanims", anims);
   let left_walk_name = persona_name + "-left-walk";
   let right_walk_name = persona_name + "-right-walk";
   let down_walk_name = persona_name + "-down-walk";
@@ -1037,9 +1038,8 @@ function update(time, delta) {
 
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
-    console.log("curr_persona_name", curr_persona_name);
     let curr_persona = personas[curr_persona_name];
-    // let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+    let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
 
     let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
 
@@ -1047,13 +1047,13 @@ function update(time, delta) {
     if (!execute_movement["persona"][curr_persona_name]) {
       curr_persona.setVisible(false);
       curr_persona_name_tags.setVisible(false);
-      // curr_pronunciatio.setVisible(false);
+      curr_pronunciatio.setVisible(false);
 
       continue;
     } else {
       curr_persona.setVisible(true);
       curr_persona_name_tags.setVisible(true);
-      // curr_pronunciatio.setVisible(true);
+      curr_pronunciatio.setVisible(true);
     }
     let curr_x = execute_movement["persona"][curr_persona_name]["movement"][0];
     let curr_y = execute_movement["persona"][curr_persona_name]["movement"][1];
@@ -1061,8 +1061,8 @@ function update(time, delta) {
       curr_x * tile_width,
       curr_y * tile_width,
     ];
-    // let pronunciatio_content =
-    //   execute_movement["persona"][curr_persona_name]["pronunciatio"];
+    let pronunciatio_content =
+      execute_movement["persona"][curr_persona_name]["pronunciatio"];
 
     let description =
       execute_movement["persona"][curr_persona_name]["description"];
@@ -1071,7 +1071,7 @@ function update(time, delta) {
     // E.g., "Dolores Murphy" -> "DM"
 
     initials = formatPersonName(curr_persona_name);
-    // pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
+    pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
@@ -1111,8 +1111,8 @@ function update(time, delta) {
         anims_direction = "";
       }
 
-      // curr_pronunciatio.x = curr_persona.body.x + 38;
-      // curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      curr_pronunciatio.x = curr_persona.body.x + 38;
+      curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
 
       curr_persona_name_tags.x = curr_persona.body.x;
       curr_persona_name_tags.y = curr_persona.body.y - 42;
@@ -1202,7 +1202,7 @@ function update(time, delta) {
 }
 Interval.value = setInterval(() => {
   getFrameData();
-}, 1000);
+}, 500);
 function getFrameData() {
   focus_id.value &&
     rolesApi.visibleChars(focus_id.value).then((res) => {
@@ -1214,7 +1214,7 @@ function getFrameData() {
       };
       output.execute_movement.persona[data.name] = {
         movement: data.position,
-        // pronunciatio: data.center_character.level_emoji,
+        pronunciatio: data.emoji,
         description: data.action,
       };
 
@@ -1224,7 +1224,7 @@ function getFrameData() {
       data.visible_characters.forEach((char) => {
         output.execute_movement.persona[char.name] = {
           movement: char.position,
-          // pronunciatio: char.level_emoji,
+          pronunciatio: char.emoji,
           description: char.action,
         };
 
