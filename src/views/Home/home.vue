@@ -158,29 +158,36 @@ const profileGuideShown = ref(true);
 profileGuideShown.value = localStorage.getItem("profileGuideShown");
 introOption.value = [
   {
-    element: ".w1", // 第一步目标元素
-    title: "第一步",
-    intro: "这是第一个引导步骤",
+    element: ".w1",
+    title: "The first step",
+    intro: "Ctrl+'scroll wheel'/keyboard input 'x/z' to zoom in and out",
   },
   {
-    element: ".w1", // 第一步目标元素
-    title: "第二步",
-    intro: "这是第一个引导步骤",
+    element: ".w1",
+    title: "The second step",
+    intro:
+      "Click on the character to switch perspectives and then click unfocus again",
   },
   {
-    element: ".tab-container", // 第一步目标元素
-    title: "第三步",
-    intro: "这是第一个引导步骤",
+    element: ".game-controls",
+    title: "The third step",
+    intro:
+      "One click to return to your character, click again to unfocus the perspective",
   },
   {
-    element: ".el-card__body", // 第一步目标元素
-    title: "第四步",
-    intro: "这是第一个引导步骤",
+    element: ".tab-container",
+    title: "The fourth step",
+    intro: "Here is the daily schedule of the character",
   },
   {
-    element: ".user-avatarBox", // 第一步目标元素
-    title: "第五步",
-    intro: "这是第一个引导步骤",
+    element: ".el-card__body",
+    title: "The fifth step",
+    intro: "Here is the basic information of the character",
+  },
+  {
+    element: ".user-avatarBox",
+    title: "The sixth step",
+    intro: "This is the personal center, you can register your own character",
   },
 ];
 const initGuide = () => {

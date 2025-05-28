@@ -97,6 +97,7 @@ const progressBar = ref();
 const progress = ref();
 const slider = ref();
 const Interval = ref(null);
+const positionBuffer = [];
 let focus_id = ref("");
 let focus_user_id = ref(0);
 let currentScene = ref(null);
@@ -318,6 +319,7 @@ function preload() {
   //       png file that contains the tileset.
   //       Also IMPORTANT: when you create a tileset in Tiled, always be
   //       sure to check the "embedded" option.
+  this.load.image("emoji", "/img/emojiBg.png");
   this.load.image(
     "blocks_1",
     "assets/the_ville/visuals/map_assets/blocks/blocks_1.png"
@@ -506,6 +508,22 @@ function addUser(persona_name, start_pos, id, user_id) {
   personas[persona_name] = new_sprite;
   anims && createWalk(persona_name, currentScene.value.anims);
   // Emoji garbled characters
+
+  const texture = currentScene.value.textures.get("emoji");
+  const originalWidth = texture.getSourceImage().width;
+  const originalHeight = texture.getSourceImage().height;
+  const maxWidth = 50;
+  const scale = maxWidth / originalWidth; // bg.setDisplaySize(bg.width * scale, bg.height * scale);
+  pronunciatios[persona_name + "emoji"] = currentScene.value.add
+    .tileSprite(
+      new_sprite.body.x - 6,
+      new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+      originalWidth,
+      originalHeight,
+      "emoji"
+    )
+    .setScale(scale)
+    .setDepth(3);
   pronunciatios[persona_name] = currentScene.value.add
     .text(
       new_sprite.body.x - 6,
@@ -521,8 +539,7 @@ function addUser(persona_name, start_pos, id, user_id) {
         border: "none",
       }
     )
-    .setDepth(3);
-
+    .setDepth(4);
   persona_name_tags[persona_name] = currentScene.value.add
     .text(
       new_sprite.body.x - 6,
@@ -539,6 +556,7 @@ function addUser(persona_name, start_pos, id, user_id) {
     )
     .setDepth(3);
 }
+
 function createWalk(persona_name, anims) {
   let left_walk_name = persona_name + "-left-walk";
   let right_walk_name = persona_name + "-right-walk";
@@ -1036,20 +1054,27 @@ function update(time, delta) {
     let curr_persona_name = Object.keys(personas)[i];
     let curr_persona = personas[curr_persona_name];
     let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+    let curr_pronunciatio_emoji = pronunciatios[curr_persona_name + "emoji"];
 
     let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
-
+    if (positionBuffer.length >= 2) {
+      execute_movement = positionBuffer[positionBuffer.length - 1];
+    } else {
+      return;
+    }
     // if (execute_count == execute_count_max + 1) {
     if (!execute_movement["persona"][curr_persona_name]) {
       curr_persona.setVisible(false);
       curr_persona_name_tags.setVisible(false);
       curr_pronunciatio.setVisible(false);
+      curr_pronunciatio_emoji.setVisible(false);
 
       continue;
     } else {
       curr_persona.setVisible(true);
       curr_persona_name_tags.setVisible(true);
       curr_pronunciatio.setVisible(true);
+      curr_pronunciatio_emoji.setVisible(true);
     }
     let curr_x = execute_movement["persona"][curr_persona_name]["movement"][0];
     let curr_y = execute_movement["persona"][curr_persona_name]["movement"][1];
@@ -1109,6 +1134,8 @@ function update(time, delta) {
 
       curr_pronunciatio.x = curr_persona.body.x + 38;
       curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      curr_pronunciatio_emoji.x = curr_persona.body.x + 38;
+      curr_pronunciatio_emoji.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
 
       curr_persona_name_tags.x = curr_persona.body.x;
       curr_persona_name_tags.y = curr_persona.body.y - 42;
@@ -1196,6 +1223,7 @@ function update(time, delta) {
   // 注释掉计数更改
   // execute_count = execute_count - 1;
 }
+getFrameData();
 Interval.value = setInterval(() => {
   getFrameData();
 }, 500);
@@ -1257,6 +1285,7 @@ function getFrameData() {
         }
       }
       execute_movement = output.execute_movement;
+      positionBuffer.push(execute_movement);
     });
 }
 
