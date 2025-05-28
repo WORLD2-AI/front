@@ -7,16 +7,17 @@
           height="250px"
           class="timeline-container"
           ref="containerRef"
+          :style="{
+            scrollTop: `500px`,
+          }"
         >
           <!-- @scroll="handleScroll" -->
           <!-- :style="{ height: `${totalHeight}px` }" -->
-          <!-- :style="{
-              transform: `translateY(${offset}px)`,
-            }" -->
+
           <el-timeline class="timeline-content">
             <el-timeline-item
               center
-              v-for="(item, index) in visibleItems"
+              v-for="(item, index) in allItems"
               :key="item.start_minute"
             >
               <el-card>
@@ -29,7 +30,7 @@
                 </div>
               </el-card>
               <template #dot>
-                <template v-if="index === visibleItems.length - 1">
+                <template v-if="index === allItems.length - 1">
                   <el-icon><CaretRight /></el-icon>
                 </template>
                 <div>{{ Toformatted(item.start_minute) }}</div>
@@ -72,6 +73,7 @@ const BUFFER_SIZE = 6; // Number of buffer items
 const PAGE_SIZE = 15; // Number of loads per page
 let PAGE = 1;
 let timeInterval;
+const offset = ref(0);
 
 const containerHeight = computed(
   () => containerRef.value?.wrapRef?.clientHeight || 0
@@ -90,10 +92,6 @@ const endIndex = computed(() => {
 const visibleItems = computed(() =>
   allItems.value.slice(startIndex.value, endIndex.value + 1)
 );
-const offset = computed(() => {
-  console.log(startIndex.value, "startIndex.valuestartIndex.value");
-  return startIndex.value * ITEM_HEIGHT;
-});
 const Toformatted = (start_minute) => {
   let startHour = Math.floor(start_minute / 60);
   const startMinute = start_minute % 60;
@@ -105,11 +103,8 @@ const Toformatted = (start_minute) => {
 // Load new data (scroll down)
 const loadMoreNewer = async (focusId) => {
   let isLoading = false;
-  let lastLoadTime = 0;
   const now = Date.now();
-  if (loadingBottom.value || now - lastLoadTime < 500) return;
   loadingBottom.value = true;
-  lastLoadTime = now;
   try {
     const data = await characterApi.getTimeLine({
       characterId: focusId,
@@ -118,45 +113,41 @@ const loadMoreNewer = async (focusId) => {
     });
     name.value = data.data.name;
     const items = data.data.activities;
-    // console.log(items.reverse(), "items.reverse()items.reverse()");
-
-    // const items = await fetchTimelineItems({
-    //   lastId: allItems.value[0]?.id,
-    //   direction: "newer",
-    //   pageSize: PAGE_SIZE,
-    // });
-    if (items.length > 0) {
-      // allItems.value = [...allItems.value, ...items];
-      allItems.value = items;
-      PAGE++;
-      nextTick(() => {
-        // Node setScrollTop
-
-        allItemsLength.value = allItems.value.length;
-        if (containerRef.value) {
-          // console.log({
-          //   scrollTop: containerRef.value.scrollTop,
-          //   itemsLength: items.length,
-          // });
-          // containerRef.value.scrollTop = items.length * ITEM_HEIGHT;
-        }
-      });
-    }
+    // if (items.length > 0) {
+    allItems.value = items;
+    nextTick(() => {
+      allItemsLength.value = allItems.value.length;
+    });
+    // }
   } finally {
     loadingBottom.value = false;
   }
 };
-// watch(
-//   () => props.focusId, // 监听的具体依赖
-//   (newVal, oldVal) => {
-//     props.focusId && (allItems.value = []);
-//     allItemsLength.length = 0;
-//     props.focusId && loadMoreNewer(props.focusId);
-//   },
-//   { immediate: true }
-// );
+watch(
+  () => props.focusId,
+  (newVal, oldVal) => {
+    console.log("props.focusId:", props.focusId);
+    timeInterval && clearInterval(timeInterval);
+    props.focusId && loadMoreNewer(props.focusId);
+    timeInterval = setInterval(() => {
+      props.focusId && loadMoreNewer(props.focusId);
+    }, 60 * 60);
+  },
+  { immediate: true }
+);
+
 // initialization
 onMounted(() => {
+  watch(
+    () => allItemsLength.value,
+    (newVal, oldVal) => {
+      containerRef.value?.scrollTo({
+        top: allItemsLength.value * ITEM_HEIGHT,
+        behavior: "smooth", // smooth scrolling
+      });
+    },
+    { immediate: true }
+  );
   timeInterval = setInterval(() => {
     props.focusId && loadMoreNewer(props.focusId);
   }, 60 * 60);
@@ -164,48 +155,6 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(timeInterval);
 });
-
-// Rolling processing
-let debounceTimer = null;
-
-const handleScroll = () => {
-  containerRef.value.setScrollTop();
-  const containerNode = containerRef.value ? containerRef.value.wrapRef : null;
-  if (!containerNode) return;
-
-  if (debounceTimer) clearTimeout(debounceTimer);
-  const { scrollTop: st, scrollHeight, clientHeight } = containerNode;
-  // console.log(st, "containerRef.value.wrapRef");
-
-  scrollTop.value = st;
-  console.log({
-    scrollTop: st,
-    scrollHeight,
-    clientHeight,
-    totalHeight: totalHeight.value,
-    clientHeight,
-  });
-  debounceTimer = setTimeout(() => {
-    console.log(
-      "totalHeight.value - clientHeight - 100",
-      totalHeight.value - clientHeight - 100
-    );
-    if (st > totalHeight.value - clientHeight - 100) {
-      // loadMoreNewer(props.focusId);
-    }
-    if (st < 100) {
-      // loadMoreOlder();
-    }
-  }, 500);
-
-  // if (scrollHeight - (st + clientHeight) < 100 && hasMore.value) {
-
-  // }
-
-  // if (st < 100 && allItems.value.length > 0) {
-  //   loadMoreOlder();
-  // }
-};
 </script>
 <style lang="scss" scoped>
 .ScrollBox {

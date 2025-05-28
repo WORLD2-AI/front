@@ -24,6 +24,7 @@
               placeholder="input chat content..."
             />
             <button
+              v-loading="dialoguesLoading"
               style="
                 background-color: #c9a769;
                 color: #1a2a1a;
@@ -32,16 +33,7 @@
                 border-radius: 4px;
                 margin-left: 10px;
               "
-              @click="
-                () => {
-                  console.log(dialoguesCont);
-
-                  rolesApi.dialogues({
-                    character_id: focus_id,
-                    instruction: dialoguesCont,
-                  });
-                }
-              "
+              @click="() => dialoguesCont && dialoguesHandler()"
             >
               Send
             </button>
@@ -68,6 +60,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import Phaser from "phaser";
+import { ElMessage } from "element-plus";
 import { Place } from "@element-plus/icons-vue";
 import rolesApi from "../../api/roles";
 import userApi from "../../api/user";
@@ -109,7 +102,11 @@ let focus_user_id = ref(0);
 let currentScene = ref(null);
 const dialogues = computed(() => {
   let flag = false;
-  if (Profile && focus_id.value && focus_user_id.value !== 0) {
+  if (
+    Profile &&
+    focus_id.value &&
+    focus_user_id.value === userState.initialFocuUserId
+  ) {
     flag = true;
   }
   return flag;
@@ -173,7 +170,6 @@ let spans = document
 //   persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
 // }
 var last_time = null;
-// console.log('persona_names:',persona_names)
 let t = null;
 
 // Phaser 3.0 global settings.
@@ -497,7 +493,7 @@ function addUser(persona_name, start_pos, id, user_id) {
       // focus_id.value = "";
       // focus_user_id.value = user_id;
       // userState.changeFocusId(focus_id.value);
-      // display_main_box();
+      display_main_box();
     } else {
       focus_name = persona_name;
       focus_id.value = id;
@@ -995,7 +991,7 @@ function update(time, delta) {
     player.body.setVelocityY(camera_speed);
   }
 
-  if (focus_name) {
+  if (focus_name && userState.isFocused) {
     player.body.x = personas[focus_name].body.x;
     player.body.y = personas[focus_name].body.y;
   }
@@ -1303,6 +1299,22 @@ function updatePersonaAnimation(
   }
 }
 
+const dialoguesLoading = ref(false);
+function dialoguesHandler() {
+  dialoguesLoading.value = true;
+  rolesApi
+    .dialogues({
+      character_id: focus_id,
+      instruction: dialoguesCont.value,
+    })
+    .catch((err) => {
+      ElMessage.error(err.statusText);
+    })
+    .finally(() => {
+      dialoguesLoading.value = false;
+    });
+}
+
 /**
  * strings are split by a specified length
  * @param text
@@ -1443,12 +1455,15 @@ function update_dialog_user_info(visible) {
   }
 }
 function display_main_box() {
-  focus_name = "";
+  // isfocused = false;
+  userState.changeIsFocused(false);
   // document.getElementById("gameDialog").style.display = "none";
   // document.getElementById("main_box").style.display = "inline-block";
 }
 function display_game_dialog(user_name) {
   focus_name = user_name;
+  // isfocused = true;
+  userState.changeIsFocused(true);
   // document.getElementById("gameDialog").style.display = "inline-block";
   // document.getElementById("main_box").style.display = "none";
 }
@@ -1542,8 +1557,6 @@ function switchTab(tabName) {
     tabElement.classList.add("active");
   }
 }
-
-switchTab("dialogue");
 </script>
 
 <style lang="scss" scoped>

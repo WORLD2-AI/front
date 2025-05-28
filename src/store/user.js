@@ -8,6 +8,7 @@ export default defineStore('user', {
       user_id:''
     },
     initialFocuUserId:null,
+    isFocused:true
   }),
   getters: {
    
@@ -20,11 +21,16 @@ export default defineStore('user', {
       this.initialFocuUserId=userId
     },
     restoreFocusId () {
+      this.isFocused=this.focusId===this.initialFocusInfo.id?!this.isFocused:true
       this.focusId = this.initialFocusInfo.id
     },
     changeFocusId(id){
       this.focusId = id
     },
+    changeIsFocused(flag){
+      console.log(flag)
+      this.isFocused=flag
+    }
     
   }
 })

@@ -1,9 +1,13 @@
 <template>
   <div class="common-layout">
-    <!-- <div class="w1"></div>
-    <div class="w2"></div>
-    <div class="w3"></div>
-    <button id="start-tour">开始引导</button> -->
+    <div
+      class="Stepelements"
+      :style="{
+        display: profileGuideShown ? 'none' : 'flex',
+      }"
+    >
+      <div class="w1"></div>
+    </div>
     <el-container>
       <el-header style="background: #000">
         <ul class="container">
@@ -67,7 +71,7 @@
                   >White Paper</a
                 >
               </li>
-              <li class="nav-item" style="padding-left: 40px">
+              <li class="nav-item user-avatarBox" style="padding-left: 40px">
                 <div v-show="!loginStatus">
                   <div class="user-auto">
                     <img src="/img/github.jpg" @click="goLogin" alt="" />
@@ -127,18 +131,15 @@
   </div> -->
 </template>
 <script setup>
-import * as DriverModule from "driver.js";
-import "driver.js/dist/driver.css";
-// 正确提取构造函数
-const Driver = DriverModule.driver;
-console.log(Driver);
-// import "driver.js/dist/driver.min.css";
 import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import intro from "intro.js"; // introjs库
+import "intro.js/introjs.css"; // introjs默认css样式
 import Map from "./Map.vue";
 import BarOntainer from "./barOntainer.vue";
 const router = useRouter();
 const loginStatus = ref(false);
+const introOption = ref();
 import {
   ArrowDown,
   User,
@@ -153,38 +154,75 @@ const user = ref({
 const goLogin = () => {
   router.push("/login");
 };
-
+const profileGuideShown = ref(true);
+profileGuideShown.value = localStorage.getItem("profileGuideShown");
+introOption.value = [
+  {
+    element: ".w1", // 第一步目标元素
+    title: "第一步",
+    intro: "这是第一个引导步骤",
+  },
+  {
+    element: ".w1", // 第一步目标元素
+    title: "第二步",
+    intro: "这是第一个引导步骤",
+  },
+  {
+    element: ".tab-container", // 第一步目标元素
+    title: "第三步",
+    intro: "这是第一个引导步骤",
+  },
+  {
+    element: ".el-card__body", // 第一步目标元素
+    title: "第四步",
+    intro: "这是第一个引导步骤",
+  },
+  {
+    element: ".user-avatarBox", // 第一步目标元素
+    title: "第五步",
+    intro: "这是第一个引导步骤",
+  },
+];
+const initGuide = () => {
+  console.log("initGuide");
+  console.log(introOption.value);
+  intro()
+    .setOptions({
+      steps: introOption.value,
+      showBullets: false,
+      skipLabel: "skip",
+    })
+    .oncomplete(() => {
+      console.log("引导完成");
+      localStorage.setItem("profileGuideShown", true);
+      profileGuideShown.value = true;
+    })
+    .onexit(() => {
+      console.log("用户退出了引导");
+      localStorage.setItem("profileGuideShown", true);
+      profileGuideShown.value = true;
+    })
+    .start();
+};
 onMounted(() => {
-  const driver = new Driver();
-  // console.log(document.getElementById("start-tour"));
+  if (profileGuideShown.value === null) {
+    initGuide();
+  }
+  // const originalMoveNext = driver.moveNext.bind(driver);
+  // driver.moveNext = function () {
+  //   console.log("开始下一步");
+  //   const isLastStepBeforeMove = this.isLastStep();
+  //   originalMoveNext(); // 执行原方法
+
+  //   if (isLastStepBeforeMove) {
+  //     console.log("导览已结束（最后一步）");
+  //     // 执行你的回调逻辑
+  //   }
+  // };
+
   // document.getElementById("start-tour").addEventListener("click", function () {
   //   console.log("开始引导");
-  //   driver.defineSteps([
-  //     {
-  //       element: ".w1", // 第一步目标元素
-  //       popover: {
-  //         title: "第一步",
-  //         description: "这是第一个引导步骤",
-  //         position: "bottom",
-  //       },
-  //     },
-  //     {
-  //       element: ".w2", // 第二步目标元素
-  //       popover: {
-  //         title: "第二步",
-  //         description: "请点击这里继续",
-  //         position: "right",
-  //       },
-  //     },
-  //     {
-  //       element: ".w3", // 第三步目标元素
-  //       popover: {
-  //         title: "最后一步",
-  //         description: "完成所有引导",
-  //         position: "top",
-  //       },
-  //     },
-  //   ]);
+  //   driver.drive();
   // });
   userApi.profile().then((res) => {
     loginStatus.value = true;
@@ -194,18 +232,6 @@ onMounted(() => {
         user.value.avatar = URL.createObjectURL(new Blob([res.data]));
       });
   });
-  document
-    .querySelector(".user-avatar")
-    .addEventListener("mouseenter", function () {
-      if (!localStorage.getItem("profileGuideShown")) {
-        showTooltip(this, "点击查看个人资料和设置");
-        localStorage.setItem("profileGuideShown", "true");
-      }
-    });
-
-  function showTooltip(target, text) {
-    // 动态创建提示元素并定位
-  }
 });
 
 const handleCommand = (command) => {
@@ -229,7 +255,25 @@ const logout = () => {
 </script>
 
 <style lang="scss" scoped>
-.w1,
+.common-layout {
+  position: relative;
+  .Stepelements {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .w1 {
+      /* display: none; */
+      /* opacity: 0; */
+      /* width: 10px;
+      height: 10px;
+      background: rgb(0, 0, 0); */
+    }
+  }
+}
 .w2,
 .w3 {
   width: 200px;
@@ -390,6 +434,45 @@ const logout = () => {
   }
   .el-main {
     padding: 0;
+  }
+}
+:deep(.introjs-tooltipReferenceLayer) {
+  background-color: red;
+}
+:deep(.introjs-tooltip) {
+  background-color: red; /* 背景颜色 */
+  color: #333; /* 文字颜色 */
+  border-radius: 8px; /* 圆角 */
+
+  .introjs-button {
+    background-color: #007bff; /* 按钮背景颜色 */
+    color: #fff; /* 按钮文字颜色 */
+  }
+
+  .introjs-arrow {
+    border-color: rgba(255, 255, 255, 0.95); /* 箭头颜色 */
+  }
+  .introjs-arrow.top {
+    border-bottom-color: #f7f7f7; /* 上箭头颜色 */
+  }
+  .introjs-arrow.bottom {
+    border-top-color: #f7f7f7; /* 下箭头颜色 */
+  }
+  .introjs-arrow.left {
+    border-right-color: #f7f7f7; /* 左箭头颜色 */
+  }
+  .introjs-arrow.right {
+    border-left-color: #f7f7f7; /* 右箭头颜色 */
+  }
+  .introjs-button {
+    padding: 10px 20px; /* 内边距 */
+    border: none; /* 无边框 */
+    border-radius: 5px; /* 圆角 */
+    cursor: pointer; /* 鼠标指针 */
+    transition: background-color 0.3s ease; /* 过渡效果 */
+  }
+  .introjs-button:hover {
+    background-color: #0056b3; /* 鼠标悬停时的背景颜色 */
   }
 }
 </style>

@@ -66,11 +66,10 @@
           Character
         </button> -->
       </div>
-    </div>
-
-    <div id="schedule" class="tab-content">
-      <div class="schedule-content" id="character_schedule">
-        <time-line :focusId="props.focusId"></time-line>
+      <div id="schedule" class="tab-content">
+        <div class="schedule-content" id="character_schedule">
+          <time-line :focusId="props.focusId"></time-line>
+        </div>
       </div>
     </div>
 
@@ -446,13 +445,13 @@ $backgroundHover: rgba(13, 31, 13, 0.7);
 }
 
 .tab-container {
-  height: 30px;
   background-color: #1a2a1a;
   padding: 2px;
   border-bottom: 1px solid #c9a76933;
 }
 
 .tabs {
+  height: 30px;
   display: flex;
   justify-content: space-around;
 }
@@ -474,7 +473,6 @@ $backgroundHover: rgba(13, 31, 13, 0.7);
 
 .tab-content {
   display: none;
-  padding: 16px;
   background: rgba(13, 31, 13, 0.9);
   color: #8d9e8d;
 }
