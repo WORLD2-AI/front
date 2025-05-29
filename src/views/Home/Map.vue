@@ -1,0 +1,1687 @@
+<template>
+  <div>
+    <div id="step" style="display: none">{{ step }}</div>
+    <div id="sim_code" style="display: none">{{ sim_code }}</div>
+    <div id="persona_name_list" style="display: none">
+      <!-- {{ persona_name_str }} -->
+      persona_name_str
+    </div>
+    <div id="persona_init_pos" style="display: none">
+      <!-- <span v-for="(pos, index) in personaInitPos" :key="index">
+        {{ pos[0] }},{{ pos[1] }},{{ pos[2] }}
+      </span> -->
+    </div>
+    <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-7">
+        <div id="game-container" style="text-align: center">
+          <!-- <Map /> -->
+          <div class="game-dialogues" v-if="dialogues">
+            <input
+              v-model="dialoguesCont"
+              type="text"
+              class="chat-input"
+              placeholder="input chat content..."
+            />
+            <button
+              v-loading="dialoguesLoading"
+              style="
+                background-color: #c9a769;
+                color: #1a2a1a;
+                padding: 8px 4px;
+                border: none;
+                border-radius: 4px;
+                margin-left: 10px;
+              "
+              @click="() => dialoguesCont && dialoguesHandler()"
+            >
+              Send
+            </button>
+          </div>
+          <div class="game-controls">
+            <el-icon @click="() => userState.restoreFocusId()"
+              ><Place
+            /></el-icon>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <CharacterAttributes
+          :personNames="persona_names"
+          :displayMainBox="display_main_box"
+          :displayGameDialog="display_game_dialog"
+          :switchTab="switchTab"
+          :focusId="focus_id"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+<script setup>
+import { onMounted, onUnmounted, ref, computed, watch } from "vue";
+import Phaser from "phaser";
+import { ElMessage } from "element-plus";
+import { Place } from "@element-plus/icons-vue";
+import rolesApi from "../../api/roles";
+import userApi from "../../api/user";
+import DialogContainer from "./dialogContainer.vue";
+import CharacterAttributes from "./characterAttributes.vue";
+import userStore from "../../store/user.js";
+import user from "../../api/user";
+const userState = userStore();
+
+/*
+Main resources:
+	  https://www.youtube.com/watch?v=cKIG1lKwLeo&t=401s&ab_channel=HongLy
+	  For the ground zero code, see the exported files from here:
+	  https://codepen.io/mikewesthad/pen/BVeoYP?editors=1111
+
+	  Also worth taking a look:
+	  https://www.youtube.com/watch?v=fdXcD9X4NrQ&ab_channel=MorganPage
+	  and
+	  https://www.youtube.com/watch?v=MR2CvWxOEsw&ab_channel=MattWilber
+	 */
+
+// ###########################################################################
+// PREAMBLE
+// ###########################################################################
+
+// <step> -- one full loop around all three phases determined by <phase> is
+// a step. We use this to link the steps in the backend.
+let gameContainerDom = ref();
+const dialoguesCont = ref("");
+const Profile = ref(false);
+const config = ref();
+const game = ref();
+const progressBar = ref();
+const progress = ref();
+const slider = ref();
+const Interval = ref(null);
+const positionBuffer = [];
+let focus_id = ref("");
+let focus_user_id = ref(0);
+let currentScene = ref(null);
+const props = defineProps({
+  initGuide: {
+    type: Function,
+  },
+  profileGuideShown: {
+    type: Boolean || Boolean,
+  },
+});
+const dialogues = computed(() => {
+  let flag = false;
+  if (
+    Profile &&
+    focus_id.value &&
+    focus_user_id.value === userState.initialFocuUserId
+  ) {
+    flag = true;
+  }
+  return flag;
+});
+watch(
+  () => userState.focusId, // 监听目标（需用函数返回）
+  (newValue, oldValue) => {
+    if (newValue && newValue === userState.initialFocusInfo.id) {
+      focus_id.value = newValue;
+      focus_name = userState.initialFocusInfo.name;
+      focus_user_id.value = userState.initialFocusInfo.user_id;
+    }
+  },
+  { immediate: false } // 可选：立即触发一次
+);
+
+onUnmounted(() => {
+  if (game.value) {
+    game.value.destroy(true);
+  }
+  clearInterval(Interval.value);
+  // Also removed when the game is destroyed
+  game.value.events.on("destroy", () => {
+    slider.value?.removeEventListener("mousedown", startDragging);
+    document?.removeEventListener("mousemove", handleDragging);
+    document?.removeEventListener("mouseup", stopDragging);
+  });
+  game.value = null;
+});
+let params = getUrlParams();
+let step = 1;
+let last_step = 1;
+let setTimeoutHandle = null;
+let postTimeoutHandle = false;
+let drag_step = step;
+let currentEndFrame = step;
+let currentStartFrame = calculateStartFrame(currentEndFrame);
+let currentFrame = currentEndFrame;
+let sim_code = "ai_and_v_coin2";
+// let persona_names = document.getElementById('persona_name_list').innerHTML.split(",");
+let persona_names = [];
+let persona_namesList = [];
+let spans = document
+  .getElementById("persona_init_pos")
+  ?.getElementsByTagName("span");
+// let persona_names = [
+//   "christopher gardner",
+//   "linda",
+//   "chris gardner",
+//   "jane moreno",
+//   "arthur burton",
+//   "latoya williams",
+//   "carlos gomez",
+//   "kiki",
+//   "cichengege",
+//   "frank",
+//   "mk",
+// ];
+// for (var i = 0, l = spans?.length; i < l; i++) {
+//   let x = spans[i].innerText.split(",");
+//   persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
+// }
+var last_time = null;
+let t = null;
+
+// Phaser 3.0 global settings.
+// Configuration meant to be passed to the main Phaser game instance.
+// Creating the game instance and setting up the main Phaser variables that
+// will be used in it.
+
+let cursors;
+let player;
+let showDebug = false;
+let position = [
+  "arthur burton,61,24",
+  "carlos gomez,40,35",
+  "carmen ortiz,63,67",
+  "francisco lopez,31,86",
+  "latoya williams,18,14",
+  "kiki,18,67",
+  "cichengege,27,65",
+  "frank,71,25",
+  "mk,25,89",
+  "tamara taylor,73,53",
+  "jane moreno,70,57",
+  "tom moreno,96,74",
+  "rajiv patel,27,14",
+  "chris gardner,33,86",
+  "linda,83,47",
+  "christopher gardner,132,71",
+];
+// console.log("get url params", params);
+// Persona related variables. This should have the name of the persona as its
+// keys, and the instances of the Persona class as the values.
+var spawn_tile_loc = {};
+onMounted(() => {
+  gameContainerDom.value = document.getElementById("game-container");
+  config.value = {
+    type: Phaser.AUTO,
+    fps: {
+      target: 30,
+      forceSetTimeOut: true,
+    },
+    width: 1200,
+    height: 800,
+    // parent: gameContainerDom.value,
+    pixelArt: true,
+    physics: {
+      default: "arcade",
+      arcade: {
+        gravity: { y: 0 },
+      },
+    },
+    scene: {
+      preload: preload,
+      create: create,
+      update: update,
+    },
+    mode: Phaser.Scale.FIT, // 自动缩放并保持比例
+    parent: gameContainerDom.value,
+  };
+  game.value = new Phaser.Game(config.value);
+
+  // Initializing the progress bar
+  progressBar.value = document.getElementById("progress-bar");
+  // =======================
+  progress.value = document.getElementById("progress");
+  slider.value = document.getElementById("slider");
+  // event listener
+  slider.value?.addEventListener("mousedown", startDragging);
+  document?.addEventListener("mousemove", handleDragging);
+  document?.addEventListener("mouseup", stopDragging);
+});
+// for (var i = 0; i < position.length; i++) {
+//   let x = position[i].split(",");
+//   persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
+// }
+
+// for (let key in persona_names) {
+//   spawn_tile_loc[key] = persona_names[key];
+// }
+// console.log(spawn_tile_loc);
+let lastTime = 0;
+var personas = {};
+var pronunciatios = {};
+let persona_name_tags = {};
+let anims_direction;
+let pre_anims_direction;
+let pre_anims_direction_dict = {};
+let offset = 0;
+let curr_maze = "the_ville";
+let anims;
+
+// <tile_width> is the width of one individual tile (tiles are square)
+let tile_width = 32;
+// Important: tile_width % movement_speed has to be 0.
+// <movement_speed> determines how fast we move at each upate cylce.
+let movement_speed = 4;
+
+// <timer_max> determines how frequently our update function will query the
+// frontend server. If it's higher, we wait longer cycles.
+let timer_max = 10;
+let first_stop = true;
+let timer = timer_max;
+
+// <phase> -- there are three phases: "process," "update," and "execute."
+let phase = "update"; // or "update" or "execute"
+
+// Variables for storing movements that are sent from the backend server.
+let frame_data = [];
+let execute_movement;
+
+let execute_count_max = tile_width / movement_speed;
+let execute_count = execute_count_max + 1;
+let movement_target = {};
+
+let isDraggingmMap = false;
+let startPointerPos = new Phaser.Math.Vector2();
+let focus_name = "";
+let randomIndex;
+
+let dial_content =
+  '<div style="color: #c9a769; margin-bottom: 8px;word-break: break-word"><span style="color:white;">#name#:</span><span><p>#content#</p></span></div>';
+// ###########################################################################
+// ENGINE
+// ###########################################################################
+
+// Joon: Phaser 3.0 is oriented around "scenes" -- recall how Pokemon plays:
+//       there is the outdoor space, and then there is the indoor space; when
+//       you go inside, you transition to a new "scene" and the outdoor space
+//       basically disappears.
+//       A scene in Phaser has four key methods that are called at different
+//       stages of rendering for different purposes. They are:
+//       init() -> preload() -> create() -> update()
+//         init() is called only once at the very beginning. This is the
+//           initialization function in case that is needed.
+//         preload() is called once and preloads any of the assets
+//         create() is also called once after preloading... creates sprites
+//           and actually displays stuff
+//         update() is called on each frame during the game play
+
+function preload() {
+  currentScene.value = this;
+  // Loading the necessary images (e.g., the background image, character
+  // sprites).
+
+  // Joon: for load.image, the first parameter is simply the key value that
+  //       you are passing in. The second parameter should be pointed to the
+  //       png file that contains the tileset.
+  //       Also IMPORTANT: when you create a tileset in Tiled, always be
+  //       sure to check the "embedded" option.
+  this.load.image("emoji", "/img/emojiBg.png");
+  this.load.image(
+    "blocks_1",
+    "assets/the_ville/visuals/map_assets/blocks/blocks_1.png"
+  );
+  this.load.image(
+    "walls",
+    "assets/the_ville/visuals/map_assets/v1/Room_Builder_32x32.png"
+  );
+  this.load.image(
+    "interiors_pt1",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt1.png"
+  );
+  this.load.image(
+    "interiors_pt2",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt2.png"
+  );
+  this.load.image(
+    "interiors_pt3",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt3.png"
+  );
+  this.load.image(
+    "interiors_pt4",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt4.png"
+  );
+  this.load.image(
+    "interiors_pt5",
+    "assets/the_ville/visuals/map_assets/v1/interiors_pt5.png"
+  );
+  this.load.image(
+    "interiors_pt7",
+    "assets/the_ville/visuals/map_assets/v2/TopDownHouse_FurnitureState1.png"
+  );
+  this.load.image(
+    "CuteRPG_Field_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Field_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png"
+  );
+  this.load.image(
+    "CuteRPG_Harbor_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png"
+  );
+  this.load.image(
+    "CuteRPG_Village_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Forest_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Desert_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png"
+  );
+  this.load.image(
+    "CuteRPG_Mountains_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Desert_B",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png"
+  );
+  this.load.image(
+    "CuteRPG_Forest_C",
+    "assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png"
+  );
+  this.load.image(
+    "CityRoad",
+    "assets/the_ville/visuals/map_assets/Road_test1024.png"
+  );
+  this.load.image(
+    "BasketballPlace",
+    "assets/the_ville/visuals/map_assets/basketball_place.png"
+  );
+  this.load.image(
+    "CityObject",
+    "assets/the_ville/visuals/map_assets/city_extension_prev.png"
+  );
+  this.load.image(
+    "Waters",
+    "assets/the_ville/visuals/map_assets/CuteRPG_Mountains_A1.png"
+  );
+  this.load.image(
+    "Trees",
+    "assets/the_ville/visuals/map_assets/height96_trees_mega_pack_cc_by_3_0.png"
+  );
+
+  // Joon: This is the export json file you get from Tiled.
+  this.load.tilemapTiledJSON("map", "assets/the_ville/visuals/the_ville.json");
+
+  // An atlas is a way to pack multiple images together into one texture. I'm
+  // using it to load all the player animations (walking left, walking right,
+  // etc.) in one image. For more info see:
+  // https://labs.phaser.io/view.html?src=src/animation/texture%20atlas%20animation.js
+  // If you don't use an atlas, you can do the same thing with a spritesheet,
+  // see: https://labs.phaser.io/view.html?src=src/animation/single%20sprite%20sheet.js
+  // Joon: Technically, I think this guy had the best tutorial for atlas:
+  //       https://www.youtube.com/watch?v=fdXcD9X4NrQ&ab_channel=MorganPage
+  this.load.atlas(
+    "atlas",
+    "img/atlas.png",
+    "assets/characters/town/atlas.json"
+  );
+  rolesApi.allChars().then((res) => {
+    persona_namesList = [];
+    res.data.data.forEach((char, index) => {
+      persona_names[char.name] = char.position;
+      if (!char.is_system_character) {
+        randomIndex = index;
+        userState.changeInitialFocuUserId(char.user_id);
+      }
+      persona_namesList.push({
+        id: char.id,
+        name: char.name,
+        user_id: char.user_id,
+      });
+    });
+    for (let key in persona_names) {
+      spawn_tile_loc[key] = persona_names[key];
+    }
+    // focus_name = "kiki";
+
+    userApi
+      .profile()
+      // .then(() => {
+      //   randomIndex = persona_namesList.length - 1;
+      // })
+      .catch(() => {
+        randomIndex = Math.floor(Math.random() * persona_namesList.length);
+      })
+      .finally(() => {
+        focus_name = persona_namesList[randomIndex].name;
+        focus_id.value = persona_namesList[randomIndex].id;
+        focus_user_id.value = persona_namesList[randomIndex].user_id;
+        userState.changeInitialFocusInfo({
+          id: focus_id.value,
+          name: focus_name,
+          user_id: focus_user_id.value,
+        });
+        userState.changeFocusId(focus_id.value);
+      });
+    for (let key in persona_names) {
+      // key = persona_names[key];
+      // ===============================
+      // key = key.replace(" ", "_");
+      // key = key.toLowerCase();
+      // console.log(`assets/characters/town/profile/${key}.png`, "");
+      this.load.atlas(
+        key,
+        `assets/characters/town/kiki.png`,
+        `assets/characters/town/atlas.json`
+      );
+    }
+  });
+}
+function addUser(persona_name, start_pos, id, user_id) {
+  currentScene.value.load.atlas(
+    persona_name,
+    `assets/characters/town/kiki.png`,
+    `assets/characters/town/atlas.json`
+  );
+  let new_sprite = currentScene.value.physics.add
+    .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
+    .setSize(30, 40)
+    .setOffset(0, 0);
+
+  new_sprite.setInteractive();
+  new_sprite.on("pointerup", () => {
+    if (persona_name == focus_name) {
+      // focus_name = "";
+      // focus_id.value = "";
+      // focus_user_id.value = user_id;
+      // userState.changeFocusId(focus_id.value);
+      display_main_box();
+    } else {
+      focus_name = persona_name;
+      focus_id.value = id;
+      focus_user_id.value = user_id;
+      userState.changeFocusId(focus_id.value);
+      display_game_dialog(persona_name);
+    }
+  });
+  // Here, we are creating the persona and its pronunciatio sprites.
+  personas[persona_name] = new_sprite;
+  anims && createWalk(persona_name, currentScene.value.anims);
+  // Emoji garbled characters
+
+  const texture = currentScene.value.textures.get("emoji");
+  const originalWidth = texture.getSourceImage().width;
+  const originalHeight = texture.getSourceImage().height;
+  const maxWidth = 56;
+  const scale = maxWidth / originalWidth; // bg.setDisplaySize(bg.width * scale, bg.height * scale);
+  if (!pronunciatios[persona_name + "emoji"])
+    pronunciatios[persona_name + "emoji"] = currentScene.value.add
+      .tileSprite(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        originalWidth,
+        originalHeight,
+        "emoji"
+      )
+      .setOrigin(0, 0)
+      .setScale(scale)
+      .setDepth(3);
+  if (!pronunciatios[persona_name])
+    pronunciatios[persona_name] = currentScene.value.add
+      .text(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        "",
+        {
+          font: "18px Arial",
+          strokeThickness: 0,
+          border: "none",
+        }
+      )
+      .setOrigin(0, 0)
+      .setDepth(4);
+  if (!persona_name_tags[persona_name])
+    persona_name_tags[persona_name] = currentScene.value.add
+      .text(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        formatPersonName(persona_name),
+        {
+          font: "bold 16px velvet",
+          stroke: "#fff",
+          strokeThickness: 2,
+          fill: "#000",
+          border: "solid",
+          borderRadius: "10px",
+        }
+      )
+      .setDepth(3);
+}
+
+function createWalk(persona_name, anims) {
+  let left_walk_name = persona_name + "-left-walk";
+  let right_walk_name = persona_name + "-right-walk";
+  let down_walk_name = persona_name + "-down-walk";
+  let up_walk_name = persona_name + "-up-walk";
+
+  //   console.log(persona_name, left_walk_name, "DEUBG")
+
+  anims.create({
+    key: left_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "left-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: right_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "right-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: down_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "down-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: up_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "up-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+}
+function create() {
+  if (props.profileGuideShown === null) {
+    props.initGuide();
+  }
+  anims = this.anims;
+  const map = this.make.tilemap({ key: "map" });
+  // console.log(map, "addTilesetImage");
+  // Joon: Logging map is really helpful for debugging here:
+  //       console.log(map);
+
+  // The first parameter is the name you gave to the tileset in Tiled and then
+  // the key of the tileset image in Phaser's cache (i.e. the name you used in
+  // preload)
+  // Joon: for the first parameter here, really take a look at the
+  //       console.log(map) output. You need to make sure that the name
+  //       matches.
+  const collisions = map.addTilesetImage("blocks", "blocks_1");
+  const walls = map.addTilesetImage("Room_Builder_32x32", "walls");
+  const interiors_pt1 = map.addTilesetImage("interiors_pt1", "interiors_pt1");
+  const interiors_pt2 = map.addTilesetImage("interiors_pt2", "interiors_pt2");
+  const interiors_pt3 = map.addTilesetImage("interiors_pt3", "interiors_pt3");
+  const interiors_pt4 = map.addTilesetImage("interiors_pt4", "interiors_pt4");
+  const interiors_pt5 = map.addTilesetImage("interiors_pt5", "interiors_pt5");
+  const CuteRPG_Field_B = map.addTilesetImage(
+    "CuteRPG_Field_B",
+    "CuteRPG_Field_B"
+  );
+  const CuteRPG_Field_C = map.addTilesetImage(
+    "CuteRPG_Field_C",
+    "CuteRPG_Field_C"
+  );
+  const CuteRPG_Harbor_C = map.addTilesetImage(
+    "CuteRPG_Harbor_C",
+    "CuteRPG_Harbor_C"
+  );
+  const CuteRPG_Village_B = map.addTilesetImage(
+    "CuteRPG_Village_B",
+    "CuteRPG_Village_B"
+  );
+  const CuteRPG_Forest_B = map.addTilesetImage(
+    "CuteRPG_Forest_B",
+    "CuteRPG_Forest_B"
+  );
+  const CuteRPG_Desert_C = map.addTilesetImage(
+    "CuteRPG_Desert_C",
+    "CuteRPG_Desert_C"
+  );
+  const CuteRPG_Mountains_B = map.addTilesetImage(
+    "CuteRPG_Mountains_B",
+    "CuteRPG_Mountains_B"
+  );
+  const CuteRPG_Desert_B = map.addTilesetImage(
+    "CuteRPG_Desert_B",
+    "CuteRPG_Desert_B"
+  );
+  const CuteRPG_Forest_C = map.addTilesetImage(
+    "CuteRPG_Forest_C",
+    "CuteRPG_Forest_C"
+  );
+  const CityRoad = map.addTilesetImage("CityRoad", "CityRoad");
+  const Trees = map.addTilesetImage("Trees", "Trees");
+  const BasketballPlace = map.addTilesetImage(
+    "BasketballPlace",
+    "BasketballPlace"
+  );
+  const CityObject = map.addTilesetImage("CityObject", "CityObject");
+  const Waters = map.addTilesetImage("Waters", "Waters");
+
+  // The first parameter is the layer name (or index) taken from Tiled, the
+  // second parameter is the tileset you set above, and the final two
+  // parameters are the x, y coordinate.
+  // Joon: The "layer name" that comes as the first parameter value
+  //       literally is taken from our Tiled layer name. So to find out what
+  //       they are; you actually need to open up tiled and see how you
+  //       named things there.
+  let tileset_group_1 = [
+    CuteRPG_Field_B,
+    CuteRPG_Field_C,
+    CuteRPG_Harbor_C,
+    CuteRPG_Village_B,
+    CuteRPG_Forest_B,
+    CuteRPG_Desert_C,
+    CuteRPG_Mountains_B,
+    CuteRPG_Desert_B,
+    CuteRPG_Forest_C,
+    interiors_pt1,
+    interiors_pt2,
+    interiors_pt3,
+    interiors_pt4,
+    interiors_pt5,
+    walls,
+    CityRoad,
+    Trees,
+    BasketballPlace,
+    CityObject,
+    Waters,
+  ];
+  const bottomGroundLayer = map.createLayer(
+    "Bottom Ground",
+    tileset_group_1,
+    0,
+    0
+  );
+  const exteriorGroundLayer = map.createLayer(
+    "Exterior Ground",
+    tileset_group_1,
+    0,
+    0
+  );
+  const cityRoadLayer = map.createLayer("City Road", tileset_group_1, 0, 0);
+  const exteriorDecorationL1Layer = map.createLayer(
+    "Exterior Decoration L1",
+    tileset_group_1,
+    0,
+    0
+  );
+  const exteriorDecorationL2Layer = map.createLayer(
+    "Exterior Decoration L2",
+    tileset_group_1,
+    0,
+    0
+  );
+  const exteriorDecorationL3Layer = map.createLayer(
+    "Exterior Decoration L3",
+    tileset_group_1,
+    0,
+    0
+  );
+  const interiorGroundLayer = map.createLayer(
+    "Interior Ground",
+    tileset_group_1,
+    0,
+    0
+  );
+  const wallLayer = map.createLayer("Wall", [CuteRPG_Field_C, walls], 0, 0);
+  const interiorFurnitureL1Layer = map.createLayer(
+    "Interior Furniture L1",
+    tileset_group_1,
+    0,
+    0
+  );
+  const interiorFurnitureL2Layer = map.createLayer(
+    "Interior Furniture L2",
+    tileset_group_1,
+    0,
+    0
+  );
+  const interiorFurnitureL3Layer = map.createLayer(
+    "Interior Furniture L3",
+    tileset_group_1,
+    0,
+    0
+  );
+  const interiorFurnitureL4Layer = map.createLayer(
+    "Interior Furniture L4",
+    tileset_group_1,
+    0,
+    0
+  );
+  const foregroundL1Layer = map.createLayer(
+    "Foreground L1",
+    tileset_group_1,
+    0,
+    0
+  );
+  const foregroundL2Layer = map.createLayer(
+    "Foreground L2",
+    tileset_group_1,
+    0,
+    0
+  );
+  foregroundL1Layer && foregroundL1Layer.setDepth(2);
+  foregroundL2Layer && foregroundL2Layer.setDepth(2);
+
+  const collisionsLayer = map.createLayer("Collisions", collisions, 0, 0);
+  // const groundLayer = map.createLayer("Ground", walls, 0, 0);
+  // const indoorGroundLayer = map.createLayer("Indoor Ground", walls, 0, 0);
+  // const wallsLayer = map.createLayer("Walls", walls, 0, 0);
+  // const interiorsLayer = map.createLayer("Furnitures", interiors, 0, 0);
+  // const builtInLayer = map.createLayer("Built-ins", interiors, 0, 0);
+  // const appliancesLayer = map.createLayer("Appliances", interiors, 0, 0);
+  // const foregroundLayer = map.createLayer("Foreground", interiors, 0, 0);
+
+  // Joon : This is where you want to create a custom field for the tileset
+  //        in Tiled. Take a look at this guy's tutorial:
+  //        https://www.youtube.com/watch?v=MR2CvWxOEsw&ab_channel=MattWilber
+  collisionsLayer && collisionsLayer.setCollisionByProperty({ collide: true });
+  // By default, everything gets depth sorted on the screen in the order we
+  // created things. Here, we want the "Above Player" layer to sit on top of
+  // the player, so we explicitly give it a depth. Higher depths will sit on
+  // top of lower depth objects.
+  // Collisions layer should get a negative depth since we do not want to see
+  // it.
+  collisionsLayer && collisionsLayer.setDepth(-1);
+  // foregroundL1Layer.setDepth(2);
+  // foregroundL1Layer.setDepth(2);
+
+  // *** SET UP CAMERA ***
+  // "player" is to be set as the center of mass for our "camera." We
+  // basically create a game character sprite as we would for our personas
+  // but we move it to depth -1 and let it pass through the collision map;
+  // that is, do not have the following line:
+  // this.physics.add.collider(player, collisionsLayer);
+  // OLD NOTE: Create a sprite with physics enabled via the physics system.
+  // The image  used for the sprite has a bit of whitespace, so I'm using
+  // setSize & setOffset to control the size of the player's body.
+  player = this.physics.add
+    .sprite(1000, 400, "player")
+    .setVelocity(0, 0)
+    .setSize(30, 40)
+    .setOffset(0, 0);
+  player.setDepth(-1);
+
+  // Setting up the camera.
+  const camera = this.cameras.main;
+  camera.setZoom(0.7);
+  camera.startFollow(player);
+  camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+  cursors = this.input.keyboard.addKeys({
+    up: Phaser.Input.Keyboard.KeyCodes.UP,
+    down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+    left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+    right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+    // 不绑定 SPACE 或 SHIFT
+  });
+
+  // *** SET UP PERSONAS ***
+  // We start by creating the game sprite objects.
+  anims = this.anims;
+  for (let i = 0; i < Object.keys(spawn_tile_loc).length; i++) {
+    let persona_name = Object.keys(spawn_tile_loc)[i];
+    let start_pos = [
+      spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
+      spawn_tile_loc[persona_name][1] * tile_width + tile_width,
+    ];
+    addUser(
+      persona_name,
+      start_pos,
+      persona_namesList[i].id,
+      persona_namesList[i].user_id
+    );
+    // createWalk(persona_name, anims);
+  }
+
+  // Create the player's walking animations from the texture atlas. These are
+  // stored in the global animation manager so any sprite can access them.
+  for (let i = 0; i < Object.keys(persona_names).length; i++) {
+    // ===========================================================
+    let persona_name = Object.keys(persona_names)[i];
+    // let persona_name = persona_names[i];
+    // console.log(persona_name,"persona_namepersona_namepersona_namepersona_namepersona_namepersona_name");
+    anims && createWalk(persona_name, anims);
+    // let left_walk_name = persona_name + "-left-walk";
+    // let right_walk_name = persona_name + "-right-walk";
+    // let down_walk_name = persona_name + "-down-walk";
+    // let up_walk_name = persona_name + "-up-walk";
+
+    // //   console.log(persona_name, left_walk_name, "DEUBG")
+
+    // anims.create({
+    //   key: left_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "left-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
+
+    // anims.create({
+    //   key: right_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "right-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
+
+    // anims.create({
+    //   key: down_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "down-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
+
+    // anims.create({
+    //   key: up_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "up-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
+  }
+
+  // set the view zoom
+  const minZoom = 0.5; // minimal scaling
+  const maxZoom = 3; // maximum scale
+  // Play audio normally
+
+  this.input.keyboard.on("keydown-Z", () => {
+    const newZoom = this.cameras.main.zoom * 1.1;
+    this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
+  });
+
+  this.input.keyboard.on("keydown-X", () => {
+    const newZoom = this.cameras.main.zoom * 0.9;
+    this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, minZoom, maxZoom));
+  });
+
+  // Input event binding
+  this.input.on("pointerdown", (pointer) => {
+    if (pointer.leftButtonDown()) {
+      isDraggingmMap = true;
+      startPointerPos.set(pointer.x, pointer.y);
+    }
+  });
+
+  this.input.on("pointermove", (pointer) => {
+    if (isDraggingmMap && pointer.leftButtonDown()) {
+      // Calculate camera offset
+      let deltaX = startPointerPos.x - pointer.x;
+      let deltaY = startPointerPos.y - pointer.y;
+      player.body.setVelocity(deltaX * 5, deltaY * 5);
+    }
+  });
+
+  this.input.on("pointerup", () => {
+    isDraggingmMap = false;
+    player.body.setVelocity(0, 0);
+  });
+  this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
+    // Get the mouse world coordinates before zooming in and out
+    // Calculate the new zoom level (deltaY>0, scroll down)
+    if (pointer.event.ctrlKey) {
+      pointer.event.preventDefault();
+      const newZoom = Phaser.Math.Clamp(
+        this.cameras.main.zoom - deltaY * 0.001,
+        0.5, // minimum-scale
+        3 // Maximum Zoom
+      );
+      // Set a new zoom level
+      this.cameras.main.setZoom(newZoom);
+    }
+  });
+}
+
+function update(time, delta) {
+  // *** SETUP PLAY AND PAUSE BUTTON ***
+  let play_context = this;
+  anims = this.anims;
+  function game_resume() {
+    play_context.scene.resume();
+  }
+  if (play_button) {
+    play_button.onclick = function () {
+      game_resume();
+    };
+    pause_button.onclick = function () {
+      game_pause();
+    };
+  }
+  function game_pause() {
+    play_context.scene.pause();
+  }
+
+  // *** MOVE CAMERA ***
+  // This is where we finish up the camera setting we started in the create()
+  // function. We set the movement speed of the camera and wire up the keys to
+  // map to the actual movement.
+  const camera_speed = 400;
+  // Stop any previous movement from the last frame
+  player.body.setVelocity(0);
+  if (cursors.left.isDown) {
+    player.body.setVelocityX(-camera_speed);
+  }
+  if (cursors.right.isDown) {
+    player.body.setVelocityX(camera_speed);
+  }
+  if (cursors.up.isDown) {
+    player.body.setVelocityY(-camera_speed);
+  }
+  if (cursors.down.isDown) {
+    player.body.setVelocityY(camera_speed);
+  }
+
+  if (focus_name && userState.isFocused) {
+    player.body.x = personas[focus_name].body.x;
+    player.body.y = personas[focus_name].body.y;
+  }
+
+  //   let curr_focused_persona = document.getElementById("temp_focus").textContent;
+  // 	if (curr_focused_persona != "") {
+
+  // 		// document.getElementById("temp_focus").innerHTML = "";
+  // 	}
+  // console.log("phase: " + phase + ", step: " + step);
+  // *** MOVE PERSONAS ***
+  // Moving personas take place in three distinct phases: "process," "update,"
+  // and "execute." These phases are determined by the value of <phase>.
+  // Only one of the three phases is incurred in each update cycle.
+  // if (drag_step && drag_step != step) {
+  //   step = drag_step;
+  //   drag_step = 0;
+  //   return;
+  // }
+
+  // This is where we actually move the personas in the visual world. Each
+  // backend computation in execute_movement moves each persona by one tile
+  // (or some personas might not move if they choose not to).
+  // The execute_count_max is computed by tile_width/movement_speed, which
+  // defines a one step sequence in this world.
+  // if (frame_data.length <= 0) {
+  //   return;
+  // }
+
+  // getFrameData();
+
+  // execute_movement = frame_data[step + 1];
+
+  if (!execute_movement || !execute_movement["persona"]) {
+    return;
+  }
+  // document.getElementById("game-time-content").innerHTML =
+  //   execute_movement["meta"]["curr_time"];
+  // last_time = execute_movement["meta"]["curr_time"];
+
+  for (let i = 0; i < Object.keys(personas).length; i++) {
+    let curr_persona_name = Object.keys(personas)[i];
+    let curr_persona = personas[curr_persona_name];
+    let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+    let curr_pronunciatio_emoji = pronunciatios[curr_persona_name + "emoji"];
+
+    let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
+    if (positionBuffer.length >= 2) {
+      execute_movement = positionBuffer[positionBuffer.length - 1];
+    } else {
+      return;
+    }
+    // if (execute_count == execute_count_max + 1) {
+    if (!execute_movement["persona"][curr_persona_name]) {
+      curr_persona.setVisible(false);
+      curr_persona_name_tags.setVisible(false);
+      curr_pronunciatio.setVisible(false);
+      curr_pronunciatio_emoji.setVisible(false);
+
+      continue;
+    } else {
+      curr_persona.setVisible(true);
+      curr_persona_name_tags.setVisible(true);
+      curr_pronunciatio.setVisible(true);
+      curr_pronunciatio_emoji.setVisible(true);
+    }
+    let curr_x = execute_movement["persona"][curr_persona_name]["movement"][0];
+    let curr_y = execute_movement["persona"][curr_persona_name]["movement"][1];
+    movement_target[curr_persona_name] = [
+      curr_x * tile_width,
+      curr_y * tile_width,
+    ];
+    let pronunciatio_content =
+      execute_movement["persona"][curr_persona_name]["pronunciatio"];
+
+    let description =
+      execute_movement["persona"][curr_persona_name]["description"];
+    // This is what gives the pronunciatio balloon the name initials. We
+    // use regex to extract the initials of the personas.
+    // E.g., "Dolores Murphy" -> "DM"
+
+    initials = formatPersonName(curr_persona_name);
+    pronunciatios[curr_persona_name].setText(`${pronunciatio_content}`);
+    // }
+    let x = personas[curr_persona_name].body.position.x;
+    let y = personas[curr_persona_name].body.position.y;
+    // console.log(
+    //   curr_x,
+    //   curr_y,
+    //   curr_persona_name,
+    //   x,
+    //   y,
+    //   movement_target[curr_persona_name][0],
+    //   movement_target[curr_persona_name][1],
+    //   movement_speed
+    // );
+    // console.log("persona pos:", Math.ceil(x / tile_width), Math.ceil(y / tile_width))
+    if (execute_count > 0) {
+      if (curr_persona.body.x < movement_target[curr_persona_name][0]) {
+        curr_persona.body.x += movement_speed;
+        anims_direction = "r";
+        pre_anims_direction = "r";
+        pre_anims_direction_dict[curr_persona_name] = "r";
+      } else if (curr_persona.body.x > movement_target[curr_persona_name][0]) {
+        curr_persona.body.x -= movement_speed;
+        anims_direction = "l";
+        pre_anims_direction = "l";
+        pre_anims_direction_dict[curr_persona_name] = "l";
+      } else if (curr_persona.body.y < movement_target[curr_persona_name][1]) {
+        curr_persona.body.y += movement_speed;
+        anims_direction = "d";
+        pre_anims_direction = "d";
+        pre_anims_direction_dict[curr_persona_name] = "d";
+      } else if (curr_persona.body.y > movement_target[curr_persona_name][1]) {
+        curr_persona.body.y -= movement_speed;
+        anims_direction = "u";
+        pre_anims_direction = "u";
+        pre_anims_direction_dict[curr_persona_name] = "u";
+      } else {
+        anims_direction = "";
+      }
+
+      curr_pronunciatio.x = curr_persona.body.x + 38;
+      curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      curr_pronunciatio_emoji.x = curr_persona.body.x + 38 - 4;
+      curr_pronunciatio_emoji.y = curr_persona.body.y - tile_width / 2 - 4; // DEBUG 1 --- I added 32 offset on Dec 29.
+
+      curr_persona_name_tags.x = curr_persona.body.x;
+      curr_persona_name_tags.y = curr_persona.body.y - 42;
+
+      updatePersonaAnimation(
+        curr_persona,
+        anims_direction,
+        curr_persona_name,
+        pre_anims_direction_dict
+      );
+      // curr_persona.body.x = movement_target[curr_persona_name][0];
+      // curr_persona.body.y = movement_target[curr_persona_name][1];
+      // console.log("curr_persona_namecurr_persona_name", curr_persona_name);
+    } else {
+      for (let i = 0; i < Object.keys(personas).length; i++) {}
+      // if (execute_count > 0) {
+      // } else {
+      //   // Once we are done moving the personas, we move on to the "process"
+      //   // stage where we will send the current locations of all personas at the
+      //   // end of the movemments to the frontend server, and then the backend.
+      //   return;
+      // }
+    }
+  }
+
+  // Filling in the action description.
+  if (execute_count == execute_count_max) {
+    for (let i = 0; i < Object.keys(personas).length; i++) {
+      let action_description = "";
+      let curr_persona_name = Object.keys(personas)[i];
+      let curr_persona_name_os = curr_persona_name.replace(/ /g, "_");
+      let description_content =
+        execute_movement["persona"][curr_persona_name]["description"];
+      let chat_content = "";
+
+      // if (execute_movement["persona"][curr_persona_name]["chat"] != null) {
+      // 	for (let j = 0; j < execute_movement["persona"][curr_persona_name]["chat"].length; j++) {
+
+      // 		chat_content += execute_movement["persona"][curr_persona_name]["chat"][j][0] + ": " + execute_movement["persona"][curr_persona_name]["chat"][j][1] + "<br>"
+      // 	}
+      // } else {
+      // 	chat_content = "<em>None</em>"
+      // }
+      let fill_dialog_content = "";
+      if (focus_name == curr_persona_name) {
+        if (execute_movement["persona"][curr_persona_name]["chat"] != null) {
+          let temp_content = dial_content;
+          for (
+            let j = 0;
+            j < execute_movement["persona"][curr_persona_name]["chat"].length;
+            j++
+          ) {
+            let temp_content = dial_content;
+            fill_dialog_content += temp_content
+              .replace(
+                "#name#",
+                execute_movement["persona"][curr_persona_name]["chat"][j][0]
+              )
+              .replace(
+                "#content#",
+                execute_movement["persona"][curr_persona_name]["chat"][j][1]
+              );
+          }
+        } else {
+          fill_dialog_content = "<span>None</span>";
+        }
+        // Focus on role assignment
+
+        // document.getElementById("dialog_content").innerHTML =
+        //   fill_dialog_content;
+        // document.getElementById("character_name").innerHTML = focus_name;
+        // document.getElementById("character_pos").innerHTML =
+        //   description_content.split("@")[1];
+        // document.getElementById("character_atcion").innerHTML =
+        //   description_content.split("@")[0];
+        // document.getElementById("character_detail").innerHTML = document.getElementById("status_"+curr_persona_name_os).innerHTML
+      } else if (focus_name == "") {
+        // document.getElementById("character_name").innerHTML = "None";
+        // document.getElementById("character_pos").innerHTML = "None";
+        // document.getElementById("character_atcion").innerHTML = "None";
+        // document.getElementById("character_detail").innerHTML = ""
+      }
+    }
+  }
+  // 注释掉计数更改
+  // execute_count = execute_count - 1;
+}
+getFrameData();
+Interval.value = setInterval(() => {
+  getFrameData();
+}, 1000);
+function getFrameData() {
+  focus_id.value &&
+    rolesApi.visibleChars(focus_id.value).then((res) => {
+      let data = res.data.data;
+      const output = {
+        execute_movement: {
+          persona: [],
+        },
+      };
+      output.execute_movement.persona[data.name] = {
+        movement: data.position,
+        pronunciatio: data.emoji,
+        description: data.action,
+      };
+
+      // add visible_characters
+      let tempData = {};
+      tempData[data.name];
+      data.visible_characters.forEach((char) => {
+        output.execute_movement.persona[char.name] = {
+          movement: char.position,
+          pronunciatio: char.emoji,
+          description: char.action,
+        };
+
+        if (!char || !char["name"]) {
+          return;
+        }
+        if (!personas[char["name"]]) {
+          console.log("addUser 创建角色", char["name"]);
+          //
+          addUser(
+            char["name"],
+            [
+              char.position[0] * tile_width + tile_width / 2,
+              char.position[1] * tile_width + tile_width,
+            ],
+            char["id"],
+            char["user_id"]
+          );
+          // createWalk(char["name"],anims)
+        }
+        // tempData[char["name"]] = 1;
+      });
+      for (let key in personas) {
+        if (!tempData || !tempData[key]) {
+          personas && personas[key] && personas[key].setVisible(false);
+          persona_name_tags &&
+            persona_name_tags[key] &&
+            persona_name_tags[key].setVisible(false);
+        } else {
+          personas && personas[key] && personas[key].setVisible(true);
+          persona_name_tags &&
+            persona_name_tags[key] &&
+            persona_name_tags[key].setVisible(true);
+        }
+      }
+      execute_movement = output.execute_movement;
+      positionBuffer.push(execute_movement);
+    });
+}
+
+function updatePersonaAnimation(
+  curr_persona,
+  anims_direction,
+  curr_persona_name,
+  pre_anims_direction_dict
+) {
+  // console.log({
+  //   curr_persona,
+  //   anims_direction,
+  //   curr_persona_name,
+  //   pre_anims_direction_dict,
+  // });
+  let baseTextureLowerCase = curr_persona_name.toLowerCase(); // Dynamically generate basic texture names
+  let baseTexture = baseTextureLowerCase;
+  if (anims_direction === "l") {
+    curr_persona.anims.play(`${baseTexture}-left-walk`, true);
+  } else if (anims_direction === "r") {
+    curr_persona.anims.play(`${baseTexture}-right-walk`, true);
+  } else if (anims_direction === "u") {
+    curr_persona.anims.play(`${baseTexture}-up-walk`, true);
+  } else if (anims_direction === "d") {
+    curr_persona.anims.play(`${baseTexture}-down-walk`, true);
+  } else {
+    curr_persona.anims.stop();
+    // If we were moving, pick an idle frame to use
+    //console.log(pre_anims_direction_dict[baseTextureLowerCase],"pre_anims_direction_dict")
+    //console.log('Current texture key:', curr_persona.texture.key);
+    // console.log("curr_persona_name："+curr_persona_name,curr_persona)
+    if (pre_anims_direction_dict[baseTextureLowerCase] === "l")
+      curr_persona.setTexture(baseTexture, "left");
+    else if (pre_anims_direction_dict[baseTextureLowerCase] === "r")
+      curr_persona.setTexture(baseTexture, "right");
+    else if (pre_anims_direction_dict[baseTextureLowerCase] === "u")
+      curr_persona.setTexture(baseTexture, "up");
+    else if (pre_anims_direction_dict[baseTextureLowerCase] === "d")
+      curr_persona.setTexture(baseTexture, "down");
+  }
+}
+
+const dialoguesLoading = ref(false);
+function dialoguesHandler() {
+  dialoguesLoading.value = true;
+  rolesApi
+    .dialogues({
+      character_id: focus_id,
+      instruction: dialoguesCont.value,
+    })
+    .catch((err) => {
+      ElMessage.error(err.statusText);
+    })
+    .finally(() => {
+      dialoguesLoading.value = false;
+    });
+}
+
+/**
+ * strings are split by a specified length
+ * @param text
+ * @param n
+ * @returns {string}
+ */
+function splitAndWrap(text, n = 7) {
+  if (!text) return text;
+  let result = [];
+  for (let i = 0; i < text.length; i += n) {
+    result.push(text.substring(i, i + n));
+  }
+  return result.join("\n");
+}
+/**
+ * Formatting character names
+ */
+function formatPersonName(origin_name) {
+  // Character name handling rules
+  let person_name_inital_reg = new RegExp(/(\p{L}{1})\p{L}+/, "gu");
+  let initials = [...origin_name.matchAll(person_name_inital_reg)] || [];
+  return (
+    (initials.shift()?.[1] || "") + (initials.pop()?.[1] || "")
+  ).toUpperCase();
+}
+function getUrlParams() {
+  let params = {};
+  let queryString = window.location.href;
+  queryString = queryString.split("?")[1];
+  if (!queryString) {
+    return params;
+  }
+  queryString.split("&").forEach((pair) => {
+    let [key, value] = pair.split("=");
+    if (!key) return;
+    let decodedKey = decodeURIComponent(key);
+    let decodedValue = decodeURIComponent(value || "");
+    params[decodedKey] = decodedValue;
+  });
+  return params;
+}
+// Control button binders
+var play_button = document.getElementById("play_button");
+var pause_button = document.getElementById("pause_button");
+
+let isDragging = false;
+
+function calculateStartFrame(endFrame) {
+  let startFrame = endFrame - 4000;
+  return startFrame < 1 ? 1 : startFrame;
+}
+
+function updateFramesDisplay() {
+  document.getElementById("current-frame") &&
+    (document.getElementById("current-frame").textContent =
+      Math.floor(currentFrame));
+  document.getElementById("start-frame") &&
+    (document.getElementById("start-frame").textContent = currentStartFrame);
+  document.getElementById("end-frame") &&
+    (document.getElementById("end-frame").textContent = currentEndFrame);
+}
+
+function startDragging(e) {
+  isDragging = true;
+  updateProgress(e.clientX);
+}
+
+function handleDragging(e) {
+  if (!isDragging) return;
+  updateProgress(e.clientX);
+}
+
+function stopDragging() {
+  isDragging = false;
+}
+
+function updateProgress(clientX) {
+  const rect = progressBar.value.getBoundingClientRect();
+  let percent = ((clientX - rect.left) / rect.width) * 100;
+  percent = Math.min(100, Math.max(0, percent));
+
+  currentFrame =
+    currentStartFrame + (percent / 100) * (currentEndFrame - currentStartFrame);
+  // console.log("currentFrame",currentFrame)
+  progress.value && (progress.value.style.width = `${percent}%`);
+  slider.value && (slider.value.style.left = `calc(${percent}% - 8px)`);
+  document.getElementById("current-frame") &&
+    (document.getElementById("current-frame").textContent =
+      Math.floor(currentFrame));
+  updateFramesDisplay();
+  if (setTimeoutHandle) {
+    clearTimeout(setTimeoutHandle);
+  }
+  setTimeoutHandle = setTimeout(() => {
+    drag_step = Math.floor(currentFrame);
+  }, 200);
+  drag_step = Math.floor(currentFrame);
+  last_step = drag_step;
+  step = drag_step;
+  first_stop = true;
+}
+function changeProgressBarToEnd(endFranme) {
+  // last frame
+  if (currentEndFrame < endFranme) {
+    currentEndFrame = endFranme;
+    currentFrame = currentEndFrame;
+    currentStartFrame = calculateStartFrame(currentEndFrame);
+  } else {
+    currentFrame = endFranme;
+  }
+  let percent = 100;
+  if (endFranme < currentEndFrame) {
+    percent =
+      ((endFranme - currentStartFrame) /
+        (currentEndFrame - currentStartFrame)) *
+      100;
+  }
+  progress.value && (progress.value.style.width = `${percent}%`);
+  slider.value && (slider.value.style.left = `calc(${percent}% - 8px)`);
+  updateFramesDisplay();
+}
+changeProgressBarToEnd(currentEndFrame);
+
+// let element = document.getElementById("game-container");
+// console.log(element, "elementelementelementelementelement");
+gameContainerDom.value?.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  display_main_box();
+});
+function update_dialog_user_info(visible) {
+  let dialog = document.getElementById("gameDialog");
+  if (visible) {
+    dialog.classList.add("dialog-visible");
+    setTimeout(() => (dialog.style.overflow = "visible"), 300);
+  } else {
+    dialog.classList.remove("dialog-visible");
+    dialog.style.overflow = "hidden";
+  }
+}
+function display_main_box() {
+  // isfocused = false;
+  userState.changeIsFocused(false);
+  // document.getElementById("gameDialog").style.display = "none";
+  // document.getElementById("main_box").style.display = "inline-block";
+}
+function display_game_dialog(user_name) {
+  focus_name = user_name;
+  // isfocused = true;
+  userState.changeIsFocused(true);
+  // document.getElementById("gameDialog").style.display = "inline-block";
+  // document.getElementById("main_box").style.display = "none";
+}
+
+let all_user_data;
+let initials;
+let date;
+let data;
+let story_template =
+  '<p style="font-size:12px;"><span></span>[ #time# ] <span>#item#</span></p>';
+
+function update_story() {
+  let data = [];
+  if (
+    last_time &&
+    all_user_data &&
+    all_user_data["story"] &&
+    all_user_data["story"].length > 0
+  ) {
+    date = new Date(last_time);
+    all_user_data["story"].forEach((element) => {
+      if (!element || !element.time) {
+        return;
+      }
+      let event_time = new Date(element.time);
+      if (event_time.getTime() <= date.getTime()) {
+        data.push(element);
+      }
+    });
+  } else {
+    return;
+  }
+  // data sort by created
+  data.sort((a, b) => {
+    return new Date(a.created) - new Date(b.created);
+  });
+  let update_content = "";
+
+  data.forEach((element) => {
+    if (element.event) {
+      update_content += story_template
+        .replace("#item#", element.event)
+        .replace("#time#", element.time);
+    }
+  });
+  let worldEvent = document.getElementById("world_event");
+  worldEvent ? (worldEvent.innerHTML = update_content) : "";
+  // currentEndFrame = all_user_data.step;
+  // updateFramesDisplay();
+}
+function update_user_info() {
+  let scheduleDom = document.getElementById("character_schedule");
+  let infoDom = document.getElementById("character_info");
+  if (!focus_name || focus_name == "") {
+    scheduleDom && (scheduleDom.innerHTML = "<p>None</p>");
+    infoDom && (infoDom.innerHTML = "<p>None</p>");
+    return;
+  }
+  let user_data = all_user_data[focus_name];
+  if (user_data && user_data.scratch && user_data.scratch.daily_req) {
+    let content = "";
+    user_data.scratch.f_daily_schedule.forEach((req) => {
+      content += '<p style="font-size:12px;">' + req[0] + "</p>";
+    });
+    // document.getElementById("character_schedule").innerHTML = content;
+    content = "<p><span>Age: " + user_data.scratch.age + "</span></p>";
+    content += "<p><span>Innate: " + user_data.scratch.innate + "</span></p>";
+    content += "<p><span>Learned: " + user_data.scratch.learned + "</span></p>";
+    content +=
+      "<p><span>Currently: " + user_data.scratch.currently + "</span></p>";
+    content +=
+      "<p><span>Vision_r: " + user_data.scratch.vision_r + "</span></p>";
+    // content += "<p><span>Daily Plan: "+user_data.scratch.daily_plan_req+"</span></p>"
+    // document.getElementById("character_info").innerHTML = content;
+  }
+}
+function switchTab(tabName) {
+  document.querySelectorAll(".tab-content").forEach((tab) => {
+    tab.style.display = "none";
+  });
+
+  document.getElementById(tabName) &&
+    (document.getElementById(tabName).style.display = "block");
+
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.classList.remove("active");
+  });
+
+  const tabElement = document.querySelector(`[data-tab="${tabName}"]`);
+  if (tabElement) {
+    tabElement.classList.add("active");
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.row {
+  height: 100%;
+  min-width: 1860px;
+  display: flex;
+  .col-md-1 {
+    flex-grow: 1;
+  }
+  .col-md-7 {
+    flex-grow: 7;
+    #game-container {
+      width: 100%;
+      max-width: 1350px;
+      max-height: 900px;
+      height: 100%;
+      position: relative;
+      /* display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column; */
+      .game-dialogues {
+        position: absolute;
+        bottom: 0px;
+
+        padding: 16px;
+        border-top: 1px solid #c9a76933;
+        display: flex;
+        gap: 10px;
+        .chat-input {
+          white-space: pre; /* 允许空格 */
+          overflow: visible; /* 避免截断 */
+          &:focus {
+            outline: none;
+            border-color: #9c7d4a;
+            box-shadow: 0 0 8px rgba(201, 167, 105, 0.3);
+          }
+          padding: 12px;
+          background: #0d1f0d;
+          border: 1px solid #c9a769;
+          border-radius: 4px;
+          color: #c9a769;
+          font-family: inherit;
+        }
+        button {
+          background-color: #c9a769;
+          color: #1a2a1a;
+          padding: 8px 16px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          &:hover {
+            background-color: #9c7d4a;
+          }
+        }
+      }
+      .game-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        font-size: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1f0d;
+        color: aliceblue;
+        &:hover {
+          color: #3291c8;
+        }
+      }
+    }
+
+    #game-container > canvas {
+      border-radius: 5px;
+    }
+  }
+  .col-md-4 {
+    width: calc(100% / 3);
+    flex-grow: 6;
+    display: flex;
+  }
+}
+</style>
