@@ -118,7 +118,10 @@
         </ul>
       </el-header>
       <el-main>
-        <Map></Map>
+        <Map
+          :profileGuideShown="profileGuideShown"
+          :initGuide="initGuide"
+        ></Map>
         <!-- <BarOntainer></BarOntainer> -->
       </el-main>
     </el-container>
@@ -160,19 +163,20 @@ introOption.value = [
   {
     element: ".w1",
     title: "The first step",
-    intro: "Ctrl+'scroll wheel'/keyboard input 'x/z' to zoom in and out",
+    intro:
+      "Ctrl+'scroll wheel<br>or<br>keyboard input 'x/z' to zoom in and out",
   },
   {
     element: ".w1",
     title: "The second step",
     intro:
-      "Click on the character to switch perspectives and then click unfocus again",
+      "Click on the character to switch perspectives <br><br> then click unfocus again",
   },
   {
     element: ".game-controls",
     title: "The third step",
     intro:
-      "One click to return to your character, click again to unfocus the perspective",
+      "One click to return to your character, <br><br>click again to unfocus the perspective",
   },
   {
     element: ".tab-container",
@@ -187,17 +191,54 @@ introOption.value = [
   {
     element: ".user-avatarBox",
     title: "The sixth step",
-    intro: "This is the personal center, you can register your own character",
+    intro:
+      "This is the personal center,<br><br> you can register your own character",
   },
 ];
 const initGuide = () => {
-  console.log("initGuide");
-  console.log(introOption.value);
   intro()
     .setOptions({
       steps: introOption.value,
       showBullets: false,
       skipLabel: "skip",
+      tooltipClass: "customIntroClass", // 添加自定义类名
+      highlightClass: "customHighlightClass",
+    })
+    .onbeforechange(function () {
+      const style = document.createElement("style");
+      style.innerHTML = `
+      .customHighlightClass {
+        width:10px !important;
+        height:10px !important;
+      }
+        .customIntroClass {
+          min-width: 500px;
+          min-height: 300px;
+          padding: 20px;
+          display: flex !important;
+          flex-direction: column;
+          border-radius: 8px;
+        }
+        .introjs-tooltiptext {
+            flex: 1;
+            padding: 30px;
+        }
+        .introjs-button {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .introjs-button {
+          background-color: #007bff;
+          color: #fff;
+        }
+        .introjs-button:hover {
+          background-color: #0056b3;
+        }
+      `;
+      document.head.appendChild(style);
     })
     .oncomplete(() => {
       console.log("引导完成");
@@ -212,9 +253,6 @@ const initGuide = () => {
     .start();
 };
 onMounted(() => {
-  if (profileGuideShown.value === null) {
-    initGuide();
-  }
   // const originalMoveNext = driver.moveNext.bind(driver);
   // driver.moveNext = function () {
   //   console.log("开始下一步");
@@ -275,9 +313,8 @@ const logout = () => {
     .w1 {
       /* display: none; */
       /* opacity: 0; */
-      /* width: 10px;
+      width: 10px;
       height: 10px;
-      background: rgb(0, 0, 0); */
     }
   }
 }
@@ -445,41 +482,26 @@ const logout = () => {
 }
 :deep(.introjs-tooltipReferenceLayer) {
   background-color: red;
-}
-:deep(.introjs-tooltip) {
-  background-color: red; /* 背景颜色 */
-  color: #333; /* 文字颜色 */
-  border-radius: 8px; /* 圆角 */
+  .customIntroClass {
+    background-color: red; /* 背景颜色 */
+    color: #333; /* 文字颜色 */
+    border-radius: 8px; /* 圆角 */
 
-  .introjs-button {
-    background-color: #007bff; /* 按钮背景颜色 */
-    color: #fff; /* 按钮文字颜色 */
-  }
-
-  .introjs-arrow {
-    border-color: rgba(255, 255, 255, 0.95); /* 箭头颜色 */
-  }
-  .introjs-arrow.top {
-    border-bottom-color: #f7f7f7; /* 上箭头颜色 */
-  }
-  .introjs-arrow.bottom {
-    border-top-color: #f7f7f7; /* 下箭头颜色 */
-  }
-  .introjs-arrow.left {
-    border-right-color: #f7f7f7; /* 左箭头颜色 */
-  }
-  .introjs-arrow.right {
-    border-left-color: #f7f7f7; /* 右箭头颜色 */
-  }
-  .introjs-button {
-    padding: 10px 20px; /* 内边距 */
-    border: none; /* 无边框 */
-    border-radius: 5px; /* 圆角 */
-    cursor: pointer; /* 鼠标指针 */
-    transition: background-color 0.3s ease; /* 过渡效果 */
-  }
-  .introjs-button:hover {
-    background-color: #0056b3; /* 鼠标悬停时的背景颜色 */
+    .introjs-arrow {
+      border-color: rgba(255, 255, 255, 0.95); /* 箭头颜色 */
+    }
+    .introjs-arrow.top {
+      border-bottom-color: #f7f7f7; /* 上箭头颜色 */
+    }
+    .introjs-arrow.bottom {
+      border-top-color: #f7f7f7; /* 下箭头颜色 */
+    }
+    .introjs-arrow.left {
+      border-right-color: #f7f7f7; /* 左箭头颜色 */
+    }
+    .introjs-arrow.right {
+      border-left-color: #f7f7f7; /* 右箭头颜色 */
+    }
   }
 }
 </style>

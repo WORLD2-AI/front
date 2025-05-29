@@ -101,6 +101,14 @@ const positionBuffer = [];
 let focus_id = ref("");
 let focus_user_id = ref(0);
 let currentScene = ref(null);
+const props = defineProps({
+  initGuide: {
+    type: Function,
+  },
+  profileGuideShown: {
+    type: Boolean || Boolean,
+  },
+});
 const dialogues = computed(() => {
   let flag = false;
   if (
@@ -512,49 +520,50 @@ function addUser(persona_name, start_pos, id, user_id) {
   const texture = currentScene.value.textures.get("emoji");
   const originalWidth = texture.getSourceImage().width;
   const originalHeight = texture.getSourceImage().height;
-  const maxWidth = 50;
+  const maxWidth = 56;
   const scale = maxWidth / originalWidth; // bg.setDisplaySize(bg.width * scale, bg.height * scale);
-  pronunciatios[persona_name + "emoji"] = currentScene.value.add
-    .tileSprite(
-      new_sprite.body.x - 6,
-      new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-      originalWidth,
-      originalHeight,
-      "emoji"
-    )
-    .setScale(scale)
-    .setDepth(3);
-  pronunciatios[persona_name] = currentScene.value.add
-    .text(
-      new_sprite.body.x - 6,
-      new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-      "",
-      {
-        font: "18px Arial",
-        fill: "#000",
-        //    padding: { x: 8, y: 8},
-        backgroundColor: "#00000066",
-        stroke: "#000",
-        strokeThickness: 0,
-        border: "none",
-      }
-    )
-    .setDepth(4);
-  persona_name_tags[persona_name] = currentScene.value.add
-    .text(
-      new_sprite.body.x - 6,
-      new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-      formatPersonName(persona_name),
-      {
-        font: "bold 16px velvet",
-        stroke: "#fff",
-        strokeThickness: 2,
-        fill: "#000",
-        border: "solid",
-        borderRadius: "10px",
-      }
-    )
-    .setDepth(3);
+  if (!pronunciatios[persona_name + "emoji"])
+    pronunciatios[persona_name + "emoji"] = currentScene.value.add
+      .tileSprite(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        originalWidth,
+        originalHeight,
+        "emoji"
+      )
+      .setOrigin(0, 0)
+      .setScale(scale)
+      .setDepth(3);
+  if (!pronunciatios[persona_name])
+    pronunciatios[persona_name] = currentScene.value.add
+      .text(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        "",
+        {
+          font: "18px Arial",
+          strokeThickness: 0,
+          border: "none",
+        }
+      )
+      .setOrigin(0, 0)
+      .setDepth(4);
+  if (!persona_name_tags[persona_name])
+    persona_name_tags[persona_name] = currentScene.value.add
+      .text(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        formatPersonName(persona_name),
+        {
+          font: "bold 16px velvet",
+          stroke: "#fff",
+          strokeThickness: 2,
+          fill: "#000",
+          border: "solid",
+          borderRadius: "10px",
+        }
+      )
+      .setDepth(3);
 }
 
 function createWalk(persona_name, anims) {
@@ -614,6 +623,9 @@ function createWalk(persona_name, anims) {
   });
 }
 function create() {
+  if (props.profileGuideShown === null) {
+    props.initGuide();
+  }
   anims = this.anims;
   const map = this.make.tilemap({ key: "map" });
   // console.log(map, "addTilesetImage");
@@ -1134,8 +1146,8 @@ function update(time, delta) {
 
       curr_pronunciatio.x = curr_persona.body.x + 38;
       curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
-      curr_pronunciatio_emoji.x = curr_persona.body.x + 38;
-      curr_pronunciatio_emoji.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      curr_pronunciatio_emoji.x = curr_persona.body.x + 38 - 4;
+      curr_pronunciatio_emoji.y = curr_persona.body.y - tile_width / 2 - 4; // DEBUG 1 --- I added 32 offset on Dec 29.
 
       curr_persona_name_tags.x = curr_persona.body.x;
       curr_persona_name_tags.y = curr_persona.body.y - 42;
@@ -1226,7 +1238,7 @@ function update(time, delta) {
 getFrameData();
 Interval.value = setInterval(() => {
   getFrameData();
-}, 500);
+}, 1000);
 function getFrameData() {
   focus_id.value &&
     rolesApi.visibleChars(focus_id.value).then((res) => {

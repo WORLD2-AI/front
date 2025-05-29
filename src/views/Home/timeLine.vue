@@ -148,9 +148,6 @@ onMounted(() => {
     },
     { immediate: true }
   );
-  timeInterval = setInterval(() => {
-    props.focusId && loadMoreNewer(props.focusId);
-  }, 60 * 60);
 });
 onUnmounted(() => {
   clearInterval(timeInterval);
