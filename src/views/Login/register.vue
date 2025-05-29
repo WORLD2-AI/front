@@ -91,7 +91,6 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import { useUserStore } from "../../store/user.ts";
 import user from "../../api/user.js";
 import { ElNotification } from "element-plus";
 
@@ -199,14 +198,14 @@ const submitForm = () => {
             });
 
             setTimeout(() => {
-              router.push("/login");
+              router.push("/home");
             }, 500);
           }
         })
         .catch((req) => {
           ElNotification({
             title: "prompt",
-            message: req?.data,
+            message: req?.data.message,
             type: "warning",
           });
         });

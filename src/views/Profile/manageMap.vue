@@ -72,6 +72,9 @@ const mapMarkerHandler = () => {
         manageApi.renderSite().then((res) => {
           siteList.value = res.data?.data;
         });
+      })
+      .catch((err) => {
+        ElMessage.error(err.err);
       });
   }
 };
@@ -109,7 +112,6 @@ onMounted(() => {
 watchEffect(() => {
   container?.list && [...container.list].forEach((g) => g.destroy());
   container && (container = MapADD.value.container(0, 0));
-  console.log(siteList.value, "siteList.valuevaluevaluevaluevaluevalue");
   MapADD.value &&
     siteList.value.length > 0 &&
     siteList.value.forEach((item) => {
@@ -471,7 +473,7 @@ function create() {
   // stored in the global animation manager so any sprite can access them.
 
   // set the view zoom
-  const minZoom = 0.3; // minimal scaling
+  const minZoom = 0.1; // minimal scaling
   const maxZoom = 3; // maximum scale
   // Play audio normally
 
@@ -495,6 +497,7 @@ function create() {
     // Draw a red solid rectangle
     let setMapX = Math.floor(x / tile_width);
     let setMapY = Math.floor(y / tile_height);
+    console.log([setMapX, setMapY], "setMapX,setMapY ");
     selectionMarker.fillStyle(0xff0000, 0.5);
     selectionMarker.fillRect(
       setMapX * tile_width,
@@ -503,6 +506,9 @@ function create() {
       tile_height
     );
     site.value = [setMapX, setMapY];
+    // site.value[0] 写入剪切板
+    navigator.clipboard.writeText(site.value[0]+","+site.value[1]);
+    console.log(site.value[0]+","+site.value[1])
   }
   // Input event binding
   this.input.on("pointerdown", (pointer) => {
@@ -543,7 +549,7 @@ function create() {
   this.input.on("pointerup", (pointer) => {
     // isDraggingmMap = false;
     if (!dragStartPos) return;
-
+    player.body.setVelocity(0,0)
     // Calculate pointer movement distance
     const distance = Phaser.Math.Distance.Between(
       dragStartPos.x,

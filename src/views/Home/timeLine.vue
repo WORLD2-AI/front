@@ -4,21 +4,20 @@
       <div class="name">{{ name }}</div>
       <div class="ScrollBox">
         <el-scrollbar
-          height="420px"
+          height="250px"
           class="timeline-container"
           ref="containerRef"
-          @scroll="handleScroll"
-          :style="{ height: `${totalHeight}px` }"
+          :style="{
+            scrollTop: `500px`,
+          }"
         >
-          <el-timeline
-            class="timeline-content"
-            :style="{
-              transform: `translateY(${offset}px)`,
-            }"
-          >
+          <!-- @scroll="handleScroll" -->
+          <!-- :style="{ height: `${totalHeight}px` }" -->
+
+          <el-timeline class="timeline-content">
             <el-timeline-item
               center
-              v-for="item in visibleItems"
+              v-for="(item, index) in allItems"
               :key="item.start_minute"
             >
               <el-card>
@@ -31,23 +30,26 @@
                 </div>
               </el-card>
               <template #dot>
+                <template v-if="index === allItems.length - 1">
+                  <el-icon><CaretRight /></el-icon>
+                </template>
                 <div>{{ Toformatted(item.start_minute) }}</div>
               </template>
             </el-timeline-item>
           </el-timeline>
         </el-scrollbar>
-        <div class="loading-indicator">
+        <!-- <div class="loading-indicator">
           <el-icon v-show="loadingBottom" class="is-loading"
             ><Loading
           /></el-icon>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from "vue";
-import { Loading } from "@element-plus/icons-vue";
+import { ref, computed, onMounted, nextTick, watch, onUnmounted } from "vue";
+import { CaretRight } from "@element-plus/icons-vue";
 import characterApi from "../../api/characters";
 const props = defineProps({
   focusId: {
@@ -70,6 +72,8 @@ const ITEM_HEIGHT = 70; // Estimate the height of each timeline item
 const BUFFER_SIZE = 6; // Number of buffer items
 const PAGE_SIZE = 15; // Number of loads per page
 let PAGE = 1;
+let timeInterval;
+const offset = ref(0);
 
 const containerHeight = computed(
   () => containerRef.value?.wrapRef?.clientHeight || 0
@@ -88,10 +92,6 @@ const endIndex = computed(() => {
 const visibleItems = computed(() =>
   allItems.value.slice(startIndex.value, endIndex.value + 1)
 );
-const offset = computed(() => {
-  console.log(startIndex.value, "startIndex.valuestartIndex.value");
-  return startIndex.value * ITEM_HEIGHT;
-});
 const Toformatted = (start_minute) => {
   let startHour = Math.floor(start_minute / 60);
   const startMinute = start_minute % 60;
@@ -103,11 +103,8 @@ const Toformatted = (start_minute) => {
 // Load new data (scroll down)
 const loadMoreNewer = async (focusId) => {
   let isLoading = false;
-  let lastLoadTime = 0;
   const now = Date.now();
-  if (loadingBottom.value || now - lastLoadTime < 500) return;
   loadingBottom.value = true;
-  lastLoadTime = now;
   try {
     const data = await characterApi.getTimeLine({
       characterId: focusId,
@@ -116,93 +113,48 @@ const loadMoreNewer = async (focusId) => {
     });
     name.value = data.data.name;
     const items = data.data.activities;
-    // console.log(items.reverse(), "items.reverse()items.reverse()");
-
-    // const items = await fetchTimelineItems({
-    //   lastId: allItems.value[0]?.id,
-    //   direction: "newer",
-    //   pageSize: PAGE_SIZE,
-    // });
-    if (items.length > 0) {
-      allItems.value = [...allItems.value, ...items];
-      PAGE++;
-      nextTick(() => {
-        // Node setScrollTop
-
-        allItemsLength.value = allItems.value.length;
-        if (containerRef.value) {
-          // console.log({
-          //   scrollTop: containerRef.value.scrollTop,
-          //   itemsLength: items.length,
-          // });
-          // containerRef.value.scrollTop = items.length * ITEM_HEIGHT;
-        }
-      });
-    }
+    // if (items.length > 0) {
+    allItems.value = items;
+    nextTick(() => {
+      allItemsLength.value = allItems.value.length;
+    });
+    // }
   } finally {
     loadingBottom.value = false;
   }
 };
 watch(
-  () => props.focusId, // 监听的具体依赖
+  () => props.focusId,
   (newVal, oldVal) => {
-    allItems.value = [];
-    allItemsLength.length = 0;
-    console.log("props.focusId", "发生变化来更新");
+    console.log("props.focusId:", props.focusId);
+    timeInterval && clearInterval(timeInterval);
     props.focusId && loadMoreNewer(props.focusId);
+    timeInterval = setInterval(() => {
+      props.focusId && loadMoreNewer(props.focusId);
+    }, 60 * 60);
   },
   { immediate: true }
 );
+
 // initialization
-// onMounted(() => {
-//   loadMoreNewer();
-// });
-
-// Rolling processing
-let debounceTimer = null;
-
-const handleScroll = () => {
-  containerRef.value.setScrollTop();
-  const containerNode = containerRef.value ? containerRef.value.wrapRef : null;
-  if (!containerNode) return;
-
-  if (debounceTimer) clearTimeout(debounceTimer);
-  const { scrollTop: st, scrollHeight, clientHeight } = containerNode;
-  // console.log(st, "containerRef.value.wrapRef");
-
-  scrollTop.value = st;
-  console.log({
-    scrollTop: st,
-    scrollHeight,
-    clientHeight,
-    totalHeight: totalHeight.value,
-    clientHeight,
-  });
-  debounceTimer = setTimeout(() => {
-    console.log(
-      "totalHeight.value - clientHeight - 100",
-      totalHeight.value - clientHeight - 100
-    );
-    if (st > totalHeight.value - clientHeight - 100) {
-      loadMoreNewer(props.focusId);
-    }
-    if (st < 100) {
-      // loadMoreOlder();
-    }
-  }, 500);
-
-  // if (scrollHeight - (st + clientHeight) < 100 && hasMore.value) {
-
-  // }
-
-  // if (st < 100 && allItems.value.length > 0) {
-  //   loadMoreOlder();
-  // }
-};
+onMounted(() => {
+  watch(
+    () => allItemsLength.value,
+    (newVal, oldVal) => {
+      containerRef.value?.scrollTo({
+        top: allItemsLength.value * ITEM_HEIGHT,
+        behavior: "smooth", // smooth scrolling
+      });
+    },
+    { immediate: true }
+  );
+});
+onUnmounted(() => {
+  clearInterval(timeInterval);
+});
 </script>
 <style lang="scss" scoped>
 .ScrollBox {
-  height: 420px;
   overflow: hidden;
   position: relative;
   .loading-indicator {
@@ -238,14 +190,14 @@ const handleScroll = () => {
   margin-bottom: 10px;
 }
 .timeLine {
-  width: 290px;
-  border: 2px solid #c9a769;
+  /* width: 290px; */
+  /* border: 2px solid #c9a769; */
   background: linear-gradient(to right, #1a2a1a, #0d1f0d);
   .card {
     width: auto;
     padding: 5px 15px;
     background: linear-gradient(to right, #1a2a1a, #0d1f0d);
-    color: #ebe7e7;
+    color: #8d9e8d;
     .name {
       background: #000;
       height: 40px;
@@ -257,24 +209,45 @@ const handleScroll = () => {
       margin-bottom: 10px;
     }
     .el-timeline {
+      width: 100%;
       :deep(.el-timeline-item) {
         border-radius: 10px;
         height: 60px;
-        width: 260px;
+        /* width: 260px; */
         margin-top: 10px;
         padding: 0;
         .el-timeline-item__tail {
           left: 0;
           margin-left: 30px;
           height: 56px;
-          border-left: 3px solid #ccc;
+          border-left: 3px solid #c9a769;
           top: 37px;
+        }
+        &:last-child {
+          .el-timeline-item__dot {
+            div {
+              width: 100%;
+              position: absolute;
+              top: 0;
+              left: 0;
+            }
+            .el-icon {
+              font-size: 18px;
+              position: absolute;
+              left: -8px;
+              top: 20px;
+            }
+          }
         }
         .el-timeline-item__dot {
           width: 60px;
           height: 100%;
+          display: block;
+          text-align: center;
+          line-height: 60px;
+          position: relative;
           .el-icon {
-            font-size: 45px;
+            font-size: 18px;
           }
           .content {
             display: flex;
@@ -284,8 +257,9 @@ const handleScroll = () => {
         }
         .el-timeline-item__wrapper {
           height: 100%;
-          padding-left: 60px;
           .el-card__body {
+            background: #c9a769;
+            opacity: 0.8;
             display: flex;
             .icon {
               flex-shrink: 0;

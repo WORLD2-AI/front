@@ -64,7 +64,6 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { useUserStore } from "../../store/user.ts";
 import user from "../../api/user.js";
 import { ElNotification } from "element-plus";
 const router = useRouter();

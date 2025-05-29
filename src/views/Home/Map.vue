@@ -12,11 +12,11 @@
       </span> -->
     </div>
     <div class="row">
-      <div class="col-md-1">1</div>
+      <div class="col-md-1"></div>
       <div class="col-md-7">
         <div id="game-container" style="text-align: center">
           <!-- <Map /> -->
-          <div class="game-dialogues">
+          <div class="game-dialogues" v-if="dialogues">
             <input
               v-model="dialoguesCont"
               type="text"
@@ -24,6 +24,7 @@
               placeholder="input chat content..."
             />
             <button
+              v-loading="dialoguesLoading"
               style="
                 background-color: #c9a769;
                 color: #1a2a1a;
@@ -32,41 +33,42 @@
                 border-radius: 4px;
                 margin-left: 10px;
               "
-              @click="
-                () => {
-                  console.log(dialoguesCont);
-
-                  rolesApi.dialogues({
-                    character_id: focus_id,
-                    instruction: dialoguesCont,
-                  });
-                }
-              "
+              @click="() => dialoguesCont && dialoguesHandler()"
             >
               Send
             </button>
           </div>
+          <div class="game-controls">
+            <el-icon @click="() => userState.restoreFocusId()"
+              ><Place
+            /></el-icon>
+          </div>
         </div>
       </div>
       <div class="col-md-4">
-        <CharacterAttributes :focusId="focus_id" />
-        <!-- <DialogContainer
+        <CharacterAttributes
           :personNames="persona_names"
           :displayMainBox="display_main_box"
           :displayGameDialog="display_game_dialog"
           :switchTab="switchTab"
-        /> -->
+          :focusId="focus_id"
+        />
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import Phaser from "phaser";
+import { ElMessage } from "element-plus";
+import { Place } from "@element-plus/icons-vue";
 import rolesApi from "../../api/roles";
 import userApi from "../../api/user";
 import DialogContainer from "./dialogContainer.vue";
 import CharacterAttributes from "./characterAttributes.vue";
+import userStore from "../../store/user.js";
+import user from "../../api/user";
+const userState = userStore();
 
 /*
 Main resources:
@@ -95,14 +97,40 @@ const progressBar = ref();
 const progress = ref();
 const slider = ref();
 const Interval = ref(null);
+const positionBuffer = [];
 let focus_id = ref("");
+let focus_user_id = ref(0);
+let currentScene = ref(null);
+const props = defineProps({
+  initGuide: {
+    type: Function,
+  },
+  profileGuideShown: {
+    type: Boolean || Boolean,
+  },
+});
 const dialogues = computed(() => {
   let flag = false;
-  if (Profile && focus_id.value) {
+  if (
+    Profile &&
+    focus_id.value &&
+    focus_user_id.value === userState.initialFocuUserId
+  ) {
     flag = true;
   }
   return flag;
 });
+watch(
+  () => userState.focusId, // 监听目标（需用函数返回）
+  (newValue, oldValue) => {
+    if (newValue && newValue === userState.initialFocusInfo.id) {
+      focus_id.value = newValue;
+      focus_name = userState.initialFocusInfo.name;
+      focus_user_id.value = userState.initialFocusInfo.user_id;
+    }
+  },
+  { immediate: false } // 可选：立即触发一次
+);
 
 onUnmounted(() => {
   if (game.value) {
@@ -151,7 +179,6 @@ let spans = document
 //   persona_names[x[0]] = [parseInt(x[1]), parseInt(x[2])];
 // }
 var last_time = null;
-// console.log('persona_names:',persona_names)
 let t = null;
 
 // Phaser 3.0 global settings.
@@ -192,9 +219,9 @@ onMounted(() => {
       target: 30,
       forceSetTimeOut: true,
     },
-    width: 1500,
-    height: 1000,
-    parent: gameContainerDom.value,
+    width: 1200,
+    height: 800,
+    // parent: gameContainerDom.value,
     pixelArt: true,
     physics: {
       default: "arcade",
@@ -207,7 +234,8 @@ onMounted(() => {
       create: create,
       update: update,
     },
-    scale: { zoom: 0.9 },
+    mode: Phaser.Scale.FIT, // 自动缩放并保持比例
+    parent: gameContainerDom.value,
   };
   game.value = new Phaser.Game(config.value);
 
@@ -239,6 +267,7 @@ let pre_anims_direction;
 let pre_anims_direction_dict = {};
 let offset = 0;
 let curr_maze = "the_ville";
+let anims;
 
 // <tile_width> is the width of one individual tile (tiles are square)
 let tile_width = 32;
@@ -266,6 +295,7 @@ let movement_target = {};
 let isDraggingmMap = false;
 let startPointerPos = new Phaser.Math.Vector2();
 let focus_name = "";
+let randomIndex;
 
 let dial_content =
   '<div style="color: #c9a769; margin-bottom: 8px;word-break: break-word"><span style="color:white;">#name#:</span><span><p>#content#</p></span></div>';
@@ -288,6 +318,7 @@ let dial_content =
 //         update() is called on each frame during the game play
 
 function preload() {
+  currentScene.value = this;
   // Loading the necessary images (e.g., the background image, character
   // sprites).
 
@@ -296,6 +327,7 @@ function preload() {
   //       png file that contains the tileset.
   //       Also IMPORTANT: when you create a tileset in Tiled, always be
   //       sure to check the "embedded" option.
+  this.load.image("emoji", "/img/emojiBg.png");
   this.load.image(
     "blocks_1",
     "assets/the_ville/visuals/map_assets/blocks/blocks_1.png"
@@ -403,29 +435,41 @@ function preload() {
   );
   rolesApi.allChars().then((res) => {
     persona_namesList = [];
-    res.data.data.forEach((char) => {
+    res.data.data.forEach((char, index) => {
       persona_names[char.name] = char.position;
-      persona_namesList.push({ id: char.id, name: char.name });
+      if (!char.is_system_character) {
+        randomIndex = index;
+        userState.changeInitialFocuUserId(char.user_id);
+      }
+      persona_namesList.push({
+        id: char.id,
+        name: char.name,
+        user_id: char.user_id,
+      });
     });
     for (let key in persona_names) {
       spawn_tile_loc[key] = persona_names[key];
     }
     // focus_name = "kiki";
-    let randomIndex;
+
     userApi
       .profile()
-      .then(() => {
-        Profile.value = true;
-        randomIndex = persona_namesList.length - 1;
-      })
+      // .then(() => {
+      //   randomIndex = persona_namesList.length - 1;
+      // })
       .catch(() => {
         randomIndex = Math.floor(Math.random() * persona_namesList.length);
       })
       .finally(() => {
-        console.log("randomIndex", randomIndex);
         focus_name = persona_namesList[randomIndex].name;
-        console.log("focus_name", "focus_name", focus_name);
         focus_id.value = persona_namesList[randomIndex].id;
+        focus_user_id.value = persona_namesList[randomIndex].user_id;
+        userState.changeInitialFocusInfo({
+          id: focus_id.value,
+          name: focus_name,
+          user_id: focus_user_id.value,
+        });
+        userState.changeFocusId(focus_id.value);
       });
     for (let key in persona_names) {
       // key = persona_names[key];
@@ -441,8 +485,148 @@ function preload() {
     }
   });
 }
+function addUser(persona_name, start_pos, id, user_id) {
+  currentScene.value.load.atlas(
+    persona_name,
+    `assets/characters/town/kiki.png`,
+    `assets/characters/town/atlas.json`
+  );
+  let new_sprite = currentScene.value.physics.add
+    .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
+    .setSize(30, 40)
+    .setOffset(0, 0);
 
+  new_sprite.setInteractive();
+  new_sprite.on("pointerup", () => {
+    if (persona_name == focus_name) {
+      // focus_name = "";
+      // focus_id.value = "";
+      // focus_user_id.value = user_id;
+      // userState.changeFocusId(focus_id.value);
+      display_main_box();
+    } else {
+      focus_name = persona_name;
+      focus_id.value = id;
+      focus_user_id.value = user_id;
+      userState.changeFocusId(focus_id.value);
+      display_game_dialog(persona_name);
+    }
+  });
+  // Here, we are creating the persona and its pronunciatio sprites.
+  personas[persona_name] = new_sprite;
+  anims && createWalk(persona_name, currentScene.value.anims);
+  // Emoji garbled characters
+
+  const texture = currentScene.value.textures.get("emoji");
+  const originalWidth = texture.getSourceImage().width;
+  const originalHeight = texture.getSourceImage().height;
+  const maxWidth = 56;
+  const scale = maxWidth / originalWidth; // bg.setDisplaySize(bg.width * scale, bg.height * scale);
+  if (!pronunciatios[persona_name + "emoji"])
+    pronunciatios[persona_name + "emoji"] = currentScene.value.add
+      .tileSprite(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        originalWidth,
+        originalHeight,
+        "emoji"
+      )
+      .setOrigin(0, 0)
+      .setScale(scale)
+      .setDepth(3);
+  if (!pronunciatios[persona_name])
+    pronunciatios[persona_name] = currentScene.value.add
+      .text(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        "",
+        {
+          font: "18px Arial",
+          strokeThickness: 0,
+          border: "none",
+        }
+      )
+      .setOrigin(0, 0)
+      .setDepth(4);
+  if (!persona_name_tags[persona_name])
+    persona_name_tags[persona_name] = currentScene.value.add
+      .text(
+        new_sprite.body.x - 6,
+        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
+        formatPersonName(persona_name),
+        {
+          font: "bold 16px velvet",
+          stroke: "#fff",
+          strokeThickness: 2,
+          fill: "#000",
+          border: "solid",
+          borderRadius: "10px",
+        }
+      )
+      .setDepth(3);
+}
+
+function createWalk(persona_name, anims) {
+  let left_walk_name = persona_name + "-left-walk";
+  let right_walk_name = persona_name + "-right-walk";
+  let down_walk_name = persona_name + "-down-walk";
+  let up_walk_name = persona_name + "-up-walk";
+
+  //   console.log(persona_name, left_walk_name, "DEUBG")
+
+  anims.create({
+    key: left_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "left-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: right_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "right-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: down_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "down-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+
+  anims.create({
+    key: up_walk_name,
+    frames: anims.generateFrameNames(persona_name, {
+      prefix: "up-walk.",
+      start: 0,
+      end: 3,
+      zeroPad: 3,
+    }),
+    frameRate: 4,
+    repeat: -1,
+  });
+}
 function create() {
+  if (props.profileGuideShown === null) {
+    props.initGuide();
+  }
+  anims = this.anims;
   const map = this.make.tilemap({ key: "map" });
   // console.log(map, "addTilesetImage");
   // Joon: Logging map is really helpful for debugging here:
@@ -653,139 +837,101 @@ function create() {
 
   // Setting up the camera.
   const camera = this.cameras.main;
-  camera.setZoom(0.5);
+  camera.setZoom(0.7);
   camera.startFollow(player);
   camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-  cursors = this.input.keyboard.createCursorKeys();
+  cursors = this.input.keyboard.addKeys({
+    up: Phaser.Input.Keyboard.KeyCodes.UP,
+    down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+    left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+    right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+    // 不绑定 SPACE 或 SHIFT
+  });
 
   // *** SET UP PERSONAS ***
   // We start by creating the game sprite objects.
+  anims = this.anims;
   for (let i = 0; i < Object.keys(spawn_tile_loc).length; i++) {
     let persona_name = Object.keys(spawn_tile_loc)[i];
     let start_pos = [
       spawn_tile_loc[persona_name][0] * tile_width + tile_width / 2,
       spawn_tile_loc[persona_name][1] * tile_width + tile_width,
     ];
-    let new_sprite = this.physics.add
-      .sprite(start_pos[0], start_pos[1], "atlas", "misa-front")
-      .setSize(30, 40)
-      .setOffset(0, 32);
-
-    new_sprite.setInteractive();
-    new_sprite.on("pointerup", () => {
-      if (persona_name == focus_name) {
-        focus_name = "";
-        focus_id.value = "";
-        display_main_box();
-      } else {
-        focus_name = persona_name;
-        focus_id.value = persona_namesList[i].id;
-        display_game_dialog(persona_name);
-      }
-    });
-    // Here, we are creating the persona and its pronunciatio sprites.
-    personas[persona_name] = new_sprite;
-    // Emoji garbled characters
-    // pronunciatios[persona_name] = this.add
-    //   .text(
-    //     new_sprite.body.x - 6,
-    //     new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-    //     "🦁",
-    //     {
-    //       font: "18px Arial",
-    //       fill: "#fff",
-    //       //    padding: { x: 8, y: 8},
-    //       backgroundColor: "#00000066",
-    //       stroke: "#000",
-    //       strokeThickness: 0,
-    //       border: "none",
-    //     }
-    //   )
-    //   .setDepth(3);
-
-    persona_name_tags[persona_name] = this.add
-      .text(
-        new_sprite.body.x,
-        new_sprite.body.y - 42, // DEBUG 1 --- I added 32 offset on Dec 29.
-        formatPersonName(persona_name),
-        {
-          font: "bold 16px velvet",
-          stroke: "#fff",
-          strokeThickness: 2,
-          fill: "#000",
-          border: "solid",
-          borderRadius: "10px",
-        }
-      )
-      .setDepth(3);
+    addUser(
+      persona_name,
+      start_pos,
+      persona_namesList[i].id,
+      persona_namesList[i].user_id
+    );
+    // createWalk(persona_name, anims);
   }
 
   // Create the player's walking animations from the texture atlas. These are
   // stored in the global animation manager so any sprite can access them.
-  const anims = this.anims;
   for (let i = 0; i < Object.keys(persona_names).length; i++) {
     // ===========================================================
     let persona_name = Object.keys(persona_names)[i];
     // let persona_name = persona_names[i];
     // console.log(persona_name,"persona_namepersona_namepersona_namepersona_namepersona_namepersona_name");
-    let left_walk_name = persona_name + "-left-walk";
-    let right_walk_name = persona_name + "-right-walk";
-    let down_walk_name = persona_name + "-down-walk";
-    let up_walk_name = persona_name + "-up-walk";
+    anims && createWalk(persona_name, anims);
+    // let left_walk_name = persona_name + "-left-walk";
+    // let right_walk_name = persona_name + "-right-walk";
+    // let down_walk_name = persona_name + "-down-walk";
+    // let up_walk_name = persona_name + "-up-walk";
 
-    //   console.log(persona_name, left_walk_name, "DEUBG")
+    // //   console.log(persona_name, left_walk_name, "DEUBG")
 
-    anims.create({
-      key: left_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "left-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: left_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "left-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
 
-    anims.create({
-      key: right_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "right-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: right_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "right-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
 
-    anims.create({
-      key: down_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "down-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: down_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "down-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
 
-    anims.create({
-      key: up_walk_name,
-      frames: anims.generateFrameNames(persona_name, {
-        prefix: "up-walk.",
-        start: 0,
-        end: 3,
-        zeroPad: 3,
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
+    // anims.create({
+    //   key: up_walk_name,
+    //   frames: anims.generateFrameNames(persona_name, {
+    //     prefix: "up-walk.",
+    //     start: 0,
+    //     end: 3,
+    //     zeroPad: 3,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: -1,
+    // });
   }
 
   // set the view zoom
-  const minZoom = 0.01; // minimal scaling
+  const minZoom = 0.5; // minimal scaling
   const maxZoom = 3; // maximum scale
   // Play audio normally
 
@@ -818,23 +964,28 @@ function create() {
 
   this.input.on("pointerup", () => {
     isDraggingmMap = false;
+    player.body.setVelocity(0, 0);
   });
   this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
     // Get the mouse world coordinates before zooming in and out
     // Calculate the new zoom level (deltaY>0, scroll down)
-    const newZoom = Phaser.Math.Clamp(
-      this.cameras.main.zoom - deltaY * 0.001,
-      0.5, // minimum-scale
-      3 // Maximum Zoom
-    );
-    // Set a new zoom level
-    this.cameras.main.setZoom(newZoom);
+    if (pointer.event.ctrlKey) {
+      pointer.event.preventDefault();
+      const newZoom = Phaser.Math.Clamp(
+        this.cameras.main.zoom - deltaY * 0.001,
+        0.5, // minimum-scale
+        3 // Maximum Zoom
+      );
+      // Set a new zoom level
+      this.cameras.main.setZoom(newZoom);
+    }
   });
 }
 
 function update(time, delta) {
   // *** SETUP PLAY AND PAUSE BUTTON ***
   let play_context = this;
+  anims = this.anims;
   function game_resume() {
     play_context.scene.resume();
   }
@@ -870,7 +1021,7 @@ function update(time, delta) {
     player.body.setVelocityY(camera_speed);
   }
 
-  if (focus_name) {
+  if (focus_name && userState.isFocused) {
     player.body.x = personas[focus_name].body.x;
     player.body.y = personas[focus_name].body.y;
   }
@@ -914,20 +1065,28 @@ function update(time, delta) {
   for (let i = 0; i < Object.keys(personas).length; i++) {
     let curr_persona_name = Object.keys(personas)[i];
     let curr_persona = personas[curr_persona_name];
-    // let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+    let curr_pronunciatio = pronunciatios[Object.keys(personas)[i]];
+    let curr_pronunciatio_emoji = pronunciatios[curr_persona_name + "emoji"];
 
     let curr_persona_name_tags = persona_name_tags[Object.keys(personas)[i]];
-
+    if (positionBuffer.length >= 2) {
+      execute_movement = positionBuffer[positionBuffer.length - 1];
+    } else {
+      return;
+    }
     // if (execute_count == execute_count_max + 1) {
     if (!execute_movement["persona"][curr_persona_name]) {
       curr_persona.setVisible(false);
       curr_persona_name_tags.setVisible(false);
-      // curr_pronunciatio.setVisible(false);
+      curr_pronunciatio.setVisible(false);
+      curr_pronunciatio_emoji.setVisible(false);
+
       continue;
     } else {
       curr_persona.setVisible(true);
       curr_persona_name_tags.setVisible(true);
-      // curr_pronunciatio.setVisible(true);
+      curr_pronunciatio.setVisible(true);
+      curr_pronunciatio_emoji.setVisible(true);
     }
     let curr_x = execute_movement["persona"][curr_persona_name]["movement"][0];
     let curr_y = execute_movement["persona"][curr_persona_name]["movement"][1];
@@ -935,8 +1094,8 @@ function update(time, delta) {
       curr_x * tile_width,
       curr_y * tile_width,
     ];
-    // let pronunciatio_content =
-    //   execute_movement["persona"][curr_persona_name]["pronunciatio"];
+    let pronunciatio_content =
+      execute_movement["persona"][curr_persona_name]["pronunciatio"];
 
     let description =
       execute_movement["persona"][curr_persona_name]["description"];
@@ -945,7 +1104,7 @@ function update(time, delta) {
     // E.g., "Dolores Murphy" -> "DM"
 
     initials = formatPersonName(curr_persona_name);
-    // pronunciatios[curr_persona_name].setText(`(${pronunciatio_content})`);
+    pronunciatios[curr_persona_name].setText(`${pronunciatio_content}`);
     // }
     let x = personas[curr_persona_name].body.position.x;
     let y = personas[curr_persona_name].body.position.y;
@@ -985,8 +1144,10 @@ function update(time, delta) {
         anims_direction = "";
       }
 
-      // curr_pronunciatio.x = curr_persona.body.x + 38;
-      // curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      curr_pronunciatio.x = curr_persona.body.x + 38;
+      curr_pronunciatio.y = curr_persona.body.y - tile_width / 2; // DEBUG 1 --- I added 32 offset on Dec 29.
+      curr_pronunciatio_emoji.x = curr_persona.body.x + 38 - 4;
+      curr_pronunciatio_emoji.y = curr_persona.body.y - tile_width / 2 - 4; // DEBUG 1 --- I added 32 offset on Dec 29.
 
       curr_persona_name_tags.x = curr_persona.body.x;
       curr_persona_name_tags.y = curr_persona.body.y - 42;
@@ -1074,11 +1235,11 @@ function update(time, delta) {
   // 注释掉计数更改
   // execute_count = execute_count - 1;
 }
+getFrameData();
 Interval.value = setInterval(() => {
   getFrameData();
 }, 1000);
 function getFrameData() {
-  console.log("getFrameData", "focus_id", focus_id.value);
   focus_id.value &&
     rolesApi.visibleChars(focus_id.value).then((res) => {
       let data = res.data.data;
@@ -1089,19 +1250,54 @@ function getFrameData() {
       };
       output.execute_movement.persona[data.name] = {
         movement: data.position,
-        // pronunciatio: data.center_character.level_emoji,
+        pronunciatio: data.emoji,
         description: data.action,
       };
 
       // add visible_characters
+      let tempData = {};
+      tempData[data.name];
       data.visible_characters.forEach((char) => {
         output.execute_movement.persona[char.name] = {
           movement: char.position,
-          // pronunciatio: char.level_emoji,
+          pronunciatio: char.emoji,
           description: char.action,
         };
+
+        if (!char || !char["name"]) {
+          return;
+        }
+        if (!personas[char["name"]]) {
+          console.log("addUser 创建角色", char["name"]);
+          //
+          addUser(
+            char["name"],
+            [
+              char.position[0] * tile_width + tile_width / 2,
+              char.position[1] * tile_width + tile_width,
+            ],
+            char["id"],
+            char["user_id"]
+          );
+          // createWalk(char["name"],anims)
+        }
+        // tempData[char["name"]] = 1;
       });
+      for (let key in personas) {
+        if (!tempData || !tempData[key]) {
+          personas && personas[key] && personas[key].setVisible(false);
+          persona_name_tags &&
+            persona_name_tags[key] &&
+            persona_name_tags[key].setVisible(false);
+        } else {
+          personas && personas[key] && personas[key].setVisible(true);
+          persona_name_tags &&
+            persona_name_tags[key] &&
+            persona_name_tags[key].setVisible(true);
+        }
+      }
       execute_movement = output.execute_movement;
+      positionBuffer.push(execute_movement);
     });
 }
 
@@ -1142,6 +1338,22 @@ function updatePersonaAnimation(
     else if (pre_anims_direction_dict[baseTextureLowerCase] === "d")
       curr_persona.setTexture(baseTexture, "down");
   }
+}
+
+const dialoguesLoading = ref(false);
+function dialoguesHandler() {
+  dialoguesLoading.value = true;
+  rolesApi
+    .dialogues({
+      character_id: focus_id,
+      instruction: dialoguesCont.value,
+    })
+    .catch((err) => {
+      ElMessage.error(err.statusText);
+    })
+    .finally(() => {
+      dialoguesLoading.value = false;
+    });
 }
 
 /**
@@ -1284,12 +1496,15 @@ function update_dialog_user_info(visible) {
   }
 }
 function display_main_box() {
-  focus_name = "";
+  // isfocused = false;
+  userState.changeIsFocused(false);
   // document.getElementById("gameDialog").style.display = "none";
   // document.getElementById("main_box").style.display = "inline-block";
 }
 function display_game_dialog(user_name) {
   focus_name = user_name;
+  // isfocused = true;
+  userState.changeIsFocused(true);
   // document.getElementById("gameDialog").style.display = "inline-block";
   // document.getElementById("main_box").style.display = "none";
 }
@@ -1383,8 +1598,6 @@ function switchTab(tabName) {
     tabElement.classList.add("active");
   }
 }
-
-switchTab("dialogue");
 </script>
 
 <style lang="scss" scoped>
@@ -1442,6 +1655,23 @@ switchTab("dialogue");
           }
         }
       }
+      .game-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        font-size: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1f0d;
+        color: aliceblue;
+        &:hover {
+          color: #3291c8;
+        }
+      }
     }
 
     #game-container > canvas {
@@ -1451,6 +1681,7 @@ switchTab("dialogue");
   .col-md-4 {
     width: calc(100% / 3);
     flex-grow: 6;
+    display: flex;
   }
 }
 </style>
