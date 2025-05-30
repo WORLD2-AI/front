@@ -216,7 +216,7 @@ onMounted(() => {
   config.value = {
     type: Phaser.AUTO,
     fps: {
-      target: 30,
+      target: 8,
       forceSetTimeOut: true,
     },
     width: 1200,
